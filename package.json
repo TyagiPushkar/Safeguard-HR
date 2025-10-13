@@ -2,6 +2,10 @@
   "name": "hrms-frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+  "node": "18.x"
+},
+
   "homepage": "/",
   "dependencies": {
     "@emotion/react": "^11.13.0",

@@ -520,7 +520,7 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
                     Low Priority
                   </MenuItem>
                   <MenuItem value="normal">
-                    <Chip label="Normal" color="#8d0638ff" size="small" sx={{ mr: 1 }} />
+                    <Chip label="Normal" sx={{color:"#8d0638ff",mr: 1}} size="small"  />
                     Normal Priority
                   </MenuItem>
                   <MenuItem value="high">

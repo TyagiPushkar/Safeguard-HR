@@ -175,7 +175,7 @@ const UserProfile = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        // background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
         py: 4,
         px: { xs: 2, sm: 3 },
       }}
@@ -183,7 +183,24 @@ const UserProfile = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <Box sx={{ maxWidth: 1200, margin: "auto" }}>
           {/* Header */}
-         
+          <Box sx={{ textAlign: "center", mb: 6 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: "bold",
+                background: "linear-gradient(45deg, #8d0638, #c2185b)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                mb: 2,
+              }}
+            >
+              User Profile
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              Manage your account settings and security preferences
+            </Typography>
+          </Box>
 
           <Grid container spacing={4}>
             {/* Profile Card */}
@@ -193,10 +210,8 @@ const UserProfile = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 sx={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  backdropFilter: "blur(20px)",
+                  background: "white",
                   borderRadius: 4,
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
                   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
                   overflow: "visible",
                   position: "relative",
@@ -211,9 +226,9 @@ const UserProfile = () => {
                         <IconButton
                           size="small"
                           sx={{
-                            bgcolor: theme.palette.primary.main,
+                            bgcolor: "#8d0638",
                             color: "white",
-                            "&:hover": { bgcolor: theme.palette.primary.dark },
+                            "&:hover": { bgcolor: "#6d052c" },
                           }}
                         >
                           <PhotoCameraIcon fontSize="small" />
@@ -227,7 +242,7 @@ const UserProfile = () => {
                           margin: "auto",
                           border: "4px solid white",
                           boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-                          background: "linear-gradient(45deg, #667eea, #764ba2)",
+                          background: "linear-gradient(45deg, #8d0638, #c2185b)",
                         }}
                         src={user?.image}
                         alt={user?.username}
@@ -243,7 +258,7 @@ const UserProfile = () => {
                       mt: 3,
                       mb: 1,
                       fontWeight: "bold",
-                      background: "linear-gradient(45deg, #667eea, #764ba2)",
+                      background: "linear-gradient(45deg, #8d0638, #c2185b)",
                       backgroundClip: "text",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
@@ -252,7 +267,20 @@ const UserProfile = () => {
                     {user?.username || "User Name"}
                   </Typography>
 
-                  <Chip label={user?.role || "Employee"} color="#8d0638ff" variant="outlined" sx={{ mb: 3 }} />
+                  {/* FIXED: Use valid MUI color instead of hex code */}
+                  <Chip 
+                    label={user?.role || "Employee"} 
+                    color="primary" 
+                    variant="outlined" 
+                    sx={{ 
+                      mb: 3,
+                      borderColor: "#8d0638",
+                      color: "#8d0638",
+                      '& .MuiChip-label': {
+                        fontWeight: 600
+                      }
+                    }} 
+                  />
 
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button
@@ -260,17 +288,17 @@ const UserProfile = () => {
                       startIcon={<LockIcon />}
                       onClick={handleOpen}
                       sx={{
-                        background: "linear-gradient(45deg, #667eea, #764ba2)",
+                        background: "linear-gradient(45deg, #8d0638, #c2185b)",
                         borderRadius: 3,
                         px: 4,
                         py: 1.5,
                         textTransform: "none",
                         fontSize: "1rem",
                         fontWeight: 600,
-                        boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                        boxShadow: "0 4px 15px rgba(141, 6, 56, 0.4)",
                         "&:hover": {
-                          background: "linear-gradient(45deg, #5a6fd8, #6a42a0)",
-                          boxShadow: "0 6px 20px rgba(102, 126, 234, 0.6)",
+                          background: "linear-gradient(45deg, #6d052c, #a0154b)",
+                          boxShadow: "0 6px 20px rgba(141, 6, 56, 0.6)",
                         },
                       }}
                     >
@@ -288,17 +316,15 @@ const UserProfile = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
                 sx={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  backdropFilter: "blur(20px)",
+                  background: "white",
                   borderRadius: 4,
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
                   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
                   height: "fit-content",
                 }}
               >
                 <CardContent sx={{ p: 4 }}>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                    <InfoIcon sx={{ mr: 2, color: theme.palette.primary.main }} />
+                    <InfoIcon sx={{ mr: 2, color: "#8d0638" }} />
                     <Typography variant="h5" sx={{ fontWeight: "bold" }}>
                       Profile Information
                     </Typography>
@@ -316,19 +342,19 @@ const UserProfile = () => {
                             sx={{
                               p: 3,
                               borderRadius: 3,
-                              background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))",
-                              border: "1px solid rgba(102, 126, 234, 0.2)",
+                              background: "linear-gradient(135deg, rgba(141, 6, 56, 0.1), rgba(194, 24, 91, 0.1))",
+                              border: "1px solid rgba(141, 6, 56, 0.2)",
                               transition: "all 0.3s ease",
                               "&:hover": {
                                 transform: "translateY(-2px)",
-                                boxShadow: "0 8px 25px rgba(102, 126, 234, 0.15)",
+                                boxShadow: "0 8px 25px rgba(141, 6, 56, 0.15)",
                               },
                             }}
                           >
                             <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                               <Box
                                 sx={{
-                                  color: theme.palette.primary.main,
+                                  color: "#8d0638",
                                   mr: 2,
                                   display: "flex",
                                   alignItems: "center",
@@ -367,7 +393,7 @@ const UserProfile = () => {
                   <Box sx={{ mt: 4 }}>
                     <Divider sx={{ mb: 3 }} />
                     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                      <SecurityIcon sx={{ mr: 2, color: theme.palette.primary.main }} />
+                      <SecurityIcon sx={{ mr: 2, color: "#8d0638" }} />
                       <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                         Security Settings
                       </Typography>
@@ -398,9 +424,8 @@ const UserProfile = () => {
         PaperProps={{
           sx: {
             borderRadius: 4,
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
+            background: "white",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
           },
         }}
       >
@@ -408,7 +433,7 @@ const UserProfile = () => {
           sx={{
             textAlign: "center",
             pb: 1,
-            background: "linear-gradient(45deg, #667eea, #764ba2)",
+            background: "linear-gradient(45deg, #8d0638, #c2185b)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
@@ -416,7 +441,7 @@ const UserProfile = () => {
             fontSize: "1.5rem",
           }}
         >
-          <LockIcon sx={{ mr: 1, verticalAlign: "middle", color: theme.palette.primary.main }} />
+          <LockIcon sx={{ mr: 1, verticalAlign: "middle", color: "#8d0638" }} />
           Change Password
         </DialogTitle>
 
@@ -542,11 +567,11 @@ const UserProfile = () => {
               loading || !currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword
             }
             sx={{
-              background: "linear-gradient(45deg, #667eea, #764ba2)",
+              background: "linear-gradient(45deg, #8d0638, #c2185b)",
               borderRadius: 2,
               px: 3,
               "&:hover": {
-                background: "linear-gradient(45deg, #5a6fd8, #6a42a0)",
+                background: "linear-gradient(45deg, #6d052c, #a0154b)",
               },
             }}
           >

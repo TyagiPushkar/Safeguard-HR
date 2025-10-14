@@ -3,7 +3,6 @@
 import { useState } from "react"
 import {
   Box,
-  useMediaQuery,
   Button,
   Stack,
   Typography,
@@ -22,8 +21,7 @@ import {
   Timeline
 } from "@mui/icons-material"
 import { motion, AnimatePresence } from "framer-motion"
-import Navbar from "../components/Navbar"
-import Sidebar from "../components/Sidebar"
+import PageWrapper from "../components/layout/PageWrapper"
 import MapPage from "../components/dealers/MapPage"
 import LiveTrack from "../components/dealers/LiveTrack"
 
@@ -111,8 +109,6 @@ const TabButton = ({ isActive, onClick, icon, label, description }) => {
 function Maps() {
   const [selectedTab, setSelectedTab] = useState("visitMap")
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"))
-  const drawerWidth = isMobile ? 0 : 100
 
   const tabConfig = {
     visitMap: {
@@ -130,39 +126,53 @@ function Maps() {
   }
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "#f5f7fa" }}>
-      {/* Sidebar */}
-      <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
-        <Sidebar />
+    <PageWrapper 
+      title="Maps & Tracking" 
+      maxWidth={false}
+      sx={{ 
+        bgcolor: 'background.default',
+        p: 0,
+        height: '100%'
+      }}
+    >
+      {/* Tab Navigation */}
+      {/* <Box sx={{ px: 3, pt: 2, pb: 1 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+          <TabButton
+            isActive={selectedTab === "visitMap"}
+            onClick={() => setSelectedTab("visitMap")}
+            icon={tabConfig.visitMap.icon}
+            label={tabConfig.visitMap.label}
+            description={tabConfig.visitMap.description}
+          />
+          <TabButton
+            isActive={selectedTab === "liveField"}
+            onClick={() => setSelectedTab("liveField")}
+            icon={tabConfig.liveField.icon}
+            label={tabConfig.liveField.label}
+            description={tabConfig.liveField.description}
+          />
+        </Stack>
+      </Box> */}
+
+      {/* Content Area */}
+      <Box sx={{ flexGrow: 1, height: 'calc(100% - 100px)', px: 1, pb: 1 }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            style={{ height: "100%" }}
+          >
+            <Box sx={{ height: "100%", borderRadius: 2, overflow: 'hidden' }}>
+              {selectedTab === "visitMap" ? <MapPage /> : <LiveTrack />}
+            </Box>
+          </motion.div>
+        </AnimatePresence>
       </Box>
-
-      {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Navbar />
-
-        {/* Enhanced Header Section */}
-       
-
-    
-
-        {/* Content Area */}
-        <Box sx={{ flexGrow: 1, mx: 2, mb: 2, overflow: "hidden" }}>
-         
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={selectedTab}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                style={{ height: "100%" }}
-              >
-                <Box sx={{ height: "100%", p: 1 }}>{selectedTab === "visitMap" ? <MapPage /> : <LiveTrack />}</Box>
-              </motion.div>
-            </AnimatePresence>
-        </Box>
-      </Box>
-    </Box>
+    </PageWrapper>
   )
 }
 

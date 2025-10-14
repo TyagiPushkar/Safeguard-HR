@@ -183,7 +183,7 @@ const AttendanceCard = ({ activity, isMobile }) => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={3}>
             <Box display="flex" alignItems="center" gap={1}>
-              <CalendarToday fontSize="small" color="#8d0638ff" />
+              <CalendarToday fontSize="small" sx={{ color: "#8d0638ff" }} />
               <Typography variant="body2" fontWeight="medium">
                 {activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A"}
               </Typography>
@@ -801,7 +801,7 @@ const AttendanceList = () => {
       {/* Header Section */}
       <Paper sx={{ p: 1, mb: 3, borderRadius: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h4" fontWeight="bold" color="#8d0638ff">
+          <Typography variant="h4" fontWeight="bold" sx={{ color: "#8d0638ff",mr:2 }}>
             Attendance
           </Typography>
            <Grid container spacing={2} alignItems="center">
@@ -911,11 +911,10 @@ const AttendanceList = () => {
               )}
               <Button
                 variant="contained"
-                startIcon={<Download />}
-                onClick={exportToCsv}
+               onClick={exportToCsv}
                 disabled={filteredActivities.length === 0}
               >
-                Export CSV
+                <Download />
               </Button>
             </Stack>
           </Grid>
@@ -979,7 +978,10 @@ const AttendanceList = () => {
                     Attendance records
                   </Typography>
                 </Box>
-                <CalendarToday color="#8d0638ff" sx={{ fontSize: 40 }} />
+                <CalendarToday sx={{
+                  fontSize: 40,
+                  color: "#8d0638ff"
+                }} />
               </Box>
             </CardContent>
           </Card>
@@ -1150,7 +1152,7 @@ const AttendanceList = () => {
                         >
                           <TableCell>
                             <Box display="flex" alignItems="center" gap={1}>
-                              <CalendarToday fontSize="small" color="#8d0638ff" />
+                              <CalendarToday fontSize="small" sx={{ color: "#8d0638ff" }} />
                               {activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A"}
                             </Box>
                           </TableCell>

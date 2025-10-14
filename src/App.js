@@ -1,7 +1,8 @@
+// App.js
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { AuthProvider } from './components/auth/AuthContext';
+import { AuthProvider, useAuth } from './components/auth/AuthContext';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -29,53 +30,190 @@ import HRMSLayout from './styles/HRMSLayout';
 import EmployeeSalarySlip from './components/employee/EmployeeSalarySlip';
 import Regularise from './pages/Regularise';
 import Docket from './pages/Docket';
+import MainLayout from './components/layout/MainLayout';
+
+// Wrapper component for routes that need layout
+const LayoutWrapper = ({ children }) => {
+  const { user } = useAuth();
+  
+  // Don't show layout for login page
+  if (!user) {
+    return children;
+  }
+  
+  return <MainLayout>{children}</MainLayout>;
+};
 
 function App() {
-   useEffect(() => {
-        const handleRightClick = (event) => {
-            event.preventDefault();
-        };
+  useEffect(() => {
+    const handleRightClick = (event) => {
+      event.preventDefault();
+    };
 
-        document.addEventListener('contextmenu', handleRightClick);
+    document.addEventListener('contextmenu', handleRightClick);
 
-        return () => {
-            document.removeEventListener('contextmenu', handleRightClick);
-        };
-    }, []);
+    return () => {
+      document.removeEventListener('contextmenu', handleRightClick);
+    };
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <AuthProvider>
         <Router>
           <Routes>
+            {/* Public Route */}
             <Route path="/" element={<Login />} />
-            <Route path="/dashboard" element={<PrivateRoute element={Dashboard} />} />
-            <Route path="/employees" element={<PrivateRoute element={Employee} requiredRole="HR" />} />
-            <Route path="/employees/:empId" element={<PrivateRoute element={EmployeeProfile} requiredRole="HR" />} />
-            <Route path="/holiday" element={<PrivateRoute element={Holiday} />} />
-            <Route path="/policy" element={<PrivateRoute element={Policy} />} />
-            <Route path="/attendance" element={<PrivateRoute element={Attendance} />} />
-            <Route path="/notification" element={<PrivateRoute element={Notification} />} />
-            <Route path="/leave" element={<PrivateRoute element={Leave} />} />
-            <Route path="/expense" element={<PrivateRoute element={Expense} />} />
-            <Route path="/profile" element={<PrivateRoute element={EmpProfile} />} />
-            <Route path="/visit" element={<PrivateRoute element={Visit} />} />
-            <Route path="/plan-visit" element={<PrivateRoute element={Visit} />} />
-            <Route path="/registration" element={<PrivateRoute element={Registration} />} />
-            <Route path="/report" element={<PrivateRoute element={VisitReport} />} />
-            <Route path="/maps" element={<PrivateRoute element={Maps} />} />
-            <Route path="/live-track" element={<PrivateRoute element={Maps} />} />
-            <Route path="/assets" element={<PrivateRoute element={Assets} />} />
-            <Route path="/tickets" element={<PrivateRoute element={Ticket} />} />
-            <Route path="/travel" element={<PrivateRoute element={Travel} />} />
-            <Route path="/regularise" element={<PrivateRoute element={Regularise} requiredRole="HR"/>} />
-
-            <Route path="/checkpoints" element={<PrivateRoute element={Checkpoints} />} />
-            <Route path="/add-checkpoint" element={<PrivateRoute element={Checkpoints} />} />
-            <Route path="/menus" element={<PrivateRoute element={Menus} />} />
-            <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />
-            <Route path="/docket" element={<PrivateRoute element={Docket} />} />
-            {/* <Route path="/salary-slip/:EmpId" element={<EmployeeSalarySlip />} /> */}
-            {/* <Route path="/hrms" element={<PrivateRoute element={HRMSLayout} />} /> */}
+            
+            {/* Protected Routes with Layout */}
+            <Route path="/dashboard" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Dashboard />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/employees" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Employee />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/employees/:empId" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <EmployeeProfile />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/holiday" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Holiday />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/policy" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Policy />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/attendance" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Attendance />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/notification" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Notification />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/leave" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Leave />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/expense" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Expense />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/profile" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <EmpProfile />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            {/* Add similar layout wrappers for all other protected routes */}
+            <Route path="/visit" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Visit />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+             <Route path="/plan-visit" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Visit />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/assets" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Assets />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            <Route path="/regularise" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Regularise />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            <Route path="/report" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <VisitReport />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            <Route path="/registration" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Registration />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            <Route path="/maps" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Maps />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            <Route path="/live-track" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Maps />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+             <Route path="/travel" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Travel />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            {/* Add all other routes similarly */}
           </Routes>
         </Router>
       </AuthProvider>

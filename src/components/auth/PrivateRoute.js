@@ -1,22 +1,23 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+// components/auth/PrivateRoute.jsx
 import { useAuth } from './AuthContext';
+import { Navigate } from 'react-router-dom';
 
-const PrivateRoute = ({ element: Component, requiredRole, ...rest }) => {
-    const { user, loading } = useAuth();
+const PrivateRoute = ({ children, requiredRole }) => {
+  const { user, isLoading } = useAuth();
 
-    if (loading) {
-        // Optionally return a loading spinner or null while checking auth state
-        return <div>Loading...</div>;
-    }
+  if (isLoading) {
+    return <div>Loading...</div>; // Or your loading component
+  }
 
-    // Check if the user is authenticated and if the required role matches
-    if (user && (!requiredRole || user.role === requiredRole)) {
-        return <Component {...rest} />;
-    }
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
-    // Redirect to login page if not authenticated or if the role doesn't match
-    return <Navigate to="/" />;
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

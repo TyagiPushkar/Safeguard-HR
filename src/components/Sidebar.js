@@ -3,19 +3,17 @@
 import { useState } from "react"
 import { useLocation, Link } from "react-router-dom"
 import {
-  Drawer,
   List,
   ListItem,
   Box,
   ListItemIcon,
   Typography,
   Tooltip,
-  IconButton,
   Divider,
   useTheme,
   useMediaQuery,
-  Collapse,
   Badge,
+  Drawer,
 } from "@mui/material"
 import {
   Dashboard,
@@ -24,164 +22,130 @@ import {
   Notifications,
   Person,
   BarChart,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-  Help,
-} from "@mui/icons-material"
-import {
-  AddLocationAlt,
   AccountBalanceWallet,
+  AddLocationAlt,
   LocalAirport,
   HowToReg,
   Map,
   SupportAgent,
   Laptop,
   Summarize,
-  Checklist,
-  Menu as MenuIcon,
 } from "@mui/icons-material"
-import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "./auth/AuthContext"
 import logo from "../assets/HRSmileLogo.jpeg"
-// Mock logo component since we can't import the actual image
+
+// Simple logo
 const HRSmileLogo = () => (
   <Box
     sx={{
-      width: 50,
-      height: 40,
-      bgcolor: "#8d0638ff",
+      width: 45,
+      height: 45,
       borderRadius: 2,
+      overflow: "hidden",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: "white",
-      fontWeight: "bold",
-      fontSize: "1.2rem",
+      bgcolor: "#8d0638ff",
     }}
   >
-    <img src={logo} alt="S-HR Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+    <img
+      src={logo}
+      alt="S-HR Logo"
+      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+    />
   </Box>
 )
 
-// Enhanced Navigation Item Component
+// --- Simplified Nav Item ---
 const NavItem = ({ route, isActive, isExpanded, hasNotification = false }) => {
   const theme = useTheme()
-
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Tooltip title={!isExpanded ? route.name : ""} placement="right" arrow>
-        <ListItem
-          component={Link}
-          to={route.path}
+    <Tooltip title={!isExpanded ? route.name : ""} placement="right" arrow>
+      <ListItem
+        component={Link}
+        to={route.path}
+        sx={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isExpanded ? "flex-start" : "center",
+          flexDirection: isExpanded ? "row" : "column",
+          color: isActive ? "white" : theme.palette.text.primary,
+          bgcolor: isActive ? "#8d0638ff" : "transparent",
+          borderRadius: 2,
+          mx: 1,
+          my: 0.6,
+          px: isExpanded ? 2 : 1,
+          py: 1.2,
+          transition: "all 0.25s ease",
+          "&:hover": {
+            bgcolor: isActive ? "#9a1f4b" : theme.palette.action.hover,
+            boxShadow: isActive ? theme.shadows[2] : theme.shadows[1],
+          },
+          textDecoration: 'none',
+        }}
+      >
+        <ListItemIcon
           sx={{
+            color: "inherit",
+            minWidth: isExpanded ? 40 : "auto",
+            mr: isExpanded ? 1.2 : 0,
             display: "flex",
-            flexDirection: isExpanded ? "row" : "column",
-            alignItems: "center",
-            justifyContent: isExpanded ? "flex-start" : "center",
-            color: isActive ? "white" : "text.primary",
-            bgcolor: isActive ? "#8d0638ff" : "transparent",
-            borderRadius: 2,
-            mx: 1,
-            my: 0.5,
-            px: isExpanded ? 2 : 1,
-            py: 1.5,
-            minHeight: 56,
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            "&:hover": {
-              bgcolor: isActive ? "#B81652" : "#B81652",
-              transform: "translateX(4px)",
-              boxShadow: theme.shadows[2],
-            },
-            "&:before": {
-              content: '""',
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: 3,
-              height: isActive ? "60%" : 0,
-              bgcolor: "#B81652",
-              borderRadius: "0 2px 2px 0",
-              transition: "height 0.3s ease",
-            },
+            justifyContent: "center",
           }}
         >
-          <ListItemIcon
+          <Badge
+            variant="dot"
+            color="error"
+            invisible={!hasNotification}
             sx={{
-              color: "inherit",
-              minWidth: isExpanded ? 40 : "auto",
-              mr: isExpanded ? 1 : 0,
-              justifyContent: "center",
+              "& .MuiBadge-badge": {
+                right: -2,
+                top: 2,
+              },
             }}
           >
-            <Badge
-              variant="dot"
-              color="error"
-              invisible={!hasNotification}
-              sx={{
-                "& .MuiBadge-badge": {
-                  right: -2,
-                  top: 2,
-                },
-              }}
-            >
-              {route.icon}
-            </Badge>
-          </ListItemIcon>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Typography
-                  variant="body2"
-                  fontWeight={isActive ? 600 : 400}
-                  sx={{
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                  }}
-                >
-                  {route.name}
-                </Typography>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          {!isExpanded && (
-            <Typography
-              variant="caption"
-              sx={{
-                mt: 0.5,
-                fontSize: "0.65rem",
-                textAlign: "center",
-                lineHeight: 1,
-                opacity: 0.8,
-              }}
-            >
-              {route.name}
-            </Typography>
-          )}
-        </ListItem>
-      </Tooltip>
-    </motion.div>
+            {route.icon}
+          </Badge>
+        </ListItemIcon>
+
+        {isExpanded ? (
+          <Typography
+            variant="body2"
+            fontWeight={isActive ? 600 : 400}
+            sx={{
+              whiteSpace: "nowrap",
+              opacity: 0.95,
+            }}
+          >
+            {route.name}
+          </Typography>
+        ) : (
+          <Typography
+            variant="caption"
+            sx={{
+              mt: 0.5,
+              fontSize: "0.65rem",
+              textAlign: "center",
+              opacity: 0.8,
+            }}
+          >
+            {route.name}
+          </Typography>
+        )}
+      </ListItem>
+    </Tooltip>
   )
 }
 
-function Sidebar() {
+// --- Sidebar ---
+function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mobile
   const location = useLocation()
   const { user } = useAuth()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
 
-  // Module Mapping with enhanced icons and categories
   const moduleMapping = {
     1: { path: "/attendance", name: "Attendance", icon: <BarChart />, category: "Analytics" },
     2: { path: "/leave", name: "Leave", icon: <Person />, category: "HR" },
@@ -196,16 +160,14 @@ function Sidebar() {
     15: { path: "/docket", name: "Docket", icon: <HowToReg />, category: "Operations" },
   }
 
-  // Default routes visible to everyone
   const defaultRoutes = [
     { path: "/dashboard", name: "Dashboard", icon: <Dashboard />, category: "Main" },
     { path: "/notification", name: "Notifications", icon: <Notifications />, category: "Main", hasNotification: true },
   ]
 
   const userModules = user?.modules || []
-  const allowedRoutes = userModules.map((moduleId) => moduleMapping[moduleId]).filter(Boolean)
+  const allowedRoutes = userModules.map((id) => moduleMapping[id]).filter(Boolean)
 
-  // HR-specific routes
   if (user?.role === "HR") {
     allowedRoutes.push(
       { path: "/employees", name: "Employees", icon: <Person />, category: "HR" },
@@ -213,50 +175,20 @@ function Sidebar() {
     )
   }
 
-  // If module 5 (Visit) exists, also add Maps
   if (userModules.includes(5)) {
     allowedRoutes.push({ path: "/maps", name: "Maps", icon: <Map />, category: "Field" })
   }
 
-  // Combine all available routes
   const routes = [...defaultRoutes, ...allowedRoutes]
-
-  // Group routes by category
-  const groupedRoutes = routes.reduce((acc, route) => {
-    const category = route.category || "Other"
-    if (!acc[category]) acc[category] = []
-    acc[category].push(route)
+  const groupedRoutes = routes.reduce((acc, r) => {
+    const cat = r.category || "Other"
+    if (!acc[cat]) acc[cat] = []
+    acc[cat].push(r)
     return acc
   }, {})
 
-  const drawerWidth = isExpanded ? 280 : 100
-
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        "& .MuiDrawer-paper": {
-          width: drawerWidth,
-          bgcolor: "background.paper",
-          borderRight: `1px solid ${theme.palette.divider}`,
-          boxShadow: theme.shadows[3],
-          transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          overflowX: "hidden",
-          "&::-webkit-scrollbar": {
-            width: 6,
-          },
-          "&::-webkit-scrollbar-track": {
-            bgcolor: "transparent",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            bgcolor: theme.palette.divider,
-            borderRadius: 3,
-          },
-        },
-      }}
-    >
+  const sidebarContent = (
+    <>
       {/* Header */}
       <Box
         sx={{
@@ -264,119 +196,70 @@ function Sidebar() {
           alignItems: "center",
           justifyContent: isExpanded ? "space-between" : "center",
           p: 2,
-          minHeight: 64,
           bgcolor: theme.palette.primary.main,
           color: "white",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <HRSmileLogo  />
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Typography variant="h6" fontWeight="bold" sx={{ ml: 2 }}>
-                  HR Smile
-                </Typography>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <HRSmileLogo />
+          {isExpanded && (
+            <Typography variant="h6" fontWeight="bold">
+              HR Smile
+            </Typography>
+          )}
         </Box>
-        {/* <IconButton
-          onClick={() => setIsExpanded(!isExpanded)}
-          sx={{
-            color: "white",
-            "&:hover": {
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-            },
-          }}
-        >
-          {isExpanded ? <ChevronLeft /> : <ChevronRight />}
-        </IconButton> */}
       </Box>
 
       {/* User Info */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+      {isExpanded && (
+        <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Box
               sx={{
-                p: 2,
-                bgcolor: theme.palette.grey[50],
-                borderBottom: `1px solid ${theme.palette.divider}`,
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                bgcolor: theme.palette.primary.main,
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: theme.palette.primary.main,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                    fontWeight: "bold",
-                    mr: 2,
-                  }}
-                >
-                  {user?.username?.charAt(0)?.toUpperCase() || "U"}
-                </Box>
-                <Box>
-                  <Typography variant="body2" fontWeight="medium">
-                    {user?.username || "User"}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {user?.role || "Employee"}
-                  </Typography>
-                </Box>
-              </Box>
+              {user?.username?.charAt(0)?.toUpperCase() || "U"}
             </Box>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Box>
+              <Typography variant="body2" fontWeight={600}>
+                {user?.username || "User"}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {user?.role || "Employee"}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
 
       {/* Navigation */}
       <Box sx={{ flexGrow: 1, py: 1 }}>
         {Object.entries(groupedRoutes).map(([category, categoryRoutes]) => (
-          <Box key={category}>
-            <AnimatePresence>
-              {isExpanded && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      px: 2,
-                      py: 1,
-                      color: "text.secondary",
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                      display: "block",
-                    }}
-                  >
-                    {category}
-                  </Typography>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <Box key={category} sx={{ mb: 1 }}>
+            {isExpanded && (
+              <Typography
+                variant="overline"
+                sx={{
+                  px: 2,
+                  color: "text.secondary",
+                  fontWeight: 600,
+                  letterSpacing: 0.8,
+                }}
+              >
+                {category}
+              </Typography>
+            )}
             <List sx={{ py: 0 }}>
-              {categoryRoutes.map((route, index) => (
+              {categoryRoutes.map((route) => (
                 <NavItem
                   key={route.path}
                   route={route}
@@ -386,12 +269,48 @@ function Sidebar() {
                 />
               ))}
             </List>
-            {category !== "Other" && <Divider sx={{ mx: 2, my: 1 }} />}
+            <Divider sx={{ mx: 2, opacity: 0.3 }} />
           </Box>
         ))}
       </Box>
+    </>
+  )
 
-      
+  // For mobile, use temporary drawer
+  if (isMobile) {
+    return (
+      <Drawer
+        variant="temporary"
+        open={open}
+        onClose={onClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            boxSizing: 'border-box',
+          },
+        }}
+      >
+        {sidebarContent}
+      </Drawer>
+    )
+  }
+
+  // For desktop, use permanent drawer
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: 240,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: 240,
+          boxSizing: 'border-box',
+          borderRight: `1px solid ${theme.palette.divider}`,
+        },
+      }}
+    >
+      {sidebarContent}
     </Drawer>
   )
 }

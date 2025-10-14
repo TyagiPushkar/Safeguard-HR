@@ -158,7 +158,7 @@ const NotificationCard = ({ notification, index, onView, onEdit, onDelete, isHR 
             </Box>
             <Box sx={{ display: "flex", gap: 0.5 }}>
               <Tooltip title="View Details">
-                <IconButton size="small" color="#8d0638ff" onClick={() => onView(notification)}>
+                <IconButton size="small" sx={{color:"#8d0638ff"}} onClick={() => onView(notification)}>
                   <Visibility fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -337,7 +337,7 @@ function ViewNotifications() {
       {/* Header */}
       <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h4" fontWeight="bold" color="#8d0638ff">
+          <Typography variant="h4" fontWeight="bold" sx={{color:"#8d0638ff"}}>
             Notification Center
           </Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -603,7 +603,7 @@ function ViewNotifications() {
                           <TableCell>
                             <Box sx={{ display: "flex", gap: 0.5 }}>
                               <Tooltip title="View">
-                                <IconButton size="small" color="#8d0638ff" onClick={() => handleView(notification)}>
+                                <IconButton size="small" sx={{color:"#8d0638ff"}} onClick={() => handleView(notification)}>
                                   <Visibility fontSize="small" />
                                 </IconButton>
                               </Tooltip>
@@ -643,13 +643,13 @@ function ViewNotifications() {
       {user?.role === "HR" && (
         <Zoom in={true}>
           <Fab
-            color="#8d0638ff"
             onClick={handleOpenDialog}
             sx={{
               position: "fixed",
               bottom: 16,
               right: 16,
               zIndex: theme.zIndex.speedDial,
+              color:"#8d0638ff"
             }}
           >
             <Add />

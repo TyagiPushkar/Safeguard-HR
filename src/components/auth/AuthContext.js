@@ -4,19 +4,26 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // Loading state to handle initialization
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load user from localStorage on initialization
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const initializeAuth = async () => {
             try {
-                setUser(JSON.parse(storedUser)); // Only parse if valid JSON
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    // Optional: Add token validation here
+                    setUser(userData);
+                }
             } catch (error) {
-                console.error("Failed to parse stored user data:", error);
+                console.error("Auth initialization error:", error);
+                localStorage.removeItem('user');
+            } finally {
+                setLoading(false);
             }
-        }
-        setLoading(false); // Set loading to false after checking localStorage
+        };
+
+        initializeAuth();
     }, []);
 
     const login = (userData) => {
@@ -30,12 +37,22 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            login, 
+            logout, 
+            loading,
+            isAuthenticated: !!user 
+        }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 }

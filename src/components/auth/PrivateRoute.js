@@ -3,10 +3,10 @@ import { useAuth } from './AuthContext';
 import { Navigate } from 'react-router-dom';
 
 const PrivateRoute = ({ children, requiredRole }) => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth(); // Change isLoading to loading
 
-  if (isLoading) {
-    return <div>Loading...</div>; // Or your loading component
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
   if (!user) {

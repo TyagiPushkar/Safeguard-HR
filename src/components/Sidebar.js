@@ -202,44 +202,12 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <HRSmileLogo />
-          {isExpanded && (
-            <Typography variant="h6" fontWeight="bold">
-              HR Smile
-            </Typography>
-          )}
+          
         </Box>
       </Box>
 
       {/* User Info */}
-      {isExpanded && (
-        <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                bgcolor: theme.palette.primary.main,
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-              }}
-            >
-              {user?.username?.charAt(0)?.toUpperCase() || "U"}
-            </Box>
-            <Box>
-              <Typography variant="body2" fontWeight={600}>
-                {user?.username || "User"}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {user?.role || "Employee"}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      )}
+     
 
       {/* Navigation */}
       <Box sx={{ flexGrow: 1, py: 1 }}>

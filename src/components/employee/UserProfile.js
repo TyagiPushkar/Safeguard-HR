@@ -183,25 +183,7 @@ const UserProfile = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <Box sx={{ maxWidth: 1200, margin: "auto" }}>
           {/* Header */}
-          <Box sx={{ textAlign: "center", mb: 6 }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: "bold",
-                background: "linear-gradient(45deg, #8d0638, #c2185b)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: 2,
-              }}
-            >
-              User Profile
-            </Typography>
-            <Typography variant="h6" color="text.secondary">
-              Manage your account settings and security preferences
-            </Typography>
-          </Box>
-
+          
           <Grid container spacing={4}>
             {/* Profile Card */}
             <Grid item xs={12} lg={4}>

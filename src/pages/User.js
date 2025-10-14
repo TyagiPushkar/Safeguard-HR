@@ -6,7 +6,7 @@ import EmployeeProfile from '../components/employee/UserProfile';
 
 function EmpProfile() {
     return (
-        <PageWrapper title="Policy Management">
+        <PageWrapper title="Profile">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <EmployeeProfile />
             </Box>

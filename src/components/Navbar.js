@@ -150,11 +150,7 @@ function Navbar({ onMenuClick }) { // Add onMenuClick prop for mobile
                 sx={{ ml: 2, display: { xs: 'none', sm: 'flex' } }}
                 aria-label="breadcrumb"
               >
-                <Link to="/dashboard" style={{ textDecoration: "none" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Home
-                  </Typography>
-                </Link>
+               
                 {breadcrumbs.map((b) => (
                   <Typography
                     key={b.path}
@@ -176,48 +172,12 @@ function Navbar({ onMenuClick }) { // Add onMenuClick prop for mobile
           </Box>
 
           {/* Center - Search */}
-          {!isMobile && (
-            <TextField
-              size="small"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 3,
-                  bgcolor: theme.palette.action.hover,
-                  "&:hover": { bgcolor: theme.palette.action.selected },
-                  "&.Mui-focused": { bgcolor: "background.paper" },
-                },
-                width: 280,
-              }}
-            />
-          )}
+         
 
           {/* Right */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {/* Dark / Light */}
-            <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
-              <IconButton onClick={() => setDarkMode(!darkMode)}>
-                {darkMode ? <LightMode /> : <DarkMode />}
-              </IconButton>
-            </Tooltip>
-
-            {/* Notifications */}
-            <Tooltip title="Notifications">
-              <IconButton onClick={(e) => setNotificationAnchor(e.currentTarget)}>
-                <Badge badgeContent={unreadCount} color="error">
-                  <Notifications />
-                </Badge>
-              </IconButton>
-            </Tooltip>
+            
 
             {/* Profile */}
             <Tooltip title="Account">
@@ -258,9 +218,7 @@ function Navbar({ onMenuClick }) { // Add onMenuClick prop for mobile
         <MenuItem onClick={() => navigate("/profile")}>
           <Person fontSize="small" sx={{ mr: 1 }} /> Profile
         </MenuItem>
-        <MenuItem onClick={() => navigate("/settings")}>
-          <Settings fontSize="small" sx={{ mr: 1 }} /> Settings
-        </MenuItem>
+       
         <Divider />
         <MenuItem onClick={() => { logout(); navigate("/") }} sx={{ color: "error.main" }}>
           <ExitToApp fontSize="small" sx={{ mr: 1 }} /> Logout

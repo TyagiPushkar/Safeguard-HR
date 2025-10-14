@@ -846,9 +846,7 @@ const AttendanceList = () => {
     gap={1.5}
   >
     {/* Title */}
-    <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
-      Attendance
-    </Typography>
+    
 
     {/* Filters & Buttons */}
     <Grid container spacing={1.5} alignItems="center">

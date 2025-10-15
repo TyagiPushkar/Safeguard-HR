@@ -21,11 +21,154 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
+  Paper,
+  alpha,
+  Avatar,
+  Grid,
+  CircularProgress
 } from "@mui/material"
-import { PictureAsPdf, Done, Close, Add, Policy, Visibility } from "@mui/icons-material"
+import { PictureAsPdf, Done, Close, Add, Policy, Visibility, Description } from "@mui/icons-material"
+import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 import AddPolicyDialog from "./AddPolicy"
 import { useAuth } from "../auth/AuthContext"
+
+// Compact Stats Card Component
+const StatsCard = ({ title, value, color, icon }) => {
+  const theme = useTheme()
+
+  return (
+    <Card
+      component={motion.div}
+      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+      sx={{
+        height: "100%",
+        borderLeft: `3px solid ${color}`,
+        background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.04)} 100%)`,
+        borderRadius: 2,
+      }}
+    >
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight="500" sx={{ fontSize: '0.75rem' }}>
+              {title}
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color={color} sx={{ fontSize: '1.25rem', lineHeight: 1.2 }}>
+              {value}
+            </Typography>
+          </Box>
+          <Avatar 
+            sx={{ 
+              bgcolor: alpha(color, 0.1), 
+              color: color, 
+              width: 36, 
+              height: 36,
+              fontSize: '1rem'
+            }}
+          >
+            {icon}
+          </Avatar>
+        </Box>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Policy Card for Mobile View
+const PolicyCard = ({ policy, onView, onToggle, isHR }) => {
+  const theme = useTheme()
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card
+        sx={{
+          mb: 2,
+          borderLeft: `3px solid ${policy.IsActive ? theme.palette.success.main : theme.palette.error.main}`,
+          borderRadius: 2,
+          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.9)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+          "&:hover": {
+            boxShadow: theme.shadows[4],
+            transform: "translateY(-2px)",
+            transition: "all 0.2s ease-in-out",
+          },
+        }}
+      >
+        <CardContent sx={{ p: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}>
+            <Box sx={{ display: "flex", alignItems: "flex-start", flexGrow: 1, gap: 1.5 }}>
+              <Avatar sx={{ 
+                bgcolor: alpha(theme.palette.primary.main, 0.1), 
+                color: theme.palette.primary.main, 
+                width: 32, 
+                height: 32 
+              }}>
+                <Description fontSize="small" />
+              </Avatar>
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem', lineHeight: 1.3 }}>
+                  {policy.PolicyName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>
+                  {policy.PolicyDescription}
+                </Typography>
+              </Box>
+            </Box>
+            <Chip
+              label={policy.IsActive ? "Active" : "Inactive"}
+              size="small"
+              color={policy.IsActive ? "success" : "error"}
+              sx={{ height: 24, fontSize: '0.7rem' }}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1.5 }}>
+            <Tooltip title="View PDF">
+              <Button
+                startIcon={<PictureAsPdf />}
+                onClick={() => onView(policy.PolicyPDF)}
+                size="small"
+                sx={{ 
+                  borderRadius: 2,
+                  fontSize: '0.75rem',
+                  bgcolor: alpha("#8d0638ff", 0.1),
+                  color: "#8d0638ff",
+                  "&:hover": {
+                    bgcolor: alpha("#8d0638ff", 0.2),
+                  }
+                }}
+              >
+                View PDF
+              </Button>
+            </Tooltip>
+
+            {isHR && (
+              <Tooltip title={policy.IsActive ? "Deactivate" : "Activate"}>
+                <IconButton
+                  onClick={() => onToggle(policy.Id, policy.IsActive ? "disable" : "enable")}
+                  size="small"
+                  sx={{
+                    bgcolor: policy.IsActive ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.success.main, 0.1),
+                    color: policy.IsActive ? theme.palette.error.main : theme.palette.success.main,
+                    "&:hover": {
+                      bgcolor: policy.IsActive ? alpha(theme.palette.error.main, 0.2) : alpha(theme.palette.success.main, 0.2),
+                    }
+                  }}
+                >
+                  {policy.IsActive ? <Close fontSize="small" /> : <Done fontSize="small" />}
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
 
 function PolicyList() {
   const { user } = useAuth()
@@ -128,188 +271,267 @@ function PolicyList() {
 
   const stats = getPolicyStats()
 
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+        <CircularProgress size={60} thickness={4} />
+      </Box>
+    )
+  }
+
   return (
-    <Card sx={{ boxShadow: 3 }}>
-      <CardContent>
-        {/* Header */}
-        <Box sx={{ mb: 3 }}>
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            justifyContent="space-between"
-            alignItems={isMobile ? "stretch" : "center"}
-            spacing={2}
-          >
-            <Box>
-              <Typography variant="h5" component="h2" sx={{ color: "primary.main", fontWeight: 600, mb: 1 }}>
-                <Policy sx={{ mr: 1, verticalAlign: "middle" }} />
-                Company Policies
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Manage and view company policies and documents
-              </Typography>
-            </Box>
-            {user && user.role === "HR" && (
-              <Button
-                variant="contained"
-                onClick={handleOpenDialog}
-                startIcon={<Add />}
-                sx={{
-                  bgcolor: "primary.main",
-                  "&:hover": { bgcolor: "primary.dark" },
-                  minWidth: 150,
-                }}
-              >
-                Add Policy
-              </Button>
-            )}
-          </Stack>
+    <Box sx={{ p: { xs: 1, md: 2 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+      {/* Header */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2.5, 
+          mb: 2, 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+          <Box>
+            <Typography variant="h5" fontWeight="700" color="#8d0638ff" gutterBottom>
+              Company Policies
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage and view company policies and documents
+            </Typography>
+          </Box>
+          {user && user.role === "HR" && (
+            <Button
+              variant="contained"
+              onClick={handleOpenDialog}
+              startIcon={<Add />}
+              size="small"
+              sx={{ 
+                borderRadius: 2,
+                bgcolor: "#8d0638ff",
+                "&:hover": {
+                  bgcolor: "#6d0430ff",
+                }
+              }}
+            >
+              Add Policy
+            </Button>
+          )}
         </Box>
 
         {/* Stats Cards for HR */}
         {user && user.role === "HR" && policies.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Stack direction={isMobile ? "column" : "row"} spacing={2}>
-              <Card sx={{ flex: 1, bgcolor: "primary.50", border: "1px solid", borderColor: "primary.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="primary.main" fontWeight="bold">
-                    {stats.total}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Policies
-                  </Typography>
-                </CardContent>
-              </Card>
-              <Card sx={{ flex: 1, bgcolor: "success.50", border: "1px solid", borderColor: "success.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="success.main" fontWeight="bold">
-                    {stats.active}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Active
-                  </Typography>
-                </CardContent>
-              </Card>
-              <Card sx={{ flex: 1, bgcolor: "error.50", border: "1px solid", borderColor: "error.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="error.main" fontWeight="bold">
-                    {stats.inactive}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Inactive
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Stack>
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            <Grid item xs={4}>
+              <StatsCard
+                title="Total Policies"
+                value={stats.total}
+                color={theme.palette.primary.main}
+                icon={<Policy />}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <StatsCard
+                title="Active"
+                value={stats.active}
+                color={theme.palette.success.main}
+                icon={<Done />}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <StatsCard
+                title="Inactive"
+                value={stats.inactive}
+                color={theme.palette.error.main}
+                icon={<Close />}
+              />
+            </Grid>
+          </Grid>
+        )}
+      </Paper>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2, 
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.error.light}`,
+          }} 
+          onClose={() => setError("")}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Main Content */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          overflow: 'hidden'
+        }}
+      >
+        {filteredPolicies.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 6 }}>
+            <Policy sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No Policies Available
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {user?.role === "HR" ? "Add your first company policy to get started." : "No active policies at the moment."}
+            </Typography>
           </Box>
-        )}
-
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Table */}
-        {filteredPolicies.length === 0 && !loading ? (
-          <Alert severity="info">No policies available.</Alert>
+        ) : isMobile ? (
+          // Card View for Mobile
+          <Box sx={{ p: 2 }}>
+            <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
+              Policies ({filteredPolicies.length})
+            </Typography>
+            <AnimatePresence>
+              {filteredPolicies
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((policy) => (
+                  <PolicyCard
+                    key={policy.PolicyId}
+                    policy={policy}
+                    onView={handleViewPDF}
+                    onToggle={handleTogglePolicyStatus}
+                    isHR={user?.role === "HR"}
+                  />
+                ))}
+            </AnimatePresence>
+          </Box>
         ) : (
+          // Table View for Desktop
           <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "primary.main" }}>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>Policy Name</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>Description</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>Status</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Visibility fontSize="small" />
+            <Table sx={{ minWidth: 650 }} size="small">
+              <TableHead sx={{ bgcolor: "#8d0638ff" }}>
+                <TableRow>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Description sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                      Policy Name
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Description</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Status</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Visibility sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       View
                     </Box>
                   </TableCell>
                   {user && user.role === "HR" && (
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Actions</TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>
                   )}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredPolicies.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((policy) => (
-                  <TableRow
-                    key={policy.PolicyId}
-                    sx={{
-                      "&:hover": { bgcolor: "action.hover" },
-                      "&:nth-of-type(odd)": { bgcolor: "action.selected" },
-                    }}
-                  >
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
-                        {policy.PolicyName}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
+                <AnimatePresence>
+                  {filteredPolicies
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((policy, index) => (
+                      <motion.tr
+                        key={policy.PolicyId}
+                        component={TableRow}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
                         sx={{
-                          maxWidth: 300,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                          },
                         }}
                       >
-                        {policy.PolicyDescription}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={policy.IsActive ? "Active" : "Inactive"}
-                        size="small"
-                        color={policy.IsActive ? "success" : "error"}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="View PDF">
-                        <IconButton
-                          onClick={() => handleViewPDF(policy.PolicyPDF)}
-                          color="#8d0638ff"
-                          sx={{
-                            "&:hover": { bgcolor: "primary.50" },
-                          }}
-                        >
-                          <PictureAsPdf />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                    {user && user.role === "HR" && (
-                      <TableCell>
-                        {policy.IsActive ? (
-                          <Tooltip title="Deactivate Policy">
+                        <TableCell sx={{ py: 1 }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Avatar sx={{ 
+                              mr: 1.5, 
+                              width: 28, 
+                              height: 28, 
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              color: theme.palette.primary.main,
+                              fontSize: '0.8rem'
+                            }}>
+                              <Description fontSize="small" />
+                            </Avatar>
+                            <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem' }}>
+                              {policy.PolicyName}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ py: 1 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              maxWidth: 300,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              fontSize: '0.8rem'
+                            }}
+                          >
+                            {policy.PolicyDescription}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ py: 1 }}>
+                          <Chip
+                            label={policy.IsActive ? "Active" : "Inactive"}
+                            size="small"
+                            color={policy.IsActive ? "success" : "error"}
+                            sx={{ height: 24, fontSize: '0.7rem' }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ py: 1 }}>
+                          <Tooltip title="View PDF">
                             <IconButton
-                              onClick={() => handleTogglePolicyStatus(policy.Id, "disable")}
-                              color="error"
+                              onClick={() => handleViewPDF(policy.PolicyPDF)}
+                              size="small"
                               sx={{
-                                "&:hover": { bgcolor: "error.50" },
+                                color: "#8d0638ff",
+                                bgcolor: alpha("#8d0638ff", 0.1),
+                                "&:hover": {
+                                  bgcolor: alpha("#8d0638ff", 0.2),
+                                }
                               }}
                             >
-                              <Close />
+                              <PictureAsPdf fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                        ) : (
-                          <Tooltip title="Activate Policy">
-                            <IconButton
-                              onClick={() => handleTogglePolicyStatus(policy.Id, "enable")}
-                              color="success"
-                              sx={{
-                                "&:hover": { bgcolor: "success.50" },
-                              }}
-                            >
-                              <Done />
-                            </IconButton>
-                          </Tooltip>
+                        </TableCell>
+                        {user && user.role === "HR" && (
+                          <TableCell sx={{ py: 1 }}>
+                            <Tooltip title={policy.IsActive ? "Deactivate" : "Activate"}>
+                              <IconButton
+                                onClick={() => handleTogglePolicyStatus(policy.Id, policy.IsActive ? "disable" : "enable")}
+                                size="small"
+                                sx={{
+                                  bgcolor: policy.IsActive ? 
+                                    alpha(theme.palette.error.main, 0.1) : 
+                                    alpha(theme.palette.success.main, 0.1),
+                                  color: policy.IsActive ? 
+                                    theme.palette.error.main : 
+                                    theme.palette.success.main,
+                                  "&:hover": {
+                                    bgcolor: policy.IsActive ? 
+                                      alpha(theme.palette.error.main, 0.2) : 
+                                      alpha(theme.palette.success.main, 0.2),
+                                  }
+                                }}
+                              >
+                                {policy.IsActive ? <Close fontSize="small" /> : <Done fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
                         )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      </motion.tr>
+                    ))}
+                </AnimatePresence>
               </TableBody>
             </Table>
           </TableContainer>
@@ -325,18 +547,17 @@ function PolicyList() {
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[5, 10, 25]}
-            sx={{
-              "& .MuiTablePagination-toolbar": {
-                bgcolor: "grey.50",
-              },
+            sx={{ 
+              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: '0.8rem' },
+              borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`
             }}
           />
         )}
+      </Paper>
 
-        {/* Add Policy Dialog */}
-        <AddPolicyDialog open={dialogOpen} onClose={handleCloseDialog} onPolicyAdded={handlePolicyAdded} />
-      </CardContent>
-    </Card>
+      {/* Add Policy Dialog */}
+      <AddPolicyDialog open={dialogOpen} onClose={handleCloseDialog} onPolicyAdded={handlePolicyAdded} />
+    </Box>
   )
 }
 

@@ -28,6 +28,7 @@ import {
   ListItemAvatar,
   Divider,
   Stack,
+  alpha,
 } from "@mui/material"
 import {
   Event,
@@ -53,7 +54,7 @@ import { useAuth } from "../auth/AuthContext"
 
 const localizer = momentLocalizer(moment)
 
-// Stats Card Component
+// Compact Stats Card Component
 const StatsCard = ({ icon, title, value, color, subtitle }) => {
   const theme = useTheme()
 
@@ -61,32 +62,43 @@ const StatsCard = ({ icon, title, value, color, subtitle }) => {
     <Card
       component={motion.div}
       whileHover={{
-        translateY: -5,
-        boxShadow: theme.shadows[8],
+        translateY: -2,
+        boxShadow: theme.shadows[4],
         transition: { duration: 0.2 },
       }}
       sx={{
         height: "100%",
-        borderLeft: `4px solid ${color}`,
-        background: `linear-gradient(135deg, ${color}10 0%, ${color}05 100%)`,
+        borderLeft: `3px solid ${color}`,
+        background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.04)} 100%)`,
+        borderRadius: 2,
       }}
     >
-      <CardContent>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight="500" gutterBottom sx={{ fontSize: '0.75rem' }}>
               {title}
             </Typography>
-            <Typography variant="h4" fontWeight="bold" color={color}>
+            <Typography variant="h6" fontWeight="bold" color={color} sx={{ fontSize: '1.25rem', lineHeight: 1.2 }}>
               {value}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                 {subtitle}
               </Typography>
             )}
           </Box>
-          <Avatar sx={{ bgcolor: `${color}20`, color: color, width: 48, height: 48 }}>{icon}</Avatar>
+          <Avatar 
+            sx={{ 
+              bgcolor: alpha(color, 0.1), 
+              color: color, 
+              width: 36, 
+              height: 36,
+              fontSize: '1rem'
+            }}
+          >
+            {icon}
+          </Avatar>
         </Box>
       </CardContent>
     </Card>
@@ -107,39 +119,58 @@ const HolidayListItem = ({ holiday, index }) => {
         sx={{
           borderRadius: 2,
           mb: 1,
+          p: 1.5,
           bgcolor: "background.paper",
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           "&:hover": {
-            bgcolor: theme.palette.action.hover,
+            bgcolor: alpha(theme.palette.primary.main, 0.02),
             transform: "translateX(4px)",
             transition: "all 0.2s ease",
+            borderColor: alpha(theme.palette.primary.main, 0.2),
           },
         }}
       >
         <ListItemAvatar>
-          <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-            <Celebration />
+          <Avatar 
+            sx={{ 
+              bgcolor: alpha(theme.palette.primary.main, 0.1), 
+              color: theme.palette.primary.main,
+              width: 32,
+              height: 32
+            }}
+          >
+            <Celebration fontSize="small" />
           </Avatar>
         </ListItemAvatar>
         <ListItemText
           primary={
-            <Typography variant="subtitle1" fontWeight="medium">
+            <Typography variant="subtitle2" fontWeight="600">
               {holiday.title}
             </Typography>
           }
           secondary={
-            <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
-              <CalendarMonth fontSize="small" sx={{ mr: 0.5, color: "text.secondary" }} />
-              <Typography variant="body2" color="text.secondary">
-                {moment(holiday.start).format("MMMM DD, YYYY")}
+            <Box sx={{ display: "flex", alignItems: "center", mt: 0.5, flexWrap: 'wrap', gap: 0.5 }}>
+              <CalendarMonth fontSize="small" sx={{ mr: 0.5, color: "text.secondary", fontSize: '0.8rem' }} />
+              <Typography variant="caption" color="text.secondary">
+                {moment(holiday.start).format("MMM DD, YYYY")}
               </Typography>
               <Chip
-                label={moment(holiday.start).format("dddd")}
+                label={moment(holiday.start).format("ddd")}
                 size="small"
                 variant="outlined"
-                sx={{ ml: 1 }}
+                sx={{ 
+                  height: 20, 
+                  fontSize: '0.7rem',
+                  borderColor: alpha(theme.palette.primary.main, 0.3),
+                  color: theme.palette.primary.main
+                }}
               />
             </Box>
           }
+          sx={{ 
+            '& .MuiListItemText-primary': { mb: 0.5 },
+            '& .MuiListItemText-secondary': { mt: 0 }
+          }}
         />
       </ListItem>
     </motion.div>
@@ -228,17 +259,39 @@ function ViewHoliday() {
   }
 
   return (
-    <Box sx={{ p: { xs: 0, md: 0 }, bgcolor: "#f5f7fa", minHeight: "100vh" }}>
+    <Box sx={{ p: { xs: 1, md: 2 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
       {/* Header */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2.5, 
+          mb: 2, 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        }}
+      >
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h4" fontWeight="bold" color="#8d0638ff">
-            Holiday Calendar
-          </Typography>
+          <Box>
+            <Typography variant="h5" fontWeight="700" color="#8d0638ff" gutterBottom>
+              Holiday Calendar
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage and view company holidays
+            </Typography>
+          </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
             <Tooltip title="Refresh Data">
-              <IconButton onClick={handleRefresh} disabled={refreshing}>
-                {refreshing ? <CircularProgress size={20} /> : <Refresh />}
+              <IconButton 
+                onClick={handleRefresh} 
+                disabled={refreshing}
+                size="small"
+                sx={{
+                  border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                  bgcolor: 'white'
+                }}
+              >
+                {refreshing ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
               </IconButton>
             </Tooltip>
             <Button
@@ -246,6 +299,7 @@ function ViewHoliday() {
               startIcon={<ViewModule />}
               onClick={() => setViewMode("calendar")}
               size="small"
+              sx={{ borderRadius: 2 }}
             >
               Calendar
             </Button>
@@ -254,6 +308,7 @@ function ViewHoliday() {
               startIcon={<ViewList />}
               onClick={() => setViewMode("list")}
               size="small"
+              sx={{ borderRadius: 2 }}
             >
               List
             </Button>
@@ -261,7 +316,7 @@ function ViewHoliday() {
         </Box>
 
         {/* Controls */}
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={1.5} alignItems="center">
           <Grid item xs={12} sm={6} md={4}>
             <LocalizationProvider dateAdapter={AdapterLuxon}>
               <DatePicker
@@ -271,11 +326,17 @@ function ViewHoliday() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Select Month and Year"
+                    label="Select Month & Year"
                     fullWidth
+                    size="small"
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: <CalendarMonth sx={{ mr: 1, color: "text.secondary" }} />,
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                      }
                     }}
                   />
                 )}
@@ -284,8 +345,14 @@ function ViewHoliday() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <Button variant="outlined" startIcon={<Download />} fullWidth>
-              Export Calendar
+            <Button 
+              variant="outlined" 
+              startIcon={<Download />} 
+              fullWidth
+              size="small"
+              sx={{ borderRadius: 2, py: 1 }}
+            >
+              Export
             </Button>
           </Grid>
 
@@ -296,7 +363,15 @@ function ViewHoliday() {
                 startIcon={<Add />}
                 onClick={() => setDialogOpen(true)}
                 fullWidth
-                sx={{ bgcolor: "#8d0638ff" }}
+                size="small"
+                sx={{ 
+                  borderRadius: 2, 
+                  py: 1,
+                  bgcolor: "#8d0638ff",
+                  "&:hover": {
+                    bgcolor: "#6d0430ff",
+                  }
+                }}
               >
                 Add Holiday
               </Button>
@@ -307,14 +382,22 @@ function ViewHoliday() {
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2, 
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.error.light}`,
+          }} 
+          onClose={() => setError("")}
+        >
           {error}
         </Alert>
       )}
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      {/* Compact Stats Cards */}
+      <Grid container spacing={1.5} sx={{ mb: 2 }}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<Event />}
             title="Total Holidays"
@@ -323,16 +406,16 @@ function ViewHoliday() {
             subtitle="This year"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<CalendarMonth />}
             title="This Month"
             value={thisMonthHolidays}
             color={theme.palette.success.main}
-            subtitle={selectedDate.toFormat("MMMM yyyy")}
+            subtitle={selectedDate.toFormat("MMM yyyy")}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<EventAvailable />}
             title="Upcoming"
@@ -341,7 +424,7 @@ function ViewHoliday() {
             subtitle="Future holidays"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<Today />}
             title="Next Holiday"
@@ -359,43 +442,59 @@ function ViewHoliday() {
       </Grid>
 
       {/* Main Content */}
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {/* Calendar/List View */}
-        <Grid item xs={12} md={8}>
-          <Paper elevation={2} sx={{ borderRadius: 2, height: 600 }}>
+        <Grid item xs={12} lg={8}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2, 
+              height: 550,
+              background: 'white',
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              overflow: 'hidden'
+            }}
+          >
             {viewMode === "calendar" ? (
               <Box sx={{ p: 2, height: "100%" }}>
-                <Typography variant="h6" gutterBottom>
-                  Holiday Calendar - {selectedDate.toFormat("MMMM yyyy")}
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
+                  {selectedDate.toFormat("MMMM yyyy")} Calendar
                 </Typography>
                 <Box
                   sx={{
-                    height: "calc(100% - 40px)",
+                    height: "calc(100% - 32px)",
                     borderRadius: 1,
                     overflow: "hidden",
                     "& .rbc-calendar": {
                       height: "100%",
+                      fontFamily: 'inherit',
                     },
                     "& .rbc-event": {
-                      backgroundColor: theme.palette.primary.main,
+                      backgroundColor: "#8d0638ff",
                       borderRadius: "4px",
                       border: "none",
                       color: "white",
-                      fontSize: "0.875rem",
+                      fontSize: "0.75rem",
                       fontWeight: 500,
+                      padding: '2px 4px',
                     },
                     "& .rbc-today": {
-                      backgroundColor: `${theme.palette.primary.light}20`,
+                      backgroundColor: `${alpha("#8d0638ff", 0.08)}`,
                     },
                     "& .rbc-header": {
-                      backgroundColor: theme.palette.primary.main,
+                      backgroundColor: alpha("#8d0638ff", 0.9),
                       color: "white",
-                      fontWeight: "bold",
-                      padding: "8px",
+                      fontWeight: "600",
+                      padding: "6px",
+                      fontSize: '0.8rem',
                     },
                     "& .rbc-month-view": {
-                      border: `1px solid ${theme.palette.divider}`,
+                      border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
                       borderRadius: "8px",
+                    },
+                    "& .rbc-date-cell": {
+                      fontSize: '0.8rem',
+                      padding: '4px',
                     },
                   }}
                 >
@@ -412,11 +511,11 @@ function ViewHoliday() {
                     popup
                     eventPropGetter={(event) => ({
                       style: {
-                        backgroundColor: theme.palette.primary.main,
+                        backgroundColor: "#8d0638ff",
                         borderRadius: "4px",
                         border: "none",
                         color: "white",
-                        fontSize: "0.875rem",
+                        fontSize: "0.75rem",
                         fontWeight: 500,
                       },
                     })}
@@ -425,10 +524,10 @@ function ViewHoliday() {
               </Box>
             ) : (
               <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
                   Holidays in {selectedDate.toFormat("MMMM yyyy")}
                 </Typography>
-                <List sx={{ height: "calc(100% - 40px)", overflow: "auto" }}>
+                <List sx={{ height: "calc(100% - 32px)", overflow: "auto", p: 0 }}>
                   <AnimatePresence>
                     {currentMonthHolidays.map((holiday, index) => (
                       <HolidayListItem key={holiday.id || index} holiday={holiday} index={index} />
@@ -436,7 +535,7 @@ function ViewHoliday() {
                   </AnimatePresence>
                   {currentMonthHolidays.length === 0 && (
                     <Box sx={{ textAlign: "center", py: 4 }}>
-                      <Typography variant="body1" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary">
                         No holidays found for {selectedDate.toFormat("MMMM yyyy")}
                       </Typography>
                     </Box>
@@ -448,71 +547,92 @@ function ViewHoliday() {
         </Grid>
 
         {/* Sidebar */}
-        <Grid item xs={12} md={4}>
-          <Stack spacing={3}>
+        <Grid item xs={12} lg={4}>
+          <Stack spacing={2}>
             {/* Quick Info Card */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                  <Celebration sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: 2,
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ display: "flex", alignItems: "center", fontSize: '0.9rem' }}>
+                  <Celebration sx={{ mr: 1, color: theme.palette.primary.main, fontSize: '1.1rem' }} />
                   Quick Info
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Current Month
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold">
-                    {selectedDate.toFormat("MMMM yyyy")}
-                  </Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Holidays This Month
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="#8d0638ff">
-                    {thisMonthHolidays}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Working Days
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="success.main">
-                    {selectedDate.daysInMonth - thisMonthHolidays}
-                  </Typography>
-                </Box>
+                <Stack spacing={1.5}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="500">
+                      Current Month
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {selectedDate.toFormat("MMMM yyyy")}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="500">
+                      Holidays This Month
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600" color="#8d0638ff">
+                      {thisMonthHolidays}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="500">
+                      Working Days
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600" color="success.main">
+                      {selectedDate.daysInMonth - thisMonthHolidays}
+                    </Typography>
+                  </Box>
+                </Stack>
               </CardContent>
             </Card>
 
             {/* Upcoming Holidays */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                  <EventAvailable sx={{ mr: 1, color: theme.palette.warning.main }} />
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: 2,
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ display: "flex", alignItems: "center", fontSize: '0.9rem' }}>
+                  <EventAvailable sx={{ mr: 1, color: theme.palette.warning.main, fontSize: '1.1rem' }} />
                   Upcoming Holidays
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
-                <List sx={{ maxHeight: 300, overflow: "auto" }}>
+                <List sx={{ maxHeight: 200, overflow: "auto", p: 0 }}>
                   {holidays
                     .filter((holiday) => moment(holiday.start).isAfter(moment()))
-                    .slice(0, 5)
+                    .slice(0, 4)
                     .map((holiday, index) => (
-                      <ListItem key={index} sx={{ px: 0 }}>
+                      <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
                         <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: theme.palette.warning.main, width: 32, height: 32 }}>
+                          <Avatar 
+                            sx={{ 
+                              bgcolor: alpha(theme.palette.warning.main, 0.1), 
+                              color: theme.palette.warning.main,
+                              width: 28, 
+                              height: 28 
+                            }}
+                          >
                             <Event fontSize="small" />
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText
                           primary={
-                            <Typography variant="body2" fontWeight="medium">
+                            <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem' }}>
                               {holiday.title}
                             </Typography>
                           }
                           secondary={
                             <Typography variant="caption" color="text.secondary">
-                              {moment(holiday.start).format("MMM DD, YYYY")} ({moment(holiday.start).fromNow()})
+                              {moment(holiday.start).format("MMM DD")} • {moment(holiday.start).fromNow()}
                             </Typography>
                           }
                         />
@@ -521,8 +641,11 @@ function ViewHoliday() {
                   {upcomingHolidays === 0 && (
                     <ListItem sx={{ px: 0 }}>
                       <ListItemText
-                        primary="No upcoming holidays"
-                        secondary="All holidays for this year have passed"
+                        primary={
+                          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                            No upcoming holidays
+                          </Typography>
+                        }
                       />
                     </ListItem>
                   )}
@@ -531,37 +654,45 @@ function ViewHoliday() {
             </Card>
 
             {/* Calendar Legend */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: 2,
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
                   Legend
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      bgcolor: theme.palette.primary.main,
-                      borderRadius: 1,
-                      mr: 1,
-                    }}
-                  />
-                  <Typography variant="body2">Public Holiday</Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      bgcolor: `${theme.palette.primary.light}20`,
-                      border: `1px solid ${theme.palette.primary.main}`,
-                      borderRadius: 1,
-                      mr: 1,
-                    }}
-                  />
-                  <Typography variant="body2">Today</Typography>
-                </Box>
+                <Stack spacing={1}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        bgcolor: "#8d0638ff",
+                        borderRadius: 1,
+                        mr: 1.5,
+                      }}
+                    />
+                    <Typography variant="caption" fontWeight="500">Public Holiday</Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        bgcolor: alpha("#8d0638ff", 0.1),
+                        border: `1px solid ${alpha("#8d0638ff", 0.3)}`,
+                        borderRadius: 1,
+                        mr: 1.5,
+                      }}
+                    />
+                    <Typography variant="caption" fontWeight="500">Today</Typography>
+                  </Box>
+                </Stack>
               </CardContent>
             </Card>
           </Stack>

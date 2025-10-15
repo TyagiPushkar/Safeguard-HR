@@ -27,6 +27,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  alpha,
 } from "@mui/material"
 import {
   Close,
@@ -71,16 +72,16 @@ const ImageUploadArea = ({ onImageSelect, selectedImage, onImageRemove }) => {
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       sx={{
-        border: `2px dashed ${selectedImage ? theme.palette.success.main : theme.palette.divider}`,
+        border: `2px dashed ${selectedImage ? theme.palette.success.main : alpha(theme.palette.divider, 0.5)}`,
         borderRadius: 2,
-        p: 3,
+        p: 2,
         textAlign: "center",
         cursor: "pointer",
-        transition: "all 0.3s ease",
-        bgcolor: selectedImage ? theme.palette.success.light + "10" : theme.palette.action.hover,
+        transition: "all 0.2s ease",
+        bgcolor: selectedImage ? alpha(theme.palette.success.main, 0.04) : alpha(theme.palette.action.hover, 0.5),
         "&:hover": {
           borderColor: theme.palette.primary.main,
-          bgcolor: theme.palette.primary.light + "10",
+          bgcolor: alpha(theme.palette.primary.main, 0.02),
         },
       }}
     >
@@ -92,9 +93,9 @@ const ImageUploadArea = ({ onImageSelect, selectedImage, onImageRemove }) => {
             alt="Preview"
             sx={{
               maxWidth: "100%",
-              maxHeight: 200,
+              maxHeight: 120,
               borderRadius: 1,
-              mb: 2,
+              mb: 1.5,
             }}
           />
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
@@ -103,8 +104,9 @@ const ImageUploadArea = ({ onImageSelect, selectedImage, onImageRemove }) => {
               startIcon={<CloudUpload />}
               component="label"
               size="small"
+              sx={{ fontSize: '0.75rem' }}
             >
-              Change Image
+              Change
               <input
                 type="file"
                 hidden
@@ -118,6 +120,7 @@ const ImageUploadArea = ({ onImageSelect, selectedImage, onImageRemove }) => {
               startIcon={<Delete />}
               onClick={onImageRemove}
               size="small"
+              sx={{ fontSize: '0.75rem' }}
             >
               Remove
             </Button>
@@ -125,19 +128,28 @@ const ImageUploadArea = ({ onImageSelect, selectedImage, onImageRemove }) => {
         </Box>
       ) : (
         <Box>
-          <Avatar sx={{ bgcolor: theme.palette.primary.main, mx: "auto", mb: 2, width: 56, height: 56 }}>
-            <ImageIcon />
+          <Avatar sx={{ 
+            bgcolor: alpha(theme.palette.primary.main, 0.1), 
+            color: theme.palette.primary.main, 
+            mx: "auto", 
+            mb: 1.5, 
+            width: 48, 
+            height: 48 
+          }}>
+            <ImageIcon fontSize="small" />
           </Avatar>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="subtitle2" fontWeight="600" gutterBottom>
             Upload Image
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Drag and drop an image here, or click to select
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
+            Drag & drop or click to browse
           </Typography>
           <Button
-            variant="contained"
+            variant="outlined"
             startIcon={<CloudUpload />}
             component="label"
+            size="small"
+            sx={{ borderRadius: 1.5 }}
           >
             Choose File
             <input
@@ -160,50 +172,57 @@ const NotificationPreview = ({ subject, body, url, pushTime, image }) => {
   return (
     <Card
       sx={{
-        border: `1px solid ${theme.palette.divider}`,
+        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
         borderRadius: 2,
         overflow: "hidden",
+        background: 'white',
       }}
     >
       <Box
         sx={{
-          bgcolor: theme.palette.primary.main,
+          bgcolor: "#8d0638ff",
           color: "white",
-          p: 2,
+          p: 1.5,
           display: "flex",
           alignItems: "center",
         }}
       >
-        <NotificationsActive sx={{ mr: 1 }} />
-        <Typography variant="subtitle1" fontWeight="bold">
-          Notification Preview
+        <NotificationsActive sx={{ mr: 1, fontSize: '1.1rem' }} />
+        <Typography variant="subtitle2" fontWeight="600">
+          Preview
         </Typography>
       </Box>
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
-          <Avatar sx={{ bgcolor: theme.palette.primary.main, mr: 2 }}>
-            <NotificationsActive />
+      <CardContent sx={{ p: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+          <Avatar sx={{ 
+            bgcolor: alpha("#8d0638ff", 0.1), 
+            color: "#8d0638ff", 
+            mr: 1.5,
+            width: 32,
+            height: 32
+          }}>
+            <NotificationsActive fontSize="small" />
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              {subject || "Subject will appear here"}
+            <Typography variant="subtitle2" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
+              {subject || "Notification Subject"}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {body || "Notification body will appear here"}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '0.8rem' }}>
+              {body || "Notification message will appear here..."}
             </Typography>
             
             {pushTime && (
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <AccessTime fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />
-                <Typography variant="caption">
+                <AccessTime fontSize="small" sx={{ mr: 0.5, color: "text.secondary", fontSize: '0.8rem' }} />
+                <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
                   {new Date(pushTime).toLocaleString()}
                 </Typography>
               </Box>
             )}
             
             {url && (
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Launch fontSize="small" sx={{ mr: 1, color: "primary.main" }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+                <Launch fontSize="small" sx={{ mr: 0.5, color: "primary.main", fontSize: '0.8rem' }} />
                 <Typography
                   variant="caption"
                   component="a"
@@ -213,10 +232,11 @@ const NotificationPreview = ({ subject, body, url, pushTime, image }) => {
                   sx={{
                     color: "primary.main",
                     textDecoration: "none",
+                    fontSize: '0.75rem',
                     "&:hover": { textDecoration: "underline" },
                   }}
                 >
-                  {url}
+                  {url.length > 30 ? url.substring(0, 30) + '...' : url}
                 </Typography>
               </Box>
             )}
@@ -228,7 +248,7 @@ const NotificationPreview = ({ subject, body, url, pushTime, image }) => {
                 alt="Notification"
                 sx={{
                   width: "100%",
-                  maxHeight: 150,
+                  maxHeight: 100,
                   objectFit: "cover",
                   borderRadius: 1,
                 }}
@@ -262,7 +282,6 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors(prev => ({ ...prev, [field]: "" }))
     }
@@ -270,13 +289,11 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
 
   const handleImageSelect = (file) => {
     if (file) {
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError("Image size should be less than 5MB")
         return
       }
 
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         setError("Please select a valid image file")
         return
@@ -393,11 +410,13 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
       TransitionComponent={Fade}
       PaperProps={{
         sx: {
-          borderRadius: 2,
+          borderRadius: 3,
           maxHeight: "90vh",
+          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.98)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
         },
       }}
     >
+      {/* Header */}
       <DialogTitle
         sx={{
           bgcolor: "#8d0638ff",
@@ -405,139 +424,223 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          p: 3,
+          p: 2.5,
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '100%',
+            height: '100%',
+            background: `linear-gradient(45deg, ${alpha("#8d0638ff", 0.9)} 0%, ${alpha("#6d0430ff", 0.9)} 100%)`,
+            zIndex: 1,
+          }
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <NotificationsActive sx={{ mr: 1 }} />
-          <Typography variant="h6">Create New Notification</Typography>
+        <Box sx={{ display: "flex", alignItems: "center", position: 'relative', zIndex: 2 }}>
+          <Box sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 36,
+            height: 36,
+            bgcolor: alpha('#ffffff', 0.2),
+            borderRadius: 2,
+            mr: 1.5,
+          }}>
+            <NotificationsActive sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight="700">
+              New Notification
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.5, display: 'block' }}>
+              Create and send push notifications
+            </Typography>
+          </Box>
         </Box>
-        <IconButton onClick={handleClose} sx={{ color: "white" }}>
+        <IconButton 
+          onClick={handleClose} 
+          sx={{ 
+            color: "white", 
+            position: 'relative', 
+            zIndex: 2,
+            bgcolor: alpha('#ffffff', 0.1),
+            '&:hover': {
+              bgcolor: alpha('#ffffff', 0.2),
+            }
+          }}
+        >
           <Close />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
+      <DialogContent sx={{ p: 2.5 }}>
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 2, 
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.error.light}`,
+            }} 
+            onClose={() => setError("")}
+          >
             {error}
           </Alert>
         )}
 
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {/* Form Section */}
-          <Grid item xs={12} md={showPreview ? 6 : 12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                <Title sx={{ mr: 1, color: theme.palette.primary.main }} />
-                Notification Details
-              </Typography>
-              <Divider />
-            </Box>
-
-            <Stack spacing={3}>
-              <TextField
-                fullWidth
-                label="Subject"
-                value={formData.subject}
-                onChange={(e) => handleInputChange("subject", e.target.value)}
-                error={!!validationErrors.subject}
-                helperText={validationErrors.subject}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Title color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label="Body"
-                multiline
-                rows={4}
-                value={formData.body}
-                onChange={(e) => handleInputChange("body", e.target.value)}
-                error={!!validationErrors.body}
-                helperText={validationErrors.body}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1 }}>
-                      <Description color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label="URL (Optional)"
-                value={formData.url}
-                onChange={(e) => handleInputChange("url", e.target.value)}
-                error={!!validationErrors.url}
-                helperText={validationErrors.url || "Add a link for users to take action"}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DateTimePicker
-                  label="Schedule Time"
-                  value={formData.pushTime}
-                  onChange={(newValue) => handleInputChange("pushTime", newValue)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      InputProps={{
-                        ...params.InputProps,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Schedule color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-              </LocalizationProvider>
-
-              <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
-                <Select
-                  value={formData.priority}
-                  onChange={(e) => handleInputChange("priority", e.target.value)}
-                  label="Priority"
-                >
-                  <MenuItem value="low">
-                    <Chip label="Low" color="default" size="small" sx={{ mr: 1 }} />
-                    Low Priority
-                  </MenuItem>
-                  <MenuItem value="normal">
-                    <Chip label="Normal" sx={{color:"#8d0638ff",mr: 1}} size="small"  />
-                    Normal Priority
-                  </MenuItem>
-                  <MenuItem value="high">
-                    <Chip label="High" color="warning" size="small" sx={{ mr: 1 }} />
-                    High Priority
-                  </MenuItem>
-                  <MenuItem value="urgent">
-                    <Chip label="Urgent" color="error" size="small" sx={{ mr: 1 }} />
-                    Urgent Priority
-                  </MenuItem>
-                </Select>
-              </FormControl>
-
+          <Grid item xs={12} lg={showPreview ? 6 : 12}>
+            <Stack spacing={2.5}>
+              {/* Notification Details */}
               <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                  <ImageIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                  Image Attachment (Optional)
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem', mb: 1.5 }}>
+                  📝 Notification Details
+                </Typography>
+                
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="Subject"
+                    value={formData.subject}
+                    onChange={(e) => handleInputChange("subject", e.target.value)}
+                    error={!!validationErrors.subject}
+                    helperText={validationErrors.subject}
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Title fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 1.5,
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Message Body"
+                    multiline
+                    rows={3}
+                    value={formData.body}
+                    onChange={(e) => handleInputChange("body", e.target.value)}
+                    error={!!validationErrors.body}
+                    helperText={validationErrors.body}
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1 }}>
+                          <Description fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 1.5,
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Action URL (Optional)"
+                    value={formData.url}
+                    onChange={(e) => handleInputChange("url", e.target.value)}
+                    error={!!validationErrors.url}
+                    helperText={validationErrors.url || "Add a link for users to take action"}
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LinkIcon fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 1.5,
+                      }
+                    }}
+                  />
+                </Stack>
+              </Box>
+
+              {/* Scheduling & Priority */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem', mb: 1.5 }}>
+                  ⚙️ Settings
+                </Typography>
+                
+                <Stack spacing={2}>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DateTimePicker
+                      label="Schedule Time"
+                      value={formData.pushTime}
+                      onChange={(newValue) => handleInputChange("pushTime", newValue)}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1.5,
+                            }
+                          }}
+                          InputProps={{
+                            ...params.InputProps,
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Schedule fontSize="small" color="action" />
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    />
+                  </LocalizationProvider>
+
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Priority Level</InputLabel>
+                    <Select
+                      value={formData.priority}
+                      onChange={(e) => handleInputChange("priority", e.target.value)}
+                      label="Priority Level"
+                      sx={{ borderRadius: 1.5 }}
+                    >
+                      <MenuItem value="low">
+                        <Chip label="Low" color="default" size="small" sx={{ mr: 1, fontSize: '0.7rem' }} />
+                        Low Priority
+                      </MenuItem>
+                      <MenuItem value="normal">
+                        <Chip label="Normal" sx={{ bgcolor: alpha("#8d0638ff", 0.1), color: "#8d0638ff", mr: 1, fontSize: '0.7rem' }} size="small" />
+                        Normal Priority
+                      </MenuItem>
+                      <MenuItem value="high">
+                        <Chip label="High" color="warning" size="small" sx={{ mr: 1, fontSize: '0.7rem' }} />
+                        High Priority
+                      </MenuItem>
+                      <MenuItem value="urgent">
+                        <Chip label="Urgent" color="error" size="small" sx={{ mr: 1, fontSize: '0.7rem' }} />
+                        Urgent Priority
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Box>
+
+              {/* Image Upload */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem', mb: 1.5 }}>
+                  🖼️ Image Attachment
                 </Typography>
                 <ImageUploadArea
                   onImageSelect={handleImageSelect}
@@ -551,27 +654,25 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
           {/* Preview Section */}
           <AnimatePresence>
             {showPreview && (
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} lg={6}>
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                      <Preview sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      Live Preview
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem', mb: 1.5 }}>
+                      👀 Live Preview
                     </Typography>
-                    <Divider />
+                    <NotificationPreview
+                      subject={formData.subject}
+                      body={formData.body}
+                      url={formData.url}
+                      pushTime={formData.pushTime}
+                      image={imagePreview}
+                    />
                   </Box>
-                  <NotificationPreview
-                    subject={formData.subject}
-                    body={formData.body}
-                    url={formData.url}
-                    pushTime={formData.pushTime}
-                    image={imagePreview}
-                  />
                 </motion.div>
               </Grid>
             )}
@@ -579,40 +680,51 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
         </Grid>
       </DialogContent>
 
+      {/* Footer Actions */}
       <DialogActions
         sx={{
-          p: 3,
-          bgcolor: "#f5f5f5",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          p: 2,
+          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          background: alpha(theme.palette.grey[50], 0.8),
         }}
       >
         <Button
           variant="outlined"
           startIcon={<Preview />}
           onClick={() => setShowPreview(!showPreview)}
+          size="small"
+          sx={{ borderRadius: 1.5 }}
         >
           {showPreview ? "Hide Preview" : "Show Preview"}
         </Button>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button onClick={handleClose} variant="outlined" disabled={loading}>
+          <Button 
+            onClick={handleClose} 
+            variant="outlined" 
+            disabled={loading}
+            size="small"
+            sx={{ borderRadius: 1.5, minWidth: 80 }}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
             disabled={loading || !formData.subject || !formData.body}
-            startIcon={loading ? <CircularProgress size={20} /> : <Send />}
+            startIcon={loading ? <CircularProgress size={16} /> : <Send />}
+            size="small"
             sx={{
+              borderRadius: 1.5,
+              minWidth: 120,
               bgcolor: "#8d0638ff",
+              fontWeight: "600",
               "&:hover": {
-                bgcolor: "#0f1f3d",
+                bgcolor: "#6d0430ff",
               },
             }}
           >
-            {loading ? "Sending..." : "Send Notification"}
+            {loading ? "Sending..." : "Send"}
           </Button>
         </Box>
       </DialogActions>

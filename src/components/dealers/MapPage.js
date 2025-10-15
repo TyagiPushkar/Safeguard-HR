@@ -50,7 +50,7 @@ import axios from "axios"
 import { useAuth } from "../auth/AuthContext"
 import VisitMap from "./VisitMap"
 
-// Enhanced Stats Card Component
+// Compact Stats Card Component
 const StatsCard = ({ icon, title, value, subtitle, color, trend }) => {
   const theme = useTheme()
 
@@ -58,40 +58,43 @@ const StatsCard = ({ icon, title, value, subtitle, color, trend }) => {
     <Card
       component={motion.div}
       whileHover={{
-        translateY: -5,
-        boxShadow: theme.shadows[8],
+        translateY: -2,
+        boxShadow: theme.shadows[4],
         transition: { duration: 0.2 },
       }}
       sx={{
         height: "100%",
-        borderLeft: `4px solid ${color}`,
-        background: `linear-gradient(135deg, ${color}10 0%, ${color}05 100%)`,
+        borderLeft: `3px solid ${color}`,
+        background: `linear-gradient(135deg, ${color}08 0%, ${color}03 100%)`,
+        minHeight: 80,
       }}
     >
-      <CardContent>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Avatar 
+            sx={{ 
+              bgcolor: `${color}15`, 
+              color: color, 
+              width: 40, 
+              height: 40,
+              fontSize: '1rem'
+            }}
+          >
+            {icon}
+          </Avatar>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography variant="body2" color="text.secondary" noWrap>
               {title}
             </Typography>
-            <Typography variant="h4" fontWeight="bold" color={color}>
+            <Typography variant="h6" fontWeight="bold" color={color} noWrap>
               {value}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" noWrap>
                 {subtitle}
               </Typography>
             )}
-            {trend && (
-              <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                <TrendingUp fontSize="small" sx={{ color: theme.palette.success.main, mr: 0.5 }} />
-                <Typography variant="caption" color="success.main">
-                  {trend}
-                </Typography>
-              </Box>
-            )}
           </Box>
-          <Avatar sx={{ bgcolor: `${color}20`, color: color, width: 48, height: 48 }}>{icon}</Avatar>
         </Box>
       </CardContent>
     </Card>
@@ -101,84 +104,71 @@ const StatsCard = ({ icon, title, value, subtitle, color, trend }) => {
 // Timeline Item Component
 const TimelineItem = ({ visit, index, isFirst, isLast, attendanceData }) => {
   const theme = useTheme()
-
-  // Determine if this is attendance data or visit data
   const isAttendance = visit.type === "attendance"
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
+      transition={{ delay: index * 0.05 }}
     >
-      <Card
+      <ListItem
         sx={{
-          mb: 2,
-          borderLeft: `4px solid ${
+          px: 1,
+          py: 1,
+          borderLeft: `3px solid ${
             isAttendance
               ? isFirst
                 ? theme.palette.success.main
                 : theme.palette.error.main
               : theme.palette.primary.main
           }`,
-          "&:hover": {
-            boxShadow: theme.shadows[4],
-            transform: "translateX(4px)",
-            transition: "all 0.2s ease",
-          },
+          mb: 1,
+          backgroundColor: 'background.paper',
+          borderRadius: 1,
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          }
         }}
       >
-        <CardContent sx={{ py: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <Avatar
-              sx={{
-                bgcolor: isAttendance
-                  ? isFirst
-                    ? theme.palette.success.main
-                    : theme.palette.error.main
-                  : theme.palette.primary.main,
-                width: 32,
-                height: 32,
-                mr: 2,
-              }}
-            >
-              {isAttendance ? (
-                isFirst ? (
-                  <MyLocation fontSize="small" />
-                ) : (
-                  <Schedule fontSize="small" />
-                )
+        <ListItemAvatar sx={{ minWidth: 40 }}>
+          <Avatar
+            sx={{
+              bgcolor: isAttendance
+                ? isFirst
+                  ? theme.palette.success.main
+                  : theme.palette.error.main
+                : theme.palette.primary.main,
+              width: 32,
+              height: 32,
+              fontSize: '0.8rem'
+            }}
+          >
+            {isAttendance ? (
+              isFirst ? (
+                <MyLocation fontSize="small" />
               ) : (
-                <Business fontSize="small" />
-              )}
-            </Avatar>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {isAttendance
-                  ? isFirst
-                    ? "Check In"
-                    : "Check Out"
-                  : `${visit.CompanyName || "Visit"}`}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {isAttendance
-                  ? isFirst
-                    ? attendanceData?.firstInLocation || "Office Location"
-                    : attendanceData?.lastOutLocation || "Office Location"
-                  : visit.DealerName || "Client Visit"}
-              </Typography>
-            </Box>
-            <Chip
-              label={isAttendance ? (isFirst ? "First In" : "Last Out") : `Visit ${index}`}
-              size="small"
-              color={isAttendance ? (isFirst ? "success" : "error") : "primary"}
-              variant="outlined"
-            />
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <AccessTime fontSize="small" sx={{ mr: 0.5, color: "text.secondary" }} />
-              <Typography variant="body2">
+                <Schedule fontSize="small" />
+              )
+            ) : (
+              <Business fontSize="small" />
+            )}
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText
+          primary={
+            <Typography variant="subtitle2" fontWeight="medium" noWrap>
+              {isAttendance
+                ? isFirst
+                  ? "Check In"
+                  : "Check Out"
+                : `${visit.CompanyName || "Visit"}`}
+            </Typography>
+          }
+          secondary={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+              <AccessTime fontSize="small" sx={{ fontSize: '0.8rem', color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary">
                 {isAttendance
                   ? isFirst
                     ? attendanceData?.firstIn || "N/A"
@@ -186,15 +176,16 @@ const TimelineItem = ({ visit, index, isFirst, isLast, attendanceData }) => {
                   : new Date(visit.VisitTime).toLocaleTimeString()}
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <LocationOn fontSize="small" sx={{ mr: 0.5, color: "text.secondary" }} />
-              <Typography variant="body2" color="text.secondary">
-                {isAttendance ? "Office" : "Client Location"}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+          }
+        />
+        <Chip
+          label={isAttendance ? (isFirst ? "IN" : "OUT") : `#${index}`}
+          size="small"
+          color={isAttendance ? (isFirst ? "success" : "error") : "primary"}
+          variant="outlined"
+          sx={{ height: 24, fontSize: '0.7rem' }}
+        />
+      </ListItem>
     </motion.div>
   )
 }
@@ -203,17 +194,15 @@ function MapPage() {
   const [visits, setVisits] = useState([])
   const [attendanceData, setAttendanceData] = useState(null)
   const { user } = useAuth()
-  const [mapCenter, setMapCenter] = useState({ lat: 28.6139, lng: 77.209 }) // Default to Delhi
+  const [mapCenter, setMapCenter] = useState({ lat: 28.6139, lng: 77.209 })
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [markers, setMarkers] = useState([])
-  const [directions, setDirections] = useState(null)
-  const [distances, setDistances] = useState([])
   const [employees, setEmployees] = useState([])
   const [selectedEmpId, setSelectedEmpId] = useState(user.role === "HR" ? "" : user.emp_id)
   const [totalDistance, setTotalDistance] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [viewMode, setViewMode] = useState("map") // 'map' or 'list'
+  const [viewMode, setViewMode] = useState("map")
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -244,7 +233,6 @@ function MapPage() {
       const avgLng = markers.reduce((sum, marker) => sum + marker.lng, 0) / markers.length
       setMapCenter({ lat: avgLat, lng: avgLng })
 
-      // Calculate total distance covered
       let totalKm = 0
       for (let i = 1; i < markers.length; i++) {
         const prev = markers[i - 1]
@@ -262,8 +250,7 @@ function MapPage() {
         `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${empId}`,
       )
       if (response.data.success && response.data.data.length > 0) {
-        // Find attendance for the specific date
-        const formattedDate = date.toLocaleDateString("en-GB") // DD/MM/YYYY format
+        const formattedDate = date.toLocaleDateString("en-GB")
         const dayAttendance = response.data.data.find((day) => day.date === formattedDate)
         return dayAttendance || null
       }
@@ -379,14 +366,14 @@ function MapPage() {
 
   // Function to calculate distance between two lat/lng points
   function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371 // Radius of Earth in km
+    const R = 6371
     const dLat = ((lat2 - lat1) * Math.PI) / 180
     const dLon = ((lon2 - lon1) * Math.PI) / 180
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    return R * c // Distance in km
+    return R * c
   }
 
   // Calculate working hours
@@ -399,7 +386,6 @@ function MapPage() {
   const createTimelineData = () => {
     const timeline = []
 
-    // Add check-in
     if (attendanceData && attendanceData.firstIn !== "N/A") {
       timeline.push({
         type: "attendance",
@@ -408,7 +394,6 @@ function MapPage() {
       })
     }
 
-    // Add visits
     visits.forEach((visit, index) => {
       timeline.push({
         ...visit,
@@ -417,7 +402,6 @@ function MapPage() {
       })
     })
 
-    // Add check-out
     if (attendanceData && attendanceData.lastOut !== "N/A") {
       timeline.push({
         type: "attendance",
@@ -432,17 +416,42 @@ function MapPage() {
   const timelineData = createTimelineData()
 
   return (
-    <Box sx={{ p: { xs: 0, md: 0 }, bgcolor: "#f5f7fa", minHeight: "100vh" }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
       {/* Header */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h4" fontWeight="bold" color="#8d0638ff">
+      <Paper elevation={1} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: 'column', md: 'row' }, justifyContent: "space-between", alignItems: { xs: 'stretch', md: 'center' }, gap: 2 }}>
+          <Typography variant="h5" fontWeight="bold" color="#8d0638ff">
             Field Activity Tracker
           </Typography>
-          <Grid container spacing={2} alignItems="center">
+          
+          <Box sx={{ display: 'flex', gap: 1, alignSelf: { xs: 'stretch', md: 'center' } }}>
+            <Button
+              variant={viewMode === "map" ? "contained" : "outlined"}
+              onClick={() => setViewMode("map")}
+              size="small"
+              startIcon={<MapIcon />}
+              sx={{ flex: 1 }}
+            >
+              Map
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "contained" : "outlined"}
+              onClick={() => setViewMode("list")}
+              size="small"
+              startIcon={<ListAlt />}
+              sx={{ flex: 1 }}
+            >
+              List
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Filters */}
+        <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
           {user.role === "HR" && (
             <Grid item xs={12} sm={6} md={4}>
               <Autocomplete
+                size="small"
                 options={employees}
                 getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
                 value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
@@ -455,24 +464,7 @@ function MapPage() {
                     label="Select Employee"
                     variant="outlined"
                     fullWidth
-                    InputProps={{
-                      ...params.InputProps,
-                      startAdornment: <Person sx={{ mr: 1, color: "text.secondary" }} />,
-                    }}
                   />
-                )}
-                renderOption={(props, option) => (
-                  <Box component="li" {...props}>
-                    <Avatar sx={{ mr: 2, width: 32, height: 32 }}>{option.Name.charAt(0)}</Avatar>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {option.Name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {option.EmpId}
-                      </Typography>
-                    </Box>
-                  </Box>
                 )}
               />
             </Grid>
@@ -480,50 +472,28 @@ function MapPage() {
 
           <Grid item xs={12} sm={6} md={3}>
             <TextField
+              size="small"
               type="date"
               value={selectedDate.toISOString().substr(0, 10)}
               onChange={handleDateChange}
               variant="outlined"
               fullWidth
-              InputProps={{
-                startAdornment: <CalendarToday sx={{ mr: 1, color: "text.secondary" }} />,
-              }}
             />
           </Grid>
 
-          <Grid item xs={12} sm={12} md={2}>
+          <Grid item xs={12} sm={6} md={2}>
             <Button
               variant="contained"
               onClick={fetchData}
               disabled={loading || !selectedEmpId}
               fullWidth
-              startIcon={loading ? <CircularProgress size={20} /> : <Analytics />}
-              sx={{ height: 56 }}
+              startIcon={loading ? <CircularProgress size={16} /> : <Analytics />}
+              size="small"
             >
               {loading ? "Loading..." : "Analyze"}
             </Button>
           </Grid>
         </Grid>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant={viewMode === "map" ? "contained" : "outlined"}
-              onClick={() => setViewMode("map")}
-              size="small"
-            >
-              <MapIcon />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "contained" : "outlined"}
-              onClick={() => setViewMode("list")}
-              size="small"
-            >
-              <ListAlt />
-            </Button>
-          </Box>
-        </Box>
-
-        {/* Filters */}
-        
       </Paper>
 
       {/* Error Alert */}
@@ -533,66 +503,62 @@ function MapPage() {
         </Alert>
       )}
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      {/* Compact Stats Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<Business />}
             title="Total Visits"
             value={visits.length}
-            subtitle="Client visits today"
             color={theme.palette.primary.main}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<DirectionsCar />}
-            title="Distance Covered"
+            title="Distance"
             value={`${totalDistance} km`}
-            subtitle="Total travel distance"
             color={theme.palette.info.main}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<AccessTime />}
-            title="Working Hours"
+            title="Work Hours"
             value={calculateWorkingHours()}
-            subtitle="Total hours worked"
             color={theme.palette.success.main}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<Timeline />}
             title="Activities"
             value={timelineData.length}
-            subtitle="Total activities today"
             color={theme.palette.warning.main}
           />
         </Grid>
       </Grid>
 
       {/* Main Content */}
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {/* Map/Timeline View */}
-        <Grid item xs={12} md={8}>
-          <Paper elevation={2} sx={{ borderRadius: 2, height: 600 }}>
+        <Grid item xs={12} lg={8}>
+          <Paper elevation={1} sx={{ borderRadius: 2, height: 500 }}>
             {viewMode === "map" ? (
-              <Box sx={{ p: 2, height: "100%" }}>
-                <Typography variant="h6" gutterBottom>
-                  Route Map
-                </Typography>
-                <Box sx={{ height: "calc(100% - 40px)", borderRadius: 1, overflow: "hidden" }}>
-                  <VisitMap markers={markers} mapCenter={mapCenter} directions={directions} distances={distances} />
+              <Box sx={{ height: "100%" }}>
+                <Box sx={{ p: 2, pb: 1 }}>
+                  <Typography variant="h6">Route Map</Typography>
+                </Box>
+                <Box sx={{ height: "calc(100% - 60px)", borderRadius: 1 }}>
+                  <VisitMap markers={markers} mapCenter={mapCenter} />
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
-                <Typography variant="h6" gutterBottom>
-                  Activity Timeline
-                </Typography>
-                <Box sx={{ height: "calc(100% - 40px)", overflow: "auto" }}>
+              <Box sx={{ height: "100%" }}>
+                <Box sx={{ p: 2, pb: 1 }}>
+                  <Typography variant="h6">Activity Timeline</Typography>
+                </Box>
+                <List sx={{ height: "calc(100% - 60px)", overflow: "auto", p: 1 }}>
                   {timelineData.map((item, index) => (
                     <TimelineItem
                       key={index}
@@ -606,49 +572,50 @@ function MapPage() {
                   {timelineData.length === 0 && (
                     <Box sx={{ textAlign: "center", py: 4 }}>
                       <Typography variant="body1" color="text.secondary">
-                        No activities found for the selected date
+                        No activities found
                       </Typography>
                     </Box>
                   )}
-                </Box>
+                </List>
               </Box>
             )}
           </Paper>
         </Grid>
 
         {/* Summary Panel */}
-        <Grid item xs={12} md={4}>
-          <Stack spacing={3}>
+        <Grid item xs={12} lg={4}>
+          <Stack spacing={2}>
             {/* Attendance Summary */}
             {attendanceData && (
-              <Card>
+              <Card elevation={1}>
                 <CardHeader
-                  title="Attendance Summary"
+                  title="Attendance"
+                  titleTypographyProps={{ variant: 'h6' }}
                   avatar={
-                    <Avatar sx={{ bgcolor: theme.palette.success.main }}>
-                      <Schedule />
+                    <Avatar sx={{ bgcolor: theme.palette.success.main, width: 32, height: 32 }}>
+                      <Schedule fontSize="small" />
                     </Avatar>
                   }
+                  sx={{ pb: 1 }}
                 />
-                <Divider />
-                <CardContent>
-                  <Grid container spacing={2}>
+                <CardContent sx={{ pt: 0 }}>
+                  <Grid container spacing={1}>
                     <Grid item xs={6}>
                       <Box sx={{ textAlign: "center" }}>
-                        <Typography variant="h6" color="success.main">
+                        <Typography variant="body1" color="success.main" fontWeight="medium">
                           {attendanceData.firstIn || "N/A"}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary">
                           Check In
                         </Typography>
                       </Box>
                     </Grid>
                     <Grid item xs={6}>
                       <Box sx={{ textAlign: "center" }}>
-                        <Typography variant="h6" color="error.main">
+                        <Typography variant="body1" color="error.main" fontWeight="medium">
                           {attendanceData.lastOut || "N/A"}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary">
                           Check Out
                         </Typography>
                       </Box>
@@ -659,88 +626,80 @@ function MapPage() {
             )}
 
             {/* Visit Details */}
-            <Card>
+            <Card elevation={1}>
               <CardHeader
-                title="Visit Details"
+                title="Visits"
+                titleTypographyProps={{ variant: 'h6' }}
                 avatar={
-                  <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                    <Business />
+                  <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 32, height: 32 }}>
+                    <Business fontSize="small" />
                   </Avatar>
                 }
+                sx={{ pb: 1 }}
               />
-              <Divider />
-              <CardContent sx={{ p: 0 }}>
-                <List sx={{ maxHeight: 300, overflow: "auto" }}>
-                  {visits.map((visit, index) => (
-                    <React.Fragment key={index}>
-                      <ListItem>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 32, height: 32 }}>
-                            {index + 1}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body1" fontWeight="medium">
-                              {visit.CompanyName}
-                            </Typography>
-                          }
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">
-                                {visit.DealerName}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {new Date(visit.VisitTime).toLocaleTimeString()}
-                              </Typography>
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < visits.length - 1 && <Divider variant="inset" component="li" />}
-                    </React.Fragment>
-                  ))}
-                  {visits.length === 0 && (
-                    <ListItem>
-                      <ListItemText
-                        primary="No visits recorded"
-                        secondary="Visit data will appear here when available"
-                      />
-                    </ListItem>
-                  )}
-                </List>
-              </CardContent>
+              <List dense sx={{ maxHeight: 200, overflow: "auto" }}>
+                {visits.map((visit, index) => (
+                  <ListItem key={index} sx={{ px: 2, py: 0.5 }}>
+                    <ListItemAvatar sx={{ minWidth: 32 }}>
+                      <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 24, height: 24, fontSize: '0.8rem' }}>
+                        {index + 1}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography variant="body2" noWrap>
+                          {visit.CompanyName}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="caption" color="text.secondary" noWrap>
+                          {new Date(visit.VisitTime).toLocaleTimeString()}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                ))}
+                {visits.length === 0 && (
+                  <ListItem>
+                    <ListItemText
+                      primary="No visits recorded"
+                      primaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
+                    />
+                  </ListItem>
+                )}
+              </List>
             </Card>
 
             {/* Route Summary */}
-            <Card>
+            <Card elevation={1}>
               <CardHeader
                 title="Route Summary"
+                titleTypographyProps={{ variant: 'h6' }}
                 avatar={
-                  <Avatar sx={{ bgcolor: theme.palette.info.main }}>
-                    <Route />
+                  <Avatar sx={{ bgcolor: theme.palette.info.main, width: 32, height: 32 }}>
+                    <Route fontSize="small" />
                   </Avatar>
                 }
+                sx={{ pb: 1 }}
               />
-              <Divider />
-              <CardContent>
-                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+              <CardContent sx={{ pt: 0 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Total Distance:
+                    Distance:
                   </Typography>
-                  <Typography variant="body1" fontWeight="bold">
+                  <Typography variant="body2" fontWeight="medium">
                     {totalDistance} km
                   </Typography>
                 </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Total Stops:
+                    Stops:
                   </Typography>
-                  <Typography variant="body1" fontWeight="bold">
+                  <Typography variant="body2" fontWeight="medium">
                     {markers.length}
                   </Typography>
                 </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
                   <Typography variant="body2" color="text.secondary">
                     Efficiency:
                   </Typography>
@@ -748,6 +707,7 @@ function MapPage() {
                     label={visits.length > 3 ? "High" : visits.length > 1 ? "Medium" : "Low"}
                     color={visits.length > 3 ? "success" : visits.length > 1 ? "warning" : "error"}
                     size="small"
+                    sx={{ height: 20, fontSize: '0.6rem' }}
                   />
                 </Box>
               </CardContent>

@@ -419,143 +419,175 @@ function ApplyLeave({ open, onClose, onLeaveApplied }) {
         <Grid container spacing={3}>
           {/* Form Section */}
           <Grid item xs={12} md={showPreview ? 6 : 12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                <Person sx={{ mr: 1, color: theme.palette.primary.main }} />
-                Leave Application Details
-              </Typography>
-              <Divider />
-            </Box>
+  <Box sx={{ mt: 4, mb: 3 }}>
+    <Typography
+      variant="h6"
+      gutterBottom
+      sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: 600 }}
+    >
+      <Person sx={{ color: theme.palette.primary.main }} />
+      Leave Application Details
+    </Typography>
+    <Divider />
+  </Box>
 
-            <Stack spacing={3}>
-              <TextField
-                label="Employee ID"
-                value={leaveDetails.empid}
-                variant="outlined"
-                fullWidth
-                disabled
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person color="action" />
-                    </InputAdornment>
-                  ),
-                }}
+  <Stack spacing={3}>
+    {/* Employee ID */}
+    <Box sx={{ p: 2, bgcolor: "#f9f9f9", borderRadius: 2, border: "1px solid #e0e0e0" }}>
+      <TextField
+        label="Employee ID"
+        value={leaveDetails.empid}
+        variant="outlined"
+        fullWidth
+        disabled
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Person color="action" />
+            </InputAdornment>
+          ),
+        }}
+      />
+    </Box>
+
+    {/* Leave Balance Cards */}
+    <Box sx={{ p: 2, bgcolor: "#f9f9f9", borderRadius: 2, border: "1px solid #e0e0e0" }}>
+      <Typography
+        variant="subtitle1"
+        gutterBottom
+        sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: 500 }}
+      >
+        <Category sx={{ color: theme.palette.primary.main }} />
+        Available Leave Balance
+      </Typography>
+      {loadingCategories ? (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Grid container spacing={2}>
+          {categories.map((category) => (
+            <Grid item xs={12} sm={6} md={4} key={category.value}>
+              <LeaveBalanceCard
+                category={category.label}
+                balance={category.balance}
+                isSelected={leaveDetails.category === category.value}
+                onClick={() =>
+                  category.balance > 0 && handleChange("category", category.value)
+                }
               />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+      {validationErrors.category && (
+        <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
+          {validationErrors.category}
+        </Typography>
+      )}
+    </Box>
 
-              {/* Leave Balance Cards */}
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                  <Category sx={{ mr: 1, color: theme.palette.primary.main }} />
-                  Available Leave Balance
-                </Typography>
-                {loadingCategories ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-                    <CircularProgress />
-                  </Box>
-                ) : (
-                  <Grid container spacing={2}>
-                    {categories.map((category) => (
-                      <Grid item xs={12} sm={6} md={4} key={category.value}>
-                        <LeaveBalanceCard
-                          category={category.label}
-                          balance={category.balance}
-                          isSelected={leaveDetails.category === category.value}
-                          onClick={() => category.balance > 0 && handleChange("category", category.value)}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                )}
-                {validationErrors.category && (
-                  <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
-                    {validationErrors.category}
-                  </Typography>
-                )}
-              </Box>
-
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <DatePicker
-                      label="Start Date"
-                      value={leaveDetails.startDate}
-                      onChange={(newValue) => handleChange("startDate", newValue)}
-                      minDate={today}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          fullWidth
-                          error={!!validationErrors.startDate}
-                          helperText={validationErrors.startDate}
-                          InputProps={{
-                            ...params.InputProps,
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <CalendarToday color="action" />
-                              </InputAdornment>
-                            ),
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <DatePicker
-                      label="End Date"
-                      value={leaveDetails.endDate}
-                      onChange={(newValue) => handleChange("endDate", newValue)}
-                      minDate={leaveDetails.startDate || today}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          fullWidth
-                          error={!!validationErrors.endDate}
-                          helperText={validationErrors.endDate}
-                          InputProps={{
-                            ...params.InputProps,
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <CalendarToday color="action" />
-                              </InputAdornment>
-                            ),
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                </Grid>
-              </LocalizationProvider>
-
-              {calculateDays() > 0 && (
-                <Box sx={{ p: 2, bgcolor: theme.palette.info.light + "20", borderRadius: 1 }}>
-                  <Typography variant="body2" color="info.main" sx={{ display: "flex", alignItems: "center" }}>
-                    <AccessTime sx={{ mr: 1 }} />
-                    Total leave duration: {calculateDays()} day{calculateDays() !== 1 ? "s" : ""}
-                  </Typography>
-                </Box>
+    {/* Date Selection */}
+    <Box sx={{ p: 2, bgcolor: "#f9f9f9", borderRadius: 2, border: "1px solid #e0e0e0" }}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <DatePicker
+              label="Start Date"
+              value={leaveDetails.startDate}
+              onChange={(newValue) => handleChange("startDate", newValue)}
+              minDate={today}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  error={!!validationErrors.startDate}
+                  helperText={validationErrors.startDate}
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CalendarToday color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               )}
-
-              <TextField
-                label="Reason for Leave"
-                value={leaveDetails.reason}
-                onChange={(e) => handleChange("reason", e.target.value)}
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={4}
-                error={!!validationErrors.reason}
-                helperText={validationErrors.reason || "Please provide a detailed reason for your leave"}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1 }}>
-                      <Description color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Stack>
+            />
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <DatePicker
+              label="End Date"
+              value={leaveDetails.endDate}
+              onChange={(newValue) => handleChange("endDate", newValue)}
+              minDate={leaveDetails.startDate || today}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  error={!!validationErrors.endDate}
+                  helperText={validationErrors.endDate}
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CalendarToday color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              )}
+            />
+          </Grid>
+        </Grid>
+      </LocalizationProvider>
+
+      {calculateDays() > 0 && (
+        <Box
+          sx={{
+            mt: 2,
+            p: 1.5,
+            bgcolor: theme.palette.info.light + "20",
+            borderRadius: 1,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            variant="body2"
+            color="info.main"
+            sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}
+          >
+            <AccessTime />
+            Total leave duration: {calculateDays()} day{calculateDays() !== 1 ? "s" : ""}
+          </Typography>
+        </Box>
+      )}
+    </Box>
+
+    {/* Reason */}
+    <Box sx={{ p: 2, bgcolor: "#f9f9f9", borderRadius: 2, border: "1px solid #e0e0e0" }}>
+      <TextField
+        label="Reason for Leave"
+        value={leaveDetails.reason}
+        onChange={(e) => handleChange("reason", e.target.value)}
+        variant="outlined"
+        fullWidth
+        multiline
+        rows={4}
+        error={!!validationErrors.reason}
+        helperText={validationErrors.reason || "Please provide a detailed reason for your leave"}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1 }}>
+              <Description color="action" />
+            </InputAdornment>
+          ),
+        }}
+      />
+    </Box>
+  </Stack>
+</Grid>
+
 
           {/* Preview Section */}
           <AnimatePresence>

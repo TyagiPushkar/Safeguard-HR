@@ -277,45 +277,73 @@ const AttendanceCard = ({ activity, isMobile }) => {
 
 // Legend Component
 const CalendarLegend = () => {
-  const theme = useTheme()
+  const theme = useTheme();
 
   const legendItems = [
-    { color: theme.palette.success.main, label: "On Time", icon: <AccessTime fontSize="small" /> },
-    { color: theme.palette.error.main, label: "Late", icon: <Schedule fontSize="small" /> },
-    { color: theme.palette.warning.main, label: "Holiday", icon: <Event fontSize="small" /> },
-    { color: theme.palette.secondary.main, label: "Week Off", icon: <Weekend fontSize="small" /> },
-    { color: theme.palette.info.main, label: "Leave", icon: <BeachAccess fontSize="small" /> },
-  ]
+    { color: theme.palette.success.main, label: "On Time", icon: <AccessTime /> },
+    { color: theme.palette.error.main, label: "Late", icon: <Schedule /> },
+    { color: theme.palette.warning.main, label: "Holiday", icon: <Event /> },
+    { color: theme.palette.secondary.main, label: "Week Off", icon: <Weekend /> },
+    { color: theme.palette.info.main, label: "Leave", icon: <BeachAccess /> },
+  ];
 
   return (
-    <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
-      <Typography variant="subtitle2" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+    <Paper
+      sx={{
+        p: { xs: 1.5, md: 2 },
+        mb: 2,
+        borderRadius: 2,
+        boxShadow: 1,
+      }}
+    >
+      <Typography
+        variant="subtitle2"
+        gutterBottom
+        sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: 500 }}
+      >
         <Info fontSize="small" />
         Calendar Legend
       </Typography>
-      <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+
+      <Stack direction="row" spacing={2} flexWrap="wrap">
         {legendItems.map((item, index) => (
-          <Box key={index} display="flex" alignItems="center" gap={1}>
+          <Box
+            key={index}
+            display="flex"
+            alignItems="center"
+            gap={1}
+            sx={{
+              mb: 1,
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              backgroundColor: "#f9f9f9",
+              border: `1px solid ${theme.palette.divider}`,
+            }}
+          >
             <Box
               sx={{
-                width: 16,
-                height: 16,
+                width: 18,
+                height: 18,
                 backgroundColor: item.color,
-                borderRadius: 1,
+                borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              {React.cloneElement(item.icon, { sx: { fontSize: 10, color: "white" } })}
+              {React.cloneElement(item.icon, { sx: { fontSize: 12, color: "#fff" } })}
             </Box>
-            <Typography variant="caption">{item.label}</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 500 }}>
+              {item.label}
+            </Typography>
           </Box>
         ))}
       </Stack>
     </Paper>
-  )
-}
+  );
+};
+
 
 const AttendanceList = () => {
   const navigate = useNavigate()
@@ -797,152 +825,132 @@ const AttendanceList = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 0, md: 0 }, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      {/* Header Section */}
-      <Paper sx={{ p: 1, mb: 3, borderRadius: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: "#8d0638ff",mr:2 }}>
-            Attendance
-          </Typography>
-           <Grid container spacing={2} alignItems="center">
-          {user.role === "HR" && (
-            <Grid item xs={12} sm={6} md={3}>
-              <Autocomplete
-                options={employees}
-                getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
-                value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
-                onChange={(event, newValue) => {
-                  console.log("Employee selection changed:", newValue)
-                  setSelectedEmpId(newValue ? newValue.EmpId : "")
-                  setSelectedEmployee(newValue)
+    <Box
+    sx={{
+      px: { xs: 2, md: 4 },
+      py: { xs: 2, md: 3 }, 
+      backgroundColor: "#f5f5f5",
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+    }}
+  >
+    <Box sx={{ width: "100%", maxWidth: 1800}}>
+     
+    <Paper sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}>
+  <Box
+    display="flex"
+    flexDirection={{ xs: "column", md: "row" }}
+    justifyContent="space-between"
+    alignItems={{ xs: "stretch", md: "center" }}
+    gap={1.5}
+  >
+    {/* Title */}
+    <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
+      Attendance
+    </Typography>
+
+    {/* Filters & Buttons */}
+    <Grid container spacing={1.5} alignItems="center">
+      {user.role === "HR" && (
+        <Grid item xs={12} sm={6} md={3}>
+          <Autocomplete
+            options={employees}
+            getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
+            value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
+            onChange={(e, newValue) => {
+              setSelectedEmpId(newValue ? newValue.EmpId : "");
+              setSelectedEmployee(newValue);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Select Employee"
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: <Person sx={{ mr: 1, color: "text.secondary" }} />,
                 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Employee"
-                    variant="outlined"
-                    InputProps={{
-                      ...params.InputProps,
-                      startAdornment: <Person sx={{ mr: 1, color: "text.secondary" }} />,
-                    }}
-                  />
-                )}
-                renderOption={(props, option) => (
-                  <Box component="li" {...props}>
-                    <Avatar sx={{ mr: 2, width: 32, height: 32 }}>{option.Name.charAt(0)}</Avatar>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {option.Name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {option.EmpId} • Week Off: {option.WeekOff || "Not set"}
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-                loading={loading}
               />
-            </Grid>
-          )}
-
-          {/* Month Selector */}
-          <Grid item xs={12} sm={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Month</InputLabel>
-              <Select
-                value={selectedMonth}
-                label="Month"
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                startAdornment={<DateRange sx={{ mr: 1, color: "text.secondary" }} />}
-              >
-                {months.map((month) => (
-                  <MenuItem key={month.value} value={month.value}>
-                    {month.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Year Selector */}
-          <Grid item xs={12} sm={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Year</InputLabel>
-              <Select
-                value={selectedYear}
-                label="Year"
-                onChange={(e) => setSelectedYear(e.target.value)}
-                startAdornment={<CalendarToday sx={{ mr: 1, color: "text.secondary" }} />}
-              >
-                {years.map((year) => (
-                  <MenuItem key={year} value={year}>
-                    {year}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={2}>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant={viewMode === "calendar" ? "contained" : "outlined"}
-                onClick={() => setViewMode("calendar")}
-                size="small"
-              >
-                <CalendarToday />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "contained" : "outlined"}
-                onClick={() => setViewMode("list")}
-                size="small"
-              >
-                <FilterList />
-              </Button>
-            </Stack>
-          </Grid>
-
-          <Grid item xs={12} sm={12} md={3}>
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              {user.role === "HR" && (
-                <Button variant="outlined"  onClick={regularise} size="small">
-                  <Settings />
-                </Button>
-              )}
-              <Button
-                variant="contained"
-               onClick={exportToCsv}
-                disabled={filteredActivities.length === 0}
-              >
-                <Download />
-              </Button>
-            </Stack>
-          </Grid>
+            )}
+            loading={loading}
+          />
         </Grid>
+      )}
 
-          <Box display="flex" gap={1}>
-            <Tooltip title="Refresh Data">
-              <IconButton onClick={refreshData} disabled={loading}>
-                {loading ? <CircularProgress size={20} /> : <Refresh />}
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Box>
+      <Grid item xs={6} sm={3} md={2}>
+        <FormControl fullWidth size="small">
+          <InputLabel>Month</InputLabel>
+          <Select value={selectedMonth} label="Month" onChange={(e) => setSelectedMonth(e.target.value)}>
+            {months.map((month) => (
+              <MenuItem key={month.value} value={month.value}>
+                {month.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
 
-        {/* Controls Section */}
-       
-        {/* Selected Period Display */}
-        {/* <Box sx={{ mt: 2, p: 2, backgroundColor: "primary.light", borderRadius: 1 }}>
-          <Typography variant="body2" color="primary.contrastText" fontWeight="medium">
-            📅 Viewing: {months[selectedMonth].label} {selectedYear} •
-            {attendanceRecords.length > 0 && ` ${attendanceRecords.length} attendance records`}
-            {holidayCount > 0 && ` • ${holidayCount} holidays`}
-            {weekOffCount > 0 && ` • ${weekOffCount} week offs`}
-            {leaveCount > 0 && ` • ${leaveCount} leaves`}
-            {selectedEmployee && ` • Employee: ${selectedEmployee.Name}`}
-          </Typography>
-        </Box> */}
-      </Paper>
+      <Grid item xs={6} sm={3} md={2}>
+        <FormControl fullWidth size="small">
+          <InputLabel>Year</InputLabel>
+          <Select value={selectedYear} label="Year" onChange={(e) => setSelectedYear(e.target.value)}>
+            {years.map((year) => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={2}>
+        <Stack direction="row" spacing={0.5}>
+          <Button
+            variant={viewMode === "calendar" ? "contained" : "outlined"}
+            onClick={() => setViewMode("calendar")}
+            size="small"
+          >
+            <CalendarToday fontSize="small" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "contained" : "outlined"}
+            onClick={() => setViewMode("list")}
+            size="small"
+          >
+            <FilterList fontSize="small" />
+          </Button>
+        </Stack>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={3}>
+        <Stack direction="row" spacing={0.5} justifyContent={{ xs: "flex-start", md: "flex-end" }}>
+          {user.role === "HR" && (
+            <Button variant="outlined" onClick={regularise} size="small">
+              <Settings fontSize="small" />
+            </Button>
+          )}
+          <Button variant="contained" onClick={exportToCsv} disabled={filteredActivities.length === 0} size="small">
+            <Download fontSize="small" />
+          </Button>
+        </Stack>
+      </Grid>
+    </Grid>
+  </Box>
+
+  {/* Refresh Button */}
+  <Box display="flex" justifyContent="flex-end" mt={1}>
+    <Tooltip title="Refresh Data">
+      <IconButton onClick={refreshData} disabled={loading} size="small">
+        {loading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
+      </IconButton>
+    </Tooltip>
+  </Box>
+</Paper>
+
+
+
 
       {/* Error Alert */}
       {error && (
@@ -963,312 +971,329 @@ const AttendanceList = () => {
 
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)" }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Working Days
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold">
-                    {totalDays}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Attendance records
-                  </Typography>
-                </Box>
-                <CalendarToday sx={{
-                  fontSize: 40,
-                  color: "#8d0638ff"
-                }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+  {/* Working Days */}
+  <Grid item xs={12} sm={6} md={3}>
+    <Card sx={{ background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)", p: 1, borderRadius: 2, boxShadow: 1 }}>
+      <CardContent sx={{ p: 1 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography color="text.secondary" variant="caption" fontWeight="500">
+              Working Days
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" sx={{ lineHeight: 1 }}>
+              {totalDays}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Records
+            </Typography>
+          </Box>
+          <CalendarToday sx={{ fontSize: 22, color: "#8d0638ff" }} />
+        </Box>
+      </CardContent>
+    </Card>
+  </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)" }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    On Time
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="success.main">
-                    {onTimeDays}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {totalDays > 0 ? `${((onTimeDays / totalDays) * 100).toFixed(1)}%` : "0%"}
-                  </Typography>
-                </Box>
-                <AccessTime color="success" sx={{ fontSize: 40 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+  {/* On Time */}
+  <Grid item xs={12} sm={6} md={3}>
+    <Card sx={{ background: "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)", p: 1, borderRadius: 2, boxShadow: 1 }}>
+      <CardContent sx={{ p: 1 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography color="text.secondary" variant="caption" fontWeight="500">
+              On Time
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color="success.main" sx={{ lineHeight: 1 }}>
+              {onTimeDays}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {totalDays > 0 ? `${((onTimeDays / totalDays) * 100).toFixed(1)}%` : "0%"}
+            </Typography>
+          </Box>
+          <AccessTime color="success" sx={{ fontSize: 22 }} />
+        </Box>
+      </CardContent>
+    </Card>
+  </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)" }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Late Arrivals
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="error.main">
-                    {lateDays}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {totalDays > 0 ? `${((lateDays / totalDays) * 100).toFixed(1)}%` : "0%"}
-                  </Typography>
-                </Box>
-                <Schedule color="error" sx={{ fontSize: 40 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+  {/* Late Arrivals */}
+  <Grid item xs={12} sm={6} md={3}>
+    <Card sx={{ background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)", p: 1, borderRadius: 2, boxShadow: 1 }}>
+      <CardContent sx={{ p: 1 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography color="text.secondary" variant="caption" fontWeight="500">
+              Late Arrivals
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color="error.main" sx={{ lineHeight: 1 }}>
+              {lateDays}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {totalDays > 0 ? `${((lateDays / totalDays) * 100).toFixed(1)}%` : "0%"}
+            </Typography>
+          </Box>
+          <Schedule color="error" sx={{ fontSize: 22 }} />
+        </Box>
+      </CardContent>
+    </Card>
+  </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)" }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Non-Working
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="warning.main">
-                    {holidayCount + weekOffCount + leaveCount}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Holidays, Leaves, Week offs
-                  </Typography>
-                </Box>
-                <Badge badgeContent={`${holidayCount + weekOffCount + leaveCount}`} color="warning">
-                  <Event color="warning" sx={{ fontSize: 40 }} />
-                </Badge>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+  {/* Non-Working */}
+  <Grid item xs={12} sm={6} md={3}>
+    <Card sx={{ background: "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)", p: 1, borderRadius: 2, boxShadow: 1 }}>
+      <CardContent sx={{ p: 1 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography color="text.secondary" variant="caption" fontWeight="500">
+              Non-Working
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color="warning.main" sx={{ lineHeight: 1 }}>
+              {holidayCount + weekOffCount + leaveCount}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Holidays / Leaves
+            </Typography>
+          </Box>
+          <Badge badgeContent={`${holidayCount + weekOffCount + leaveCount}`} color="warning">
+            <Event color="warning" sx={{ fontSize: 22 }} />
+          </Badge>
+        </Box>
+      </CardContent>
+    </Card>
+  </Grid>
+</Grid>
+
 
       {/* Calendar Legend */}
       <CalendarLegend />
 
       {/* Main Content */}
       {viewMode === "calendar" ? (
-        <Paper sx={{ p: 2, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Attendance Calendar - {months[selectedMonth].label} {selectedYear}
+  <Paper sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, boxShadow: 1 }}>
+    <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+      Attendance Calendar - {months[selectedMonth].label} {selectedYear}
+    </Typography>
+
+    <Calendar
+      localizer={localizer}
+      events={filteredActivities}
+      startAccessor="start"
+      endAccessor="end"
+      style={{
+        height: 450,
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        padding: 4,
+      }}
+      eventPropGetter={eventStyleGetter}
+      views={["month", "week", "day"]}
+      popup
+      date={new Date(selectedYear, selectedMonth, 1)}
+      onNavigate={(date) => {
+        setSelectedMonth(date.getMonth());
+        setSelectedYear(date.getFullYear());
+      }}
+      tooltipAccessor={(event) =>
+        event.type === "attendance"
+          ? `${event.title}\nWorking Hours: ${event.workingHours}`
+          : event.title
+      }
+    />
+  </Paper>
+) : (
+  <Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+        All Records - {months[selectedMonth].label} {selectedYear}
+      </Typography>
+      <Divider sx={{ mb: 2 }} />
+
+      {filteredActivities.length === 0 ? (
+        <Box sx={{ textAlign: "center", py: 6 }}>
+          <CalendarToday sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            No records found
           </Typography>
-          <Calendar
-            localizer={localizer}
-            events={filteredActivities}
-            startAccessor="start"
-            endAccessor="end"
-            style={{
-              height: 500,
-              backgroundColor: "#fff",
-            }}
-            eventPropGetter={eventStyleGetter}
-            views={["month", "week", "day"]}
-            popup
-            date={new Date(selectedYear, selectedMonth, 1)}
-            onNavigate={(date) => {
-              setSelectedMonth(date.getMonth())
-              setSelectedYear(date.getFullYear())
-            }}
-            tooltipAccessor={(event) => {
-              if (event.type === "attendance") {
-                return `${event.title}\nWorking Hours: ${event.workingHours}`
-              }
-              return event.title
-            }}
-          />
-        </Paper>
+          <Typography variant="body2" color="text.secondary">
+            {selectedEmpId
+              ? `No data available for ${months[selectedMonth].label} ${selectedYear}`
+              : "Please select an employee to view attendance data"}
+          </Typography>
+        </Box>
+      ) : isMobile ? (
+        <Stack spacing={1}>
+          {filteredActivities
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map((activity, index) => (
+              <AttendanceCard key={index} activity={activity} isMobile={isMobile} />
+            ))}
+        </Stack>
       ) : (
-        <Paper sx={{ borderRadius: 2 }}>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              All Records - {months[selectedMonth].label} {selectedYear}
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+        <TableContainer sx={{ borderRadius: 2 }}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
+                {["Date", "Type", "Check In", "Check Out", "Working Hours", "Status"].map(
+                  (head) => (
+                    <TableCell
+                      key={head}
+                      sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
+                    >
+                      {head}
+                    </TableCell>
+                  )
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredActivities
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((activity, index) => (
+                  <TableRow
+                    key={index}
+                    sx={{
+                      "&:hover": { backgroundColor: theme.palette.action.hover },
+                      borderLeft: `4px solid ${
+                        activity.type === "attendance"
+                          ? activity.color === "green"
+                            ? theme.palette.success.main
+                            : theme.palette.error.main
+                          : activity.type === "holiday"
+                          ? theme.palette.warning.main
+                          : activity.type === "weekoff"
+                          ? theme.palette.secondary.main
+                          : theme.palette.info.main
+                      }`,
+                      transition: "background 0.3s",
+                    }}
+                  >
+                    <TableCell sx={{ py: 1 }}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <CalendarToday fontSize="small" sx={{ color: "#8d0638ff" }} />
+                        {activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A"}
+                      </Box>
+                    </TableCell>
 
-            {filteredActivities.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <CalendarToday sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  No records found
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedEmpId 
-                    ? `No data available for ${months[selectedMonth].label} ${selectedYear}`
-                    : "Please select an employee to view attendance data"
-                  }
-                </Typography>
-              </Box>
-            ) : isMobile ? (
-              <Box>
-                {filteredActivities
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((activity, index) => (
-                    <AttendanceCard key={index} activity={activity} isMobile={isMobile} />
-                  ))}
-              </Box>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Date</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Type</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Check In</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Check Out</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Working Hours</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredActivities
-                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      .map((activity, index) => (
-                        <TableRow
-                          key={index}
-                          sx={{
-                            "&:hover": { backgroundColor: theme.palette.action.hover },
-                            borderLeft: `4px solid ${
-                              activity.type === "attendance"
-                                ? activity.color === "green"
-                                  ? theme.palette.success.main
-                                  : theme.palette.error.main
-                                : activity.type === "holiday"
-                                  ? theme.palette.warning.main
-                                  : activity.type === "weekoff"
-                                    ? theme.palette.secondary.main
-                                    : theme.palette.info.main
-                            }`,
-                          }}
-                        >
-                          <TableCell>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <CalendarToday fontSize="small" sx={{ color: "#8d0638ff" }} />
-                              {activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A"}
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              {activity.type === "attendance" && <Person fontSize="small" />}
-                              {activity.type === "holiday" && <Event fontSize="small" />}
-                              {activity.type === "weekoff" && <Weekend fontSize="small" />}
-                              {activity.type === "leave" && <BeachAccess fontSize="small" />}
-                              <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
-                                {activity.type}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            {activity.type === "attendance" ? (
-                              <Tooltip title={`Location: ${activity.firstInLocation || "N/A"}`}>
-                                <Box
-                                  component="a"
-                                  href={generateMapUrl(activity.firstInLocation)}
-                                  target="_blank"
-                                  sx={{
-                                    textDecoration: "none",
-                                    color: "primary.main",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    "&:hover": { textDecoration: "underline" },
-                                  }}
-                                >
-                                  <LocationOn fontSize="small" />
-                                  {activity.firstIn} ({activity.firstEvent})
-                                </Box>
-                              </Tooltip>
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">
-                                -
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {activity.type === "attendance" ? (
-                              activity.lastOutLocation !== "N/A" ? (
-                                <Tooltip title={`Location: ${activity.lastOutLocation}`}>
-                                  <Box
-                                    component="a"
-                                    href={generateMapUrl(activity.lastOutLocation)}
-                                    target="_blank"
-                                    sx={{
-                                      textDecoration: "none",
-                                      color: "primary.main",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 1,
-                                      "&:hover": { textDecoration: "underline" },
-                                    }}
-                                  >
-                                    <LocationOn fontSize="small" />
-                                    {activity.lastOut} ({activity.lastEvent})
-                                  </Box>
-                                </Tooltip>
-                              ) : (
-                                <Box display="flex" alignItems="center" gap={1}>
-                                  <Schedule fontSize="small" color="disabled" />
-                                  {activity.lastOut}
-                                </Box>
-                              )
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">
-                                -
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {activity.type === "attendance" ? (
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <AccessTime fontSize="small" color="info" />
-                                <Typography fontWeight="medium">{activity.workingHours}</Typography>
-                              </Box>
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">
-                                -
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {activity.type === "attendance" ? (
-                              <AttendanceStatusChip status={activity.color === "green" ? "on-time" : "late"} time="" />
-                            ) : (
-                              <AttendanceStatusChip status={activity.type} />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
+                    <TableCell sx={{ py: 1 }}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        {activity.type === "attendance" && <Person fontSize="small" />}
+                        {activity.type === "holiday" && <Event fontSize="small" />}
+                        {activity.type === "weekoff" && <Weekend fontSize="small" />}
+                        {activity.type === "leave" && <BeachAccess fontSize="small" />}
+                        <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
+                          {activity.type}
+                        </Typography>
+                      </Box>
+                    </TableCell>
 
-            {filteredActivities.length > 0 && (
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                component="div"
-                count={filteredActivities.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={(event, newPage) => setPage(newPage)}
-                onRowsPerPageChange={(event) => {
-                  setRowsPerPage(Number.parseInt(event.target.value, 10))
-                  setPage(0)
-                }}
-              />
-            )}
-          </Box>
-        </Paper>
+                    <TableCell sx={{ py: 1 }}>
+                      {activity.type === "attendance" ? (
+                        <Tooltip title={`Location: ${activity.firstInLocation || "N/A"}`}>
+                          <Box
+                            component="a"
+                            href={generateMapUrl(activity.firstInLocation)}
+                            target="_blank"
+                            sx={{
+                              textDecoration: "none",
+                              color: "primary.main",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              "&:hover": { textDecoration: "underline" },
+                            }}
+                          >
+                            <LocationOn fontSize="small" />
+                            {activity.firstIn} ({activity.firstEvent})
+                          </Box>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          -
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    <TableCell sx={{ py: 1 }}>
+                      {activity.type === "attendance" ? (
+                        activity.lastOutLocation !== "N/A" ? (
+                          <Tooltip title={`Location: ${activity.lastOutLocation}`}>
+                            <Box
+                              component="a"
+                              href={generateMapUrl(activity.lastOutLocation)}
+                              target="_blank"
+                              sx={{
+                                textDecoration: "none",
+                                color: "primary.main",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                "&:hover": { textDecoration: "underline" },
+                              }}
+                            >
+                              <LocationOn fontSize="small" />
+                              {activity.lastOut} ({activity.lastEvent})
+                            </Box>
+                          </Tooltip>
+                        ) : (
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Schedule fontSize="small" color="disabled" />
+                            {activity.lastOut}
+                          </Box>
+                        )
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          -
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    <TableCell sx={{ py: 1 }}>
+                      {activity.type === "attendance" ? (
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <AccessTime fontSize="small" color="info" />
+                          <Typography fontWeight={500}>{activity.workingHours}</Typography>
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          -
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    <TableCell sx={{ py: 1 }}>
+                      {activity.type === "attendance" ? (
+                        <AttendanceStatusChip
+                          status={activity.color === "green" ? "on-time" : "late"}
+                          time=""
+                        />
+                      ) : (
+                        <AttendanceStatusChip status={activity.type} />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
+
+      {filteredActivities.length > 0 && (
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredActivities.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(event, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(Number.parseInt(event.target.value, 10));
+            setPage(0);
+          }}
+        />
+      )}
+    </Box>
+  </Paper>
+)}
+ </Box>
     </Box>
   )
 }

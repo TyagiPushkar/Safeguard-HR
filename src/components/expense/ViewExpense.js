@@ -301,7 +301,7 @@ function EnhancedViewExpense() {
         transition={{ duration: 0.5 }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" fontWeight="bold" color="#8d0638ff">
+          <Typography variant="h4" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
             💰 Expense Management
           </Typography>
           <Box display="flex" gap={2}>
@@ -531,7 +531,7 @@ function EnhancedViewExpense() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Typography fontWeight="bold" color="#8d0638ff">
+                          <Typography fontWeight="bold" sx={{ color: "#8d0638ff" }}>
                             {formatCurrency(expense.expenseAmount)}
                           </Typography>
                         </TableCell>
@@ -674,7 +674,7 @@ function EnhancedViewExpense() {
                             <Typography variant="body2" color="textSecondary" gutterBottom>
                               Amount
                             </Typography>
-                            <Typography variant="h5" fontWeight="bold" color="#8d0638ff">
+                            <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
                               {formatCurrency(expense.expenseAmount)}
                             </Typography>
                           </Box>

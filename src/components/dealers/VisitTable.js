@@ -23,13 +23,14 @@ import {
   CardContent,
   Chip,
   Stack,
-  Container,
   Grid,
   Fade,
   Tooltip,
   Alert,
   useTheme,
   useMediaQuery,
+  alpha,
+  Paper,
 } from "@mui/material"
 import {
   Visibility,
@@ -55,22 +56,17 @@ function VisitTable() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 
-  const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 })
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [markers, setMarkers] = useState([])
-  const [directions, setDirections] = useState(null)
-  const [distances, setDistances] = useState([])
   const [employees, setEmployees] = useState([])
   const [selectedEmpId, setSelectedEmpId] = useState(user.role === "HR" ? "" : user.emp_id)
-  const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [address, setAddress] = useState("")
   const [noData, setNoData] = useState(false)
 
   // Popup states for image
   const [openDialog, setOpenDialog] = useState(false)
   const [imageData, setImageData] = useState("")
   const [rotation, setRotation] = useState(0)
+  const [address, setAddress] = useState("")
 
   useEffect(() => {
     if (user.role === "HR") {
@@ -93,14 +89,6 @@ function VisitTable() {
     }
   }, [user.role])
 
-  useEffect(() => {
-    if (markers.length > 0) {
-      const avgLat = markers.reduce((sum, marker) => sum + marker.lat, 0) / markers.length
-      const avgLng = markers.reduce((sum, marker) => sum + marker.lng, 0) / markers.length
-      setMapCenter({ lat: avgLat, lng: avgLng })
-    }
-  }, [markers])
-
   const fetchVisits = async () => {
     setLoading(true)
     setNoData(false)
@@ -110,24 +98,7 @@ function VisitTable() {
 
       const response = await axios.get(url)
       if (response.data.success && response.data.data.length > 0) {
-        const visitData = response.data.data
-        console.log("Visit Data:", visitData)
-
-        const markerData = visitData.map((visit, index) => {
-          const [lat, lng] = visit.VisitLatLong.split(",").map(Number)
-          return {
-            lat,
-            lng,
-            label: `${index + 1}`,
-            companyName: visit.CompanyName,
-            dealerName: visit.DealerName,
-            visitTime: new Date(visit.VisitTime).toLocaleString(),
-            mobileNo: visit.MobileNo,
-          }
-        })
-
-        setVisits(visitData)
-        setMarkers(markerData)
+        setVisits(response.data.data)
       } else {
         setVisits([])
         setNoData(true)
@@ -209,159 +180,201 @@ function VisitTable() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Box sx={{ p: { xs: 1, md: 2 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
       {/* Header Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          gutterBottom
-          sx={{
-            fontWeight: 600,
-            color: "primary.main",
-            mb: 1,
-          }}
-        >
-          Visit Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Track and manage employee visits efficiently
-        </Typography>
-      </Box>
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 3, 
+          mb: 3, 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        }}
+      >
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="h5" fontWeight="700" color="#8d0638ff" gutterBottom>
+            Visit Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Track and manage employee visits efficiently
+          </Typography>
+        </Box>
+      </Paper>
 
       {/* Controls Section */}
-      <Card sx={{ mb: 3, boxShadow: 2 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={user.role === "HR" ? 4 : 6}>
-              {user.role === "HR" && (
-                <Autocomplete
-                  options={employees}
-                  getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
-                  value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
-                  onChange={(event, newValue) => {
-                    setSelectedEmpId(newValue ? newValue.EmpId : "")
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Select Employee"
-                      variant="outlined"
-                      fullWidth
-                      InputProps={{
-                        ...params.InputProps,
-                        startAdornment: <Person sx={{ mr: 1, color: "action.active" }} />,
-                      }}
-                    />
-                  )}
-                />
-              )}
-            </Grid>
-
-            <Grid item xs={12} md={user.role === "HR" ? 3 : 4}>
-              <TextField
-                type="date"
-                value={selectedDate.toISOString().substr(0, 10)}
-                onChange={handleDateChange}
-                variant="outlined"
-                fullWidth
-                label="Select Date"
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  startAdornment: <CalendarToday sx={{ mr: 1, color: "action.active" }} />,
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2.5, 
+          mb: 3, 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        }}
+      >
+        <Grid container spacing={2} alignItems="center">
+          {user.role === "HR" && (
+            <Grid item xs={12} md={4}>
+              <Autocomplete
+                options={employees}
+                getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
+                value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
+                onChange={(event, newValue) => {
+                  setSelectedEmpId(newValue ? newValue.EmpId : "")
                 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Employee"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: <Person sx={{ mr: 1, color: "action.active" }} />,
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                      }
+                    }}
+                  />
+                )}
               />
             </Grid>
+          )}
 
-            <Grid item xs={12} md={2}>
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={fetchVisits}
-                startIcon={<Search />}
-                sx={{
-                  height: 56,
-                  bgcolor: "primary.main",
-                  "&:hover": { bgcolor: "primary.dark" },
-                }}
-              >
-                Search
-              </Button>
-            </Grid>
-
-            <Grid item xs={12} md={user.role === "HR" ? 3 : 2}>
-              <Button
-                variant="outlined"
-                fullWidth
-                onClick={planVisit}
-                startIcon={<Add />}
-                sx={{
-                  height: 56,
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                  "&:hover": {
-                    borderColor: "primary.dark",
-                    bgcolor: "primary.50",
-                  },
-                }}
-              >
-                Plan Visits
-              </Button>
-            </Grid>
+          <Grid item xs={12} md={user.role === "HR" ? 3 : 4}>
+            <TextField
+              type="date"
+              value={selectedDate.toISOString().substr(0, 10)}
+              onChange={handleDateChange}
+              variant="outlined"
+              fullWidth
+              label="Select Date"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{
+                startAdornment: <CalendarToday sx={{ mr: 1, color: "action.active" }} />,
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
+            />
           </Grid>
-        </CardContent>
-      </Card>
+
+          <Grid item xs={12} md={2}>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={fetchVisits}
+              startIcon={<Search />}
+              size="small"
+              sx={{
+                borderRadius: 2,
+                bgcolor: "#8d0638ff",
+                fontWeight: "600",
+                py: 1,
+                "&:hover": {
+                  bgcolor: "#6d052cff",
+                },
+              }}
+            >
+              Search
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={user.role === "HR" ? 3 : 3}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={planVisit}
+              startIcon={<Add />}
+              size="small"
+              sx={{
+                borderRadius: 2,
+                borderColor: alpha("#8d0638ff", 0.5),
+                color: "#8d0638ff",
+                py: 1,
+                "&:hover": {
+                  borderColor: "#8d0638ff",
+                  bgcolor: alpha("#8d0638ff", 0.04),
+                },
+              }}
+            >
+              Plan Visits
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
       {/* Content Section */}
       {loading ? (
-        <Card sx={{ p: 4, textAlign: "center" }}>
-          <CircularProgress size={60} sx={{ mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            Loading visits...
-          </Typography>
-        </Card>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+          <CircularProgress size={60} thickness={4} />
+        </Box>
       ) : noData ? (
-        <Card sx={{ p: 4, textAlign: "center" }}>
-          <Alert severity="info" sx={{ mb: 2 }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 4, 
+            textAlign: "center", 
+            borderRadius: 2,
+            background: 'white',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
+        >
+          <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
             No visits found for the selected date.
           </Alert>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body2" color="text.secondary">
             Try selecting a different date or employee.
           </Typography>
-        </Card>
+        </Paper>
       ) : (
         <Fade in={!loading}>
-          <Card sx={{ boxShadow: 3 }}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2, 
+              background: 'white',
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              overflow: 'hidden'
+            }}
+          >
             <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: "primary.main" }}>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Business fontSize="small" />
+              <Table sx={{ minWidth: 650 }} size="small">
+                <TableHead sx={{ bgcolor: "#8d0638ff" }}>
+                  <TableRow>
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Business sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                         Company
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Person fontSize="small" />
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Person sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                         Dealer
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Schedule fontSize="small" />
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Schedule sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                         Time
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Phone fontSize="small" />
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Phone sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                         Mobile
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Visit By</TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Attachment</TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Visit By</TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Attachment</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -375,11 +388,12 @@ function VisitTable() {
                       <TableRow
                         key={`${visit.DealerID}-${index}`}
                         sx={{
-                          "&:hover": { bgcolor: "action.hover" },
-                          "&:nth-of-type(odd)": { bgcolor: "action.selected" },
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                          },
                         }}
                       >
-                        <TableCell>
+                        <TableCell sx={{ py: 1 }}>
                           <Tooltip title="View on Google Maps">
                             <Box
                               component="a"
@@ -387,12 +401,13 @@ function VisitTable() {
                               target="_blank"
                               rel="noopener noreferrer"
                               sx={{
-                                color: "primary.main",
+                                color: "#8d0638ff",
                                 textDecoration: "none",
                                 fontWeight: 500,
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 1,
+                                gap: 0.5,
+                                fontSize: '0.8rem',
                                 "&:hover": { textDecoration: "underline" },
                               }}
                             >
@@ -401,35 +416,60 @@ function VisitTable() {
                             </Box>
                           </Tooltip>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={500}>
+                        <TableCell sx={{ py: 1 }}>
+                          <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem' }}>
                             {visit.DealerName}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 1 }}>
                           <Stack spacing={0.5}>
-                            <Chip label={formatTime(visit.VisitTime)} size="small" color="#8d0638ff" variant="outlined" />
-                            <Typography variant="caption" color="text.secondary">
+                            <Chip 
+                              label={formatTime(visit.VisitTime)} 
+                              size="small" 
+                              sx={{ 
+                                height: 24, 
+                                fontSize: '0.7rem',
+                                bgcolor: alpha("#8d0638ff", 0.1),
+                                color: "#8d0638ff",
+                                border: `1px solid ${alpha("#8d0638ff", 0.3)}`,
+                              }} 
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                               {formatDate(visit.VisitTime)}
                             </Typography>
                           </Stack>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">{visit.MobileNo}</Typography>
+                        <TableCell sx={{ py: 1 }}>
+                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                            {visit.MobileNo}
+                          </Typography>
                         </TableCell>
-                        <TableCell>
-                          <Chip label={visit.EmpId} size="small" color="secondary" />
+                        <TableCell sx={{ py: 1 }}>
+                          <Chip 
+                            label={visit.EmpId} 
+                            size="small" 
+                            sx={{ 
+                              height: 24, 
+                              fontSize: '0.7rem',
+                              bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                              color: theme.palette.secondary.main,
+                            }} 
+                          />
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 1 }}>
                           <Tooltip title="View Attachment">
                             <IconButton
                               onClick={() => handleViewImage(visit.VisitID)}
-                              color="#8d0638ff"
+                              size="small"
                               sx={{
-                                "&:hover": { bgcolor: "primary.50" },
+                                color: "#8d0638ff",
+                                bgcolor: alpha("#8d0638ff", 0.1),
+                                "&:hover": {
+                                  bgcolor: alpha("#8d0638ff", 0.2),
+                                }
                               }}
                             >
-                              <Visibility />
+                              <Visibility fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         </TableCell>
@@ -438,7 +478,7 @@ function VisitTable() {
                 </TableBody>
               </Table>
             </TableContainer>
-          </Card>
+          </Paper>
         </Fade>
       )}
 
@@ -449,30 +489,35 @@ function VisitTable() {
         maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 2 },
+          sx: { borderRadius: 3 },
         }}
       >
         <DialogTitle
           sx={{
-            bgcolor: "primary.main",
+            bgcolor: "#8d0638ff",
             color: "white",
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            justifyContent: "space-between",
+            p: 2.5,
           }}
         >
-          <Visibility />
-          Visit Attachment
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Visibility />
+            <Typography variant="h6" fontWeight="600">
+              Visit Attachment
+            </Typography>
+          </Box>
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
+        <DialogContent sx={{ p: 2.5 }}>
           {address && (
-            <Card sx={{ mb: 2, bgcolor: "grey.50" }}>
-              <CardContent sx={{ py: 2 }}>
-                <Typography variant="subtitle2" color="#8d0638ff" gutterBottom>
-                  <LocationOn fontSize="small" sx={{ mr: 1, verticalAlign: "middle" }} />
+            <Card sx={{ mb: 2, bgcolor: alpha("#8d0638ff", 0.04), border: `1px solid ${alpha("#8d0638ff", 0.1)}` }}>
+              <CardContent sx={{ py: 1.5 }}>
+                <Typography variant="subtitle2" color="#8d0638ff" gutterBottom sx={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                  <LocationOn sx={{ mr: 1, fontSize: '1rem' }} />
                   Location Details
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
                   {address}
                 </Typography>
               </CardContent>
@@ -491,27 +536,52 @@ function VisitTable() {
                   transform: `rotate(${rotation}deg)`,
                   transition: "transform 0.3s ease",
                   borderRadius: 1,
-                  boxShadow: 2,
                 }}
               />
             ) : (
-              <Alert severity="warning">No attachment available for this visit.</Alert>
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                No attachment available for this visit.
+              </Alert>
             )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={handleRotateLeft} startIcon={<RotateLeft />} variant="outlined">
+        <DialogActions sx={{ p: 2, gap: 1, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+          <Button 
+            onClick={handleRotateLeft} 
+            startIcon={<RotateLeft />} 
+            variant="outlined"
+            size="small"
+            sx={{ borderRadius: 2 }}
+          >
             Rotate Left
           </Button>
-          <Button onClick={handleRotateRight} startIcon={<RotateRight />} variant="outlined">
+          <Button 
+            onClick={handleRotateRight} 
+            startIcon={<RotateRight />} 
+            variant="outlined"
+            size="small"
+            sx={{ borderRadius: 2 }}
+          >
             Rotate Right
           </Button>
-          <Button onClick={handleCloseDialog} variant="contained" color="#8d0638ff">
+          <Button 
+            onClick={handleCloseDialog} 
+            variant="contained"
+            size="small"
+            sx={{ 
+              borderRadius: 2,
+              bgcolor: "#8d0638ff",
+              fontWeight: "600",
+              "&:hover": {
+                bgcolor: "#6d052cff",
+              }
+            }}
+          >
             Close
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Box>
   )
 }
 

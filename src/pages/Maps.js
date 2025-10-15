@@ -132,31 +132,13 @@ function Maps() {
       sx={{ 
         bgcolor: 'background.default',
         p: 0,
-        height: '100%'
+       
       }}
     >
-      {/* Tab Navigation */}
-      {/* <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
-          <TabButton
-            isActive={selectedTab === "visitMap"}
-            onClick={() => setSelectedTab("visitMap")}
-            icon={tabConfig.visitMap.icon}
-            label={tabConfig.visitMap.label}
-            description={tabConfig.visitMap.description}
-          />
-          <TabButton
-            isActive={selectedTab === "liveField"}
-            onClick={() => setSelectedTab("liveField")}
-            icon={tabConfig.liveField.icon}
-            label={tabConfig.liveField.label}
-            description={tabConfig.liveField.description}
-          />
-        </Stack>
-      </Box> */}
+      
 
       {/* Content Area */}
-      <Box sx={{ flexGrow: 1, height: 'calc(100% - 100px)', px: 1, pb: 1 }}>
+      <Box sx={{ flexGrow: 1, px: 1, pb: 1 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedTab}

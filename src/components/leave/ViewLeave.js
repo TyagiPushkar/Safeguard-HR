@@ -36,6 +36,7 @@ import {
   DialogActions,
   Fab,
   Zoom,
+  alpha,
 } from "@mui/material"
 import {
   Check,
@@ -64,7 +65,7 @@ import axios from "axios"
 import { useAuth } from "../auth/AuthContext"
 import ApplyLeave from "./ApplyLeave"
 
-// Enhanced Stats Card Component
+// Enhanced Compact Stats Card Component
 const StatsCard = ({ icon, title, value, color, subtitle, trend }) => {
   const theme = useTheme()
 
@@ -72,37 +73,49 @@ const StatsCard = ({ icon, title, value, color, subtitle, trend }) => {
     <Card
       component={motion.div}
       whileHover={{
-        translateY: -5,
-        boxShadow: theme.shadows[8],
+        translateY: -3,
+        boxShadow: theme.shadows[6],
         transition: { duration: 0.2 },
       }}
       sx={{
         height: "100%",
-        borderLeft: `4px solid ${color}`,
-        background: `linear-gradient(135deg, ${color}10 0%, ${color}05 100%)`,
+        borderLeft: `3px solid ${color}`,
+        background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.04)} 100%)`,
+        borderRadius: 2,
+        transition: "all 0.3s ease",
       }}
     >
-      <CardContent>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight="500" gutterBottom sx={{ fontSize: '0.75rem' }}>
               {title}
             </Typography>
-            <Typography variant="h4" fontWeight="bold" color={color}>
+            <Typography variant="h6" fontWeight="bold" color={color} sx={{ fontSize: '1.25rem', lineHeight: 1.2 }}>
               {value}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                 {subtitle}
               </Typography>
             )}
           </Box>
-          <Avatar sx={{ bgcolor: `${color}20`, color: color, width: 48, height: 48 }}>{icon}</Avatar>
+          <Avatar 
+            sx={{ 
+              bgcolor: `${alpha(color, 0.1)}`, 
+              color: color, 
+              width: 36, 
+              height: 36,
+              fontSize: '1rem'
+            }}
+          >
+            {icon}
+          </Avatar>
         </Box>
         {trend && (
-          <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
-            <TrendingUp fontSize="small" sx={{ color: "success.main", mr: 0.5 }} />
-            <Typography variant="caption" color="success.main" fontWeight="600">
+          <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+            <TrendingUp fontSize="small" sx={{ color: "success.main", mr: 0.5, fontSize: '0.9rem' }} />
+            <Typography variant="caption" color="success.main" fontWeight="600" sx={{ fontSize: '0.7rem' }}>
               {trend}
             </Typography>
           </Box>
@@ -172,30 +185,42 @@ const LeaveCard = ({ leave, employee, onStatusChange, isHR, index }) => {
       <Card
         sx={{
           mb: 2,
-          borderLeft: `4px solid ${theme.palette[getStatusColor(leave.Status)].main}`,
+          borderLeft: `3px solid ${theme.palette[getStatusColor(leave.Status)].main}`,
+          borderRadius: 2,
           "&:hover": {
-            boxShadow: theme.shadows[8],
+            boxShadow: theme.shadows[4],
             transform: "translateY(-2px)",
             transition: "all 0.2s ease-in-out",
           },
         }}
       >
-        <CardContent>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+        <CardContent sx={{ p: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}>
             <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
-              <Avatar sx={{ bgcolor: theme.palette.primary.main, mr: 2 }}>
-                <Person />
+              <Avatar sx={{ 
+                bgcolor: theme.palette.primary.main, 
+                mr: 1.5,
+                width: 32,
+                height: 32,
+                fontSize: '0.9rem'
+              }}>
+                <Person fontSize="small" />
               </Avatar>
               <Box>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
                   {employee?.Name || "Unknown Employee"}
                 </Typography>
-                <Chip label={leave.Status} color={getStatusColor(leave.Status)} size="small" />
+                <Chip 
+                  label={leave.Status} 
+                  color={getStatusColor(leave.Status)} 
+                  size="small" 
+                  sx={{ height: 24, fontSize: '0.7rem' }}
+                />
               </Box>
             </Box>
             <Box sx={{ display: "flex", gap: 0.5 }}>
               <Tooltip title="View Details">
-                <IconButton size="small" color="#8d0638ff">
+                <IconButton size="small" color="primary" sx={{ fontSize: '0.8rem' }}>
                   <Visibility fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -206,11 +231,11 @@ const LeaveCard = ({ leave, employee, onStatusChange, isHR, index }) => {
                   </IconButton>
                   <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                     <MenuItem onClick={() => handleStatusChange("Approved")}>
-                      <Check sx={{ mr: 1, color: "success.main" }} />
+                      <Check sx={{ mr: 1, color: "success.main", fontSize: '1rem' }} />
                       Approve
                     </MenuItem>
                     <MenuItem onClick={() => handleStatusChange("Rejected")}>
-                      <Cancel sx={{ mr: 1, color: "error.main" }} />
+                      <Cancel sx={{ mr: 1, color: "error.main", fontSize: '1rem' }} />
                       Reject
                     </MenuItem>
                   </Menu>
@@ -219,55 +244,55 @@ const LeaveCard = ({ leave, employee, onStatusChange, isHR, index }) => {
             </Box>
           </Box>
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
             <Grid item xs={6}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <CalendarToday fontSize="small" sx={{ mr: 1, color: theme.palette.info.main }} />
-                <Typography variant="caption" color="text.secondary">
+              <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                <CalendarToday fontSize="small" sx={{ mr: 0.5, color: theme.palette.info.main, fontSize: '0.8rem' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   Duration
                 </Typography>
               </Box>
-              <Typography variant="body2" fontWeight="medium">
+              <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
                 {calculateDays()} day{calculateDays() !== 1 ? "s" : ""}
               </Typography>
             </Grid>
             <Grid item xs={6}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Category fontSize="small" sx={{ mr: 1, color: theme.palette.secondary.main }} />
-                <Typography variant="caption" color="text.secondary">
+              <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                <Category fontSize="small" sx={{ mr: 0.5, color: theme.palette.secondary.main, fontSize: '0.8rem' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   Type
                 </Typography>
               </Box>
-              <Typography variant="body2" fontWeight="medium">
+              <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
                 {leave.Category}
               </Typography>
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Schedule fontSize="small" sx={{ mr: 1, color: theme.palette.warning.main }} />
-                <Typography variant="caption" color="text.secondary">
+              <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                <Schedule fontSize="small" sx={{ mr: 0.5, color: theme.palette.warning.main, fontSize: '0.8rem' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   Dates
                 </Typography>
               </Box>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
                 {formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}
               </Typography>
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Description fontSize="small" sx={{ mr: 1, color: theme.palette.text.secondary }} />
-                <Typography variant="caption" color="text.secondary">
+              <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                <Description fontSize="small" sx={{ mr: 0.5, color: theme.palette.text.secondary, fontSize: '0.8rem' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   Reason
                 </Typography>
               </Box>
-              <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+              <Typography variant="body2" sx={{ fontStyle: "italic", fontSize: '0.8rem' }}>
                 {leave.Reason}
               </Typography>
             </Grid>
           </Grid>
 
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
               Applied: {leave.CreatedAt}
             </Typography>
             {isHR && leave.Status === "Pending" && (
@@ -278,6 +303,7 @@ const LeaveCard = ({ leave, employee, onStatusChange, isHR, index }) => {
                   color="success"
                   startIcon={<Check />}
                   onClick={() => onStatusChange(leave.Id, "Approved")}
+                  sx={{ fontSize: '0.7rem', py: 0.25, px: 1 }}
                 >
                   Approve
                 </Button>
@@ -287,6 +313,7 @@ const LeaveCard = ({ leave, employee, onStatusChange, isHR, index }) => {
                   color="error"
                   startIcon={<Cancel />}
                   onClick={() => onStatusChange(leave.Id, "Rejected")}
+                  sx={{ fontSize: '0.7rem', py: 0.25, px: 1 }}
                 >
                   Reject
                 </Button>
@@ -481,17 +508,17 @@ function ViewLeave() {
   }
 
   return (
-    <Box sx={{ p: { xs: 0, md: 0 }, bgcolor: "#f5f7fa", minHeight: "100vh" }}>
+    <Box sx={{ p: { xs: 1, md: 2 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
       {/* Header */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Paper elevation={1} sx={{ p: 2, mb: 2, borderRadius: 2, background: 'white' }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h4" fontWeight="bold" color="#8d0638ff">
+          <Typography variant="h5" fontWeight="bold" color="#8d0638ff">
             Leave Management
           </Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
             <Tooltip title="Refresh">
-              <IconButton onClick={handleRefresh} disabled={refreshing}>
-                {refreshing ? <CircularProgress size={20} /> : <Refresh />}
+              <IconButton onClick={handleRefresh} disabled={refreshing} size="small">
+                {refreshing ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
               </IconButton>
             </Tooltip>
             <Button variant="outlined" startIcon={<Download />} onClick={exportToCsv} size="small">
@@ -501,7 +528,7 @@ function ViewLeave() {
         </Box>
 
         {/* Search and Filters */}
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={1.5} alignItems="center">
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -509,10 +536,11 @@ function ViewLeave() {
               placeholder="Search by employee name, reason, or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search color="action" />
+                    <Search color="action" fontSize="small" />
                   </InputAdornment>
                 ),
               }}
@@ -525,6 +553,7 @@ function ViewLeave() {
               label="Filter by Status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              size="small"
             >
               <MenuItem value="">All Status</MenuItem>
               <MenuItem value="Pending">Pending</MenuItem>
@@ -533,11 +562,12 @@ function ViewLeave() {
             </TextField>
           </Grid>
           <Grid item xs={12} md={3}>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={0.5}>
               <Button
                 variant={viewMode === "table" ? "contained" : "outlined"}
                 onClick={() => setViewMode("table")}
                 size="small"
+                sx={{ fontSize: '0.75rem' }}
               >
                 Table
               </Button>
@@ -545,6 +575,7 @@ function ViewLeave() {
                 variant={viewMode === "cards" ? "contained" : "outlined"}
                 onClick={() => setViewMode("cards")}
                 size="small"
+                sx={{ fontSize: '0.75rem' }}
               >
                 Cards
               </Button>
@@ -555,14 +586,14 @@ function ViewLeave() {
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}
         </Alert>
       )}
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      {/* Compact Stats Cards */}
+      <Grid container spacing={1.5} sx={{ mb: 2 }}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<EventAvailable />}
             title="Total Leaves"
@@ -571,7 +602,7 @@ function ViewLeave() {
             subtitle="All applications"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<AccessTime />}
             title="Pending"
@@ -580,7 +611,7 @@ function ViewLeave() {
             subtitle="Awaiting approval"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<Check />}
             title="Approved"
@@ -589,7 +620,7 @@ function ViewLeave() {
             subtitle="Approved leaves"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             icon={<Cancel />}
             title="Rejected"
@@ -601,14 +632,14 @@ function ViewLeave() {
       </Grid>
 
       {/* Main Content */}
-      <Paper elevation={2} sx={{ borderRadius: 2 }}>
+      <Paper elevation={1} sx={{ borderRadius: 2, background: 'white' }}>
         {viewMode === "cards" || isMobile ? (
           // Card View
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ p: 1.5 }}>
+            <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ fontSize: '0.9rem' }}>
               Leave Applications ({filteredLeaves.length})
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 1.5 }} />
             <AnimatePresence>
               {filteredLeaves.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((leave, index) => {
                 const employee = employees.find((emp) => emp.EmpId === leave.EmpId)
@@ -625,8 +656,8 @@ function ViewLeave() {
               })}
             </AnimatePresence>
             {filteredLeaves.length === 0 && (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <Typography variant="body1" color="text.secondary">
+              <Box sx={{ textAlign: "center", py: 3 }}>
+                <Typography variant="body2" color="text.secondary">
                   No leave applications found
                 </Typography>
               </Box>
@@ -635,41 +666,41 @@ function ViewLeave() {
         ) : (
           // Table View
           <TableContainer>
-            <Table>
+            <Table sx={{ minWidth: 650 }} size="small">
               <TableHead sx={{ bgcolor: "#8d0638ff" }}>
                 <TableRow>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Person sx={{ mr: 1 }} />
+                      <Person sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Employee
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <CalendarToday sx={{ mr: 1 }} />
+                      <CalendarToday sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Dates
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Category sx={{ mr: 1 }} />
+                      <Category sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Category
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Description sx={{ mr: 1 }} />
+                      <Description sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Reason
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>Status</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Status</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Schedule sx={{ mr: 1 }} />
+                      <Schedule sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Applied On
                     </Box>
                   </TableCell>
-                  {user.role === "HR" && <TableCell sx={{ color: "white", fontWeight: "bold" }}>Actions</TableCell>}
+                  {user.role === "HR" && <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -684,57 +715,72 @@ function ViewLeave() {
                         <motion.tr
                           key={leave.Id}
                           component={TableRow}
-                          initial={{ opacity: 0, y: 20 }}
+                          initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ delay: index * 0.05 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ delay: index * 0.03 }}
                           sx={{
                             "&:hover": {
-                              bgcolor: theme.palette.action.hover,
-                              transform: "scale(1.01)",
-                              transition: "all 0.2s ease",
+                              bgcolor: alpha(theme.palette.primary.main, 0.04),
                             },
                           }}
                         >
-                          <TableCell>
+                          <TableCell sx={{ py: 1 }}>
                             <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <Avatar sx={{ mr: 2, width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
+                              <Avatar sx={{ 
+                                mr: 1.5, 
+                                width: 28, 
+                                height: 28, 
+                                bgcolor: theme.palette.primary.main,
+                                fontSize: '0.8rem'
+                              }}>
                                 <Person fontSize="small" />
                               </Avatar>
-                              <Typography variant="body2" fontWeight="medium">
+                              <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
                                 {employeeName}
                               </Typography>
                             </Box>
                           </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
+                          <TableCell sx={{ py: 1 }}>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
                               {formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <Chip label={leave.Category} variant="outlined" size="small" />
+                          <TableCell sx={{ py: 1 }}>
+                            <Chip 
+                              label={leave.Category} 
+                              variant="outlined" 
+                              size="small" 
+                              sx={{ height: 22, fontSize: '0.7rem' }}
+                            />
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ py: 1 }}>
                             <Typography
                               variant="body2"
                               sx={{
-                                maxWidth: 200,
+                                maxWidth: 150,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
+                                fontSize: '0.8rem'
                               }}
                             >
                               {leave.Reason}
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <Chip label={leave.Status} color={getStatusColor(leave.Status)} size="small" />
+                          <TableCell sx={{ py: 1 }}>
+                            <Chip 
+                              label={leave.Status} 
+                              color={getStatusColor(leave.Status)} 
+                              size="small" 
+                              sx={{ height: 22, fontSize: '0.7rem' }}
+                            />
                           </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">{leave.CreatedAt}</Typography>
+                          <TableCell sx={{ py: 1 }}>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{leave.CreatedAt}</Typography>
                           </TableCell>
                           {user.role === "HR" && (
-                            <TableCell>
+                            <TableCell sx={{ py: 1 }}>
                               <Box sx={{ display: "flex", gap: 0.5 }}>
                                 <Tooltip title="Approve">
                                   <IconButton
@@ -742,6 +788,7 @@ function ViewLeave() {
                                     color="success"
                                     onClick={() => handleStatusChange(leave.Id, "Approved")}
                                     disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
+                                    sx={{ fontSize: '0.8rem' }}
                                   >
                                     <Check fontSize="small" />
                                   </IconButton>
@@ -752,12 +799,13 @@ function ViewLeave() {
                                     color="error"
                                     onClick={() => handleStatusChange(leave.Id, "Rejected")}
                                     disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
+                                    sx={{ fontSize: '0.8rem' }}
                                   >
                                     <Cancel fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="View Details">
-                                  <IconButton size="small" color="info">
+                                  <IconButton size="small" color="info" sx={{ fontSize: '0.8rem' }}>
                                     <Visibility fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
@@ -781,20 +829,26 @@ function ViewLeave() {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{ '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: '0.8rem' } }}
         />
       </Paper>
 
       {/* Floating Action Button */}
       <Zoom in={true}>
         <Fab
-          color="#8d0638ff"
+          color="primary"
           onClick={() => setApplyLeaveOpen(true)}
           sx={{
             position: "fixed",
             bottom: 16,
             right: 16,
             zIndex: theme.zIndex.speedDial,
+            bgcolor: '#8d0638ff',
+            '&:hover': {
+              bgcolor: '#6d0430ff',
+            }
           }}
+          size="medium"
         >
           <Add />
         </Fab>

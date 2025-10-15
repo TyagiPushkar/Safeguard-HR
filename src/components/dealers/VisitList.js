@@ -302,8 +302,8 @@ const VisitList = () => {
       {/* Other Reports */}
       <Stack spacing={4}>
         <AttendanceReport />
-        <SalaryList />
-        <SalarySlip />
+        {/* <SalaryList /> */}
+        {/* <SalarySlip /> */}
       </Stack>
     </Container>
   )

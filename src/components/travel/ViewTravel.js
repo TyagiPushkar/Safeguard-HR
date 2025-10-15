@@ -11,7 +11,6 @@ import {
   TableHead,
   TableRow,
   CircularProgress,
-  TableFooter,
   TablePagination,
   Button,
   IconButton,
@@ -20,10 +19,12 @@ import {
   Chip,
   Stack,
   Alert,
-  Container,
   useTheme,
   useMediaQuery,
   Tooltip,
+  alpha,
+  Paper,
+  Grid,
 } from "@mui/material"
 import {
   Check,
@@ -37,6 +38,36 @@ import {
 } from "@mui/icons-material"
 import axios from "axios"
 import { useAuth } from "../auth/AuthContext"
+
+// Compact Stats Card Component
+const StatsCard = ({ title, value, color, icon }) => {
+  const theme = useTheme()
+
+  return (
+    <Card
+      sx={{
+        height: "100%",
+        borderLeft: `3px solid ${color}`,
+        background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.04)} 100%)`,
+        borderRadius: 2,
+      }}
+    >
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight="500" sx={{ fontSize: '0.75rem' }}>
+              {title}
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color={color} sx={{ fontSize: '1.25rem', lineHeight: 1.2 }}>
+              {value}
+            </Typography>
+          </Box>
+          {icon}
+        </Box>
+      </CardContent>
+    </Card>
+  )
+}
 
 function ViewTravel({ EmpId }) {
   const [travelExpenses, setTravelExpenses] = useState([])
@@ -194,136 +225,146 @@ function ViewTravel({ EmpId }) {
 
   if (loading) {
     return (
-      <Card sx={{ p: 4, textAlign: "center" }}>
-        <CircularProgress size={60} sx={{ mb: 2 }} />
-        <Typography variant="h6" color="text.secondary">
-          Loading travel requests...
-        </Typography>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+        <CircularProgress size={60} thickness={4} />
+      </Box>
     )
   }
 
   return (
-    <Card sx={{ boxShadow: 3 }}>
-      <CardContent>
-        {/* Header */}
-        <Box sx={{ mb: 3 }}>
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            justifyContent="space-between"
-            alignItems={isMobile ? "stretch" : "center"}
-            spacing={2}
+    <Box sx={{ p: { xs: 1, md: 2 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+      {/* Header */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2.5, 
+          mb: 2, 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+          <Box>
+            <Typography variant="h5" fontWeight="700" color="#8d0638ff" gutterBottom>
+              Travel Requests
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage and track all travel requests
+            </Typography>
+          </Box>
+          <Button
+            variant="outlined"
+            onClick={exportToCsv}
+            startIcon={<GetApp />}
+            disabled={travelExpenses.length === 0}
+            size="small"
+            sx={{ borderRadius: 2 }}
           >
-            <Box>
-              <Typography variant="h5" component="h2" sx={{ color: "primary.main", fontWeight: 600, mb: 1 }}>
-                <FlightTakeoff sx={{ mr: 1, verticalAlign: "middle" }} />
-                Travel Requests
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Manage and track all travel requests
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              onClick={exportToCsv}
-              startIcon={<GetApp />}
-              disabled={travelExpenses.length === 0}
-              sx={{
-                bgcolor: "primary.main",
-                "&:hover": { bgcolor: "primary.dark" },
-                minWidth: 150,
-              }}
-            >
-              Export CSV
-            </Button>
-          </Stack>
+            Export CSV
+          </Button>
         </Box>
 
         {/* Stats Cards */}
         {travelExpenses.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Stack direction={isMobile ? "column" : "row"} spacing={2}>
-              <Card sx={{ flex: 1, bgcolor: "warning.50", border: "1px solid", borderColor: "warning.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="warning.main" fontWeight="bold">
-                    {stats.pending}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Pending
-                  </Typography>
-                </CardContent>
-              </Card>
-              <Card sx={{ flex: 1, bgcolor: "success.50", border: "1px solid", borderColor: "success.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="success.main" fontWeight="bold">
-                    {stats.approved}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Approved
-                  </Typography>
-                </CardContent>
-              </Card>
-              <Card sx={{ flex: 1, bgcolor: "error.50", border: "1px solid", borderColor: "error.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="error.main" fontWeight="bold">
-                    {stats.rejected}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Rejected
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Stack>
-          </Box>
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            <Grid item xs={4}>
+              <StatsCard
+                title="Pending"
+                value={stats.pending}
+                color={theme.palette.warning.main}
+                icon={<Chip label="Pending" size="small" color="warning" sx={{ height: 24, fontSize: '0.7rem' }} />}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <StatsCard
+                title="Approved"
+                value={stats.approved}
+                color={theme.palette.success.main}
+                icon={<Chip label="Approved" size="small" color="success" sx={{ height: 24, fontSize: '0.7rem' }} />}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <StatsCard
+                title="Rejected"
+                value={stats.rejected}
+                color={theme.palette.error.main}
+                icon={<Chip label="Rejected" size="small" color="error" sx={{ height: 24, fontSize: '0.7rem' }} />}
+              />
+            </Grid>
+          </Grid>
         )}
+      </Paper>
 
-        {/* Table */}
+      {/* Error Alert */}
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2, 
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.error.light}`,
+          }} 
+          onClose={() => setError("")}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Main Content */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderRadius: 2, 
+          background: 'white',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          overflow: 'hidden'
+        }}
+      >
         {travelExpenses.length === 0 ? (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            No travel requests found.
-          </Alert>
+          <Box sx={{ textAlign: "center", py: 6 }}>
+            <FlightTakeoff sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No Travel Requests
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              No travel requests found for your account.
+            </Typography>
+          </Box>
         ) : (
           <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "primary.main" }}>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Person fontSize="small" />
+            <Table sx={{ minWidth: 650 }} size="small">
+              <TableHead sx={{ bgcolor: "#8d0638ff" }}>
+                <TableRow>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Person sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Employee
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CalendarToday fontSize="small" />
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <CalendarToday sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Date
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LocationOn fontSize="small" />
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <LocationOn sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Destination
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>From</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>To</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <DirectionsCar fontSize="small" />
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>From</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>To</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <DirectionsCar sx={{ mr: 0.5, fontSize: '0.9rem' }} />
                       Type
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 600 }}>Status</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Status</TableCell>
                   {user && user.role === "HR" && (
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Actions</TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>
                   )}
                 </TableRow>
               </TableHead>
@@ -332,61 +373,74 @@ function ViewTravel({ EmpId }) {
                   <TableRow
                     key={expense.id}
                     sx={{
-                      "&:hover": { bgcolor: "action.hover" },
-                      "&:nth-of-type(odd)": { bgcolor: "action.selected" },
+                      "&:hover": {
+                        bgcolor: alpha(theme.palette.primary.main, 0.04),
+                      },
                     }}
                   >
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
+                    <TableCell sx={{ py: 1 }}>
+                      <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem' }}>
                         {expense.employeeName}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{formatDate(expense.travelDate)}</Typography>
+                    <TableCell sx={{ py: 1 }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                        {formatDate(expense.travelDate)}
+                      </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
+                    <TableCell sx={{ py: 1 }}>
+                      <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem' }}>
                         {expense.travelDestination}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{expense.travelFrom}</Typography>
+                    <TableCell sx={{ py: 1 }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                        {expense.travelFrom}
+                      </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{expense.travelTo}</Typography>
+                    <TableCell sx={{ py: 1 }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                        {expense.travelTo}
+                      </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Chip label={expense.travelType} size="small" variant="outlined" />
+                    <TableCell sx={{ py: 1 }}>
+                      <Chip label={expense.travelType} size="small" variant="outlined" sx={{ height: 24, fontSize: '0.7rem' }} />
                     </TableCell>
-                    <TableCell>
-                      <Chip label={expense.status} size="small" color={getStatusColor(expense.status)} />
+                    <TableCell sx={{ py: 1 }}>
+                      <Chip label={expense.status} size="small" color={getStatusColor(expense.status)} sx={{ height: 24, fontSize: '0.7rem' }} />
                     </TableCell>
                     {user && user.role === "HR" && (
-                      <TableCell>
+                      <TableCell sx={{ py: 1 }}>
                         {expense.status === "Pending" && (
-                          <Stack direction="row" spacing={1}>
+                          <Stack direction="row" spacing={0.5}>
                             <Tooltip title="Approve Request">
                               <IconButton
                                 onClick={() => handleStatusChange(expense.id, "Approved")}
-                                color="success"
                                 size="small"
                                 sx={{
-                                  "&:hover": { bgcolor: "success.50" },
+                                  color: theme.palette.success.main,
+                                  bgcolor: alpha(theme.palette.success.main, 0.1),
+                                  "&:hover": {
+                                    bgcolor: alpha(theme.palette.success.main, 0.2),
+                                  }
                                 }}
                               >
-                                <Check />
+                                <Check fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Reject Request">
                               <IconButton
                                 onClick={() => handleStatusChange(expense.id, "Rejected")}
-                                color="error"
                                 size="small"
                                 sx={{
-                                  "&:hover": { bgcolor: "error.50" },
+                                  color: theme.palette.error.main,
+                                  bgcolor: alpha(theme.palette.error.main, 0.1),
+                                  "&:hover": {
+                                    bgcolor: alpha(theme.palette.error.main, 0.2),
+                                  }
                                 }}
                               >
-                                <Cancel />
+                                <Cancel fontSize="small" />
                               </IconButton>
                             </Tooltip>
                           </Stack>
@@ -396,28 +450,26 @@ function ViewTravel({ EmpId }) {
                   </TableRow>
                 ))}
               </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TablePagination
-                    rowsPerPageOptions={[5, 10, 25, 50]}
-                    count={travelExpenses.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                    sx={{
-                      "& .MuiTablePagination-toolbar": {
-                        bgcolor: "grey.50",
-                      },
-                    }}
-                  />
-                </TableRow>
-              </TableFooter>
             </Table>
+
+            {/* Pagination */}
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              component="div"
+              count={travelExpenses.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              sx={{ 
+                '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: '0.8rem' },
+                borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+              }}
+            />
           </TableContainer>
         )}
-      </CardContent>
-    </Card>
+      </Paper>
+    </Box>
   )
 }
 

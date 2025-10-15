@@ -19,8 +19,10 @@ import {
   MenuItem,
   useTheme,
   useMediaQuery,
+  alpha,
+  IconButton,
 } from "@mui/material"
-import { FlightTakeoff, CalendarToday, LocationOn, DirectionsCar } from "@mui/icons-material"
+import { FlightTakeoff, CalendarToday, LocationOn, DirectionsCar, Close } from "@mui/icons-material"
 import axios from "axios"
 import { useAuth } from "../auth/AuthContext"
 
@@ -46,7 +48,6 @@ function ApplyTravel({ open, onClose, onTravelApplied }) {
 
   const handleChange = (field, value) => {
     setTravelEntry({ ...travelEntry, [field]: value })
-    // Clear error when user starts typing
     if (error) setError("")
   }
 
@@ -59,7 +60,6 @@ function ApplyTravel({ open, onClose, onTravelApplied }) {
       return false
     }
 
-    // Check if travel date is in the future
     const selectedDate = new Date(travelEntry.travelDate)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -100,7 +100,6 @@ function ApplyTravel({ open, onClose, onTravelApplied }) {
         setTimeout(() => {
           onTravelApplied()
           onClose()
-          // Reset form
           setTravelEntry({
             empId: user.emp_id,
             travelDate: "",
@@ -135,60 +134,90 @@ function ApplyTravel({ open, onClose, onTravelApplied }) {
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       fullScreen={isMobile}
       PaperProps={{
-        sx: { borderRadius: isMobile ? 0 : 2 },
+        sx: { 
+          borderRadius: isMobile ? 0 : 3,
+        },
       }}
     >
+      {/* Header */}
       <DialogTitle
         sx={{
-          bgcolor: "primary.main",
+          bgcolor: "#8d0638ff",
           color: "white",
           display: "flex",
           alignItems: "center",
-          gap: 1,
+          justifyContent: "space-between",
+          p: 3,
         }}
       >
-        <FlightTakeoff />
-        Apply for Travel
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <FlightTakeoff sx={{ fontSize: 28 }} />
+          <Box>
+            <Typography variant="h6" fontWeight="700">
+              Apply for Travel
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9, display: 'block', mt: 0.5 }}>
+              Submit your travel request
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton 
+          onClick={handleClose} 
+          sx={{ 
+            color: "white",
+            bgcolor: alpha("#ffffff", 0.1),
+            "&:hover": {
+              bgcolor: alpha("#ffffff", 0.2),
+            }
+          }}
+          disabled={loading}
+        >
+          <Close />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
+        <Box sx={{ mt:3, mb: 3 }}>
+          <Typography variant="body1" color="text.secondary">
             Fill in the details for your travel request. All fields are required.
           </Typography>
         </Box>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
               label="Travel Date"
               type="date"
               value={travelEntry.travelDate}
               onChange={(e) => handleChange("travelDate", e.target.value)}
               InputLabelProps={{ shrink: true }}
-              variant="outlined"
               fullWidth
               InputProps={{
-                startAdornment: <CalendarToday sx={{ mr: 1, color: "action.active" }} />,
+                startAdornment: <CalendarToday sx={{ mr: 1.5, color: "action.active" }} />,
               }}
               inputProps={{
                 min: new Date().toISOString().split("T")[0],
               }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="outlined">
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
               <InputLabel>Travel Type</InputLabel>
               <Select
                 value={travelEntry.travelType}
                 onChange={(e) => handleChange("travelType", e.target.value)}
                 label="Travel Type"
-                startAdornment={<DirectionsCar sx={{ mr: 1, color: "action.active" }} />}
+                sx={{ borderRadius: 2 }}
               >
                 {travelTypes.map((type) => (
                   <MenuItem key={type} value={type}>
@@ -204,66 +233,119 @@ function ApplyTravel({ open, onClose, onTravelApplied }) {
               label="Travel Destination"
               value={travelEntry.travelDestination}
               onChange={(e) => handleChange("travelDestination", e.target.value)}
-              variant="outlined"
               fullWidth
+              placeholder="Enter destination city or location"
               InputProps={{
-                startAdornment: <LocationOn sx={{ mr: 1, color: "action.active" }} />,
+                startAdornment: <LocationOn sx={{ mr: 1.5, color: "action.active" }} />,
               }}
-              placeholder="Enter destination city/location"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
               label="Travel From"
               value={travelEntry.travelFrom}
               onChange={(e) => handleChange("travelFrom", e.target.value)}
-              variant="outlined"
               fullWidth
               placeholder="Starting location"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
               label="Travel To"
               value={travelEntry.travelTo}
               onChange={(e) => handleChange("travelTo", e.target.value)}
-              variant="outlined"
               fullWidth
               placeholder="Ending location"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
           </Grid>
         </Grid>
 
         {/* Status Messages */}
         {loading && (
-          <Box sx={{ display: "flex", alignItems: "center", mt: 2, gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mt: 3, gap: 2 }}>
             <CircularProgress size={24} />
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body1" color="text.secondary">
               Submitting your travel request...
             </Typography>
           </Box>
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mt: 3, 
+              borderRadius: 2,
+            }}
+            onClose={() => setError("")}
+          >
             {error}
           </Alert>
         )}
 
         {success && (
-          <Alert severity="success" sx={{ mt: 2 }}>
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mt: 3, 
+              borderRadius: 2,
+            }}
+          >
             {success}
           </Alert>
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, gap: 1 }}>
-        <Button onClick={handleClose} disabled={loading} variant="outlined">
+      <DialogActions sx={{ p: 3, gap: 2 }}>
+        <Button 
+          onClick={handleClose} 
+          disabled={loading}
+          variant="outlined"
+          sx={{ 
+            borderRadius: 2,
+            minWidth: 100,
+            borderColor: alpha("#8d0638ff", 0.5),
+            color: "#8d0638ff",
+            "&:hover": {
+              borderColor: "#8d0638ff",
+              bgcolor: alpha("#8d0638ff", 0.04),
+            }
+          }}
+        >
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={loading} variant="contained" sx={{ minWidth: 100 }}>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={loading}
+          variant="contained"
+          sx={{ 
+            borderRadius: 2,
+            minWidth: 140,
+            bgcolor: "#8d0638ff",
+            fontWeight: "600",
+            fontSize: "1rem",
+            "&:hover": {
+              bgcolor: "#6d052cff",
+            }
+          }}
+        >
           {loading ? <CircularProgress size={20} color="inherit" /> : "Submit Request"}
         </Button>
       </DialogActions>

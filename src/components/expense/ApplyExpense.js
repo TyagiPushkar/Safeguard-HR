@@ -321,7 +321,7 @@ function ApplyExpense({ open, onClose, onExpenseApplied }) {
                       <Chip
                         icon={<Receipt />}
                         label={`Expense ${index + 1}`}
-                        color="#8d0638ff"
+                        sx={{ color: "#8d0638ff" }}
                         variant="outlined"
                       />
                       {expenseEntries.length > 1 && (

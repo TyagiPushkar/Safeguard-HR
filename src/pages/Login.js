@@ -714,7 +714,7 @@ export default function EnhancedLoginPage() {
                           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
                             <Tooltip title="Download from Google Play Store" arrow TransitionComponent={Zoom}>
                               <Link 
-                                to="https://play.google.com/store/apps/details?id=com.nanami.hrsmile" 
+                                to="https://play.google.com/store/apps/details?id=com.namami.safeguard" 
                                 target="_blank"
                                 style={{ textDecoration: 'none' }}
                               >

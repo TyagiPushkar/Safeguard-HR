@@ -966,7 +966,8 @@ function EmployeeList() {
     { value: "S5", label: "S5 - (Helper / Assistant)" },
   ];
 
-  const roleOptions = ["HR", "Employee"];
+  // Get distinct roles from employees data
+const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => role))].sort();
   const weekDays = [
     "Sunday",
     "Monday",
@@ -1485,19 +1486,25 @@ function EmployeeList() {
               </Grid>
   
               <Grid item xs={6} md={3}>
-                <FormControl fullWidth sx={{ bgcolor: "#fff", borderRadius: 2 }}>
-                  <InputLabel>Filter by Role</InputLabel>
-                  <Select
-                    value={filterRole}
-                    onChange={(e) => setFilterRole(e.target.value)}
-                    label="Filter by Role"
-                  >
-                    <MenuItem value="">All Roles</MenuItem>
-                    <MenuItem value="HR">HR</MenuItem>
-                    <MenuItem value="Employee">Employee</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+  <Autocomplete
+    options={roleOptions}
+    value={filterRole}
+    onChange={(event, newValue) => setFilterRole(newValue || "")}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        label="Filter by Role"
+        variant="outlined"
+      />
+    )}
+    sx={{
+      '& .MuiOutlinedInput-root': {
+        bgcolor: "#fff",
+        borderRadius: 2,
+      }
+    }}
+  />
+</Grid>
   
               <Grid item xs={6} md={3}>
                 <FormControl fullWidth sx={{ bgcolor: "#fff", borderRadius: 2 }}>

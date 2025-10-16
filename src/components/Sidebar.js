@@ -188,61 +188,107 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
   }, {})
 
   const sidebarContent = (
-    <>
-      {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: isExpanded ? "space-between" : "center",
-          p: 2,
-          bgcolor: theme.palette.primary.main,
-          color: "white",
+  <>
+    {/* Header - Fixed/Sticky */}
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: isExpanded ? "space-between" : "center",
+        p: 2,
+        bgcolor: "white",
+        color: "red",
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        // Prevent horizontal scrolling
+        width: "100%",
+        boxSizing: "border-box",
+      }}
+    >
+      <Box 
+        sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 1,
+          // Ensure content doesn't overflow
+          maxWidth: "100%",
+          overflow: "hidden",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <HRSmileLogo />
-          
+        <HRSmileLogo />
+        <Typography
+          sx={{
+            fontWeight: 700,
+            fontSize: "1rem",
+            letterSpacing: 0.5,
+            fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
+            // Prevent text overflow
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          SAFEGUARD HR
+        </Typography>
+      </Box>
+    </Box>
+
+    {/* Navigation - Add overflow control */}
+    <Box sx={{ 
+      flexGrow: 1, 
+      py: 1,
+      overflow: "auto",
+      // Prevent horizontal scrolling
+      "&::-webkit-scrollbar": {
+        width: "6px",
+      },
+      "&::-webkit-scrollbar-track": {
+        background: "transparent",
+      },
+      "&::-webkit-scrollbar-thumb": {
+        background: theme.palette.divider,
+        borderRadius: "3px",
+      },
+    }}>
+      {Object.entries(groupedRoutes).map(([category, categoryRoutes]) => (
+        <Box key={category} sx={{ mb: 1, width: "100%" }}>
+          {isExpanded && (
+            <Typography
+              variant="overline"
+              sx={{
+                px: 2,
+                color: "text.secondary",
+                fontWeight: 600,
+                letterSpacing: 0.8,
+                // Prevent text overflow
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {category}
+            </Typography>
+          )}
+          <List sx={{ py: 0, width: "100%" }}>
+            {categoryRoutes.map((route) => (
+              <NavItem
+                key={route.path}
+                route={route}
+                isActive={location.pathname === route.path}
+                isExpanded={isExpanded}
+                hasNotification={route.hasNotification}
+              />
+            ))}
+          </List>
+          <Divider sx={{ mx: 2, opacity: 0.3 }} />
         </Box>
-      </Box>
-
-      {/* User Info */}
-     
-
-      {/* Navigation */}
-      <Box sx={{ flexGrow: 1, py: 1 }}>
-        {Object.entries(groupedRoutes).map(([category, categoryRoutes]) => (
-          <Box key={category} sx={{ mb: 1 }}>
-            {isExpanded && (
-              <Typography
-                variant="overline"
-                sx={{
-                  px: 2,
-                  color: "text.secondary",
-                  fontWeight: 600,
-                  letterSpacing: 0.8,
-                }}
-              >
-                {category}
-              </Typography>
-            )}
-            <List sx={{ py: 0 }}>
-              {categoryRoutes.map((route) => (
-                <NavItem
-                  key={route.path}
-                  route={route}
-                  isActive={location.pathname === route.path}
-                  isExpanded={isExpanded}
-                  hasNotification={route.hasNotification}
-                />
-              ))}
-            </List>
-            <Divider sx={{ mx: 2, opacity: 0.3 }} />
-          </Box>
-        ))}
-      </Box>
-    </>
-  )
+      ))}
+    </Box>
+  </>
+);
 
   // For mobile, use temporary drawer
   if (isMobile) {

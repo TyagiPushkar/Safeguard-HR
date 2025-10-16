@@ -967,6 +967,7 @@ function EmployeeList() {
   ];
 
   // Get distinct roles from employees data
+  const roleOptions1 = ["HR","Employee"];
 const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => role))].sort();
   const weekDays = [
     "Sunday",
@@ -1990,7 +1991,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
                   {/* Role */}
                   <Grid item xs={12} md={6}>
                     <Autocomplete
-                      options={roleOptions}
+                      options={roleOptions1}
                       value={formData.Role || ""}
                       onChange={(_, newValue) =>
                         setFormData({ ...formData, Role: newValue || "" })

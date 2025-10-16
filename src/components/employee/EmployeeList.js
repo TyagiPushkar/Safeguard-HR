@@ -568,11 +568,11 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
               label="Role"
               value={employee.Role}
             />
-            <DetailRow
+            {/* <DetailRow
               icon={<Work sx={{ color: theme.palette.secondary.main }} />}
               label="Designation"
               value={employee.Designation}
-            />
+            /> */}
             <DetailRow
               icon={<Schedule sx={{ color: theme.palette.warning.main }} />}
               label="Shift"
@@ -1672,14 +1672,9 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Chip
-                                label={employee.Role}
-                                color={
-                                  employee.Role === "HR" ? "primary" : "default"
-                                }
-                                size="small"
-                                variant="outlined"
-                              />
+                              <Typography variant="body2">
+                                {employee.Role}
+                              </Typography>
                             </TableCell>
                             {/* <TableCell>
                             <Typography variant="body2">{employee.Shift}</Typography>

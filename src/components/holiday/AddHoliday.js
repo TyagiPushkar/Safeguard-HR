@@ -264,7 +264,7 @@ const AddHoliday = ({ open, onClose, onHolidayAdded }) => {
                           <Chip
                             label={formatDate(holiday.date)}
                             size="small"
-                            color="#8d0638ff"
+                            sx={{ color: "#8d0638ff" }}
                             variant="outlined"
                             icon={<CalendarToday />}
                           />

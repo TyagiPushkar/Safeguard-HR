@@ -382,7 +382,7 @@ const DashboardData = () => {
       </Paper>
 
      
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      {/* <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             icon={<DonutLarge />}
@@ -425,7 +425,7 @@ const DashboardData = () => {
             subtitle="Company assets"
           />
         </Grid>
-      </Grid>
+      </Grid> */}
 
       
       <Paper elevation={2} sx={{ borderRadius: 2 }}>

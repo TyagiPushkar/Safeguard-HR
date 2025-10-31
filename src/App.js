@@ -45,6 +45,7 @@ const LayoutWrapper = ({ children }) => {
 };
 
 function App() {
+
   useEffect(() => {
     const handleRightClick = (event) => {
       event.preventDefault();

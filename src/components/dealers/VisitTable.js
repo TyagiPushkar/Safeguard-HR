@@ -67,7 +67,7 @@ function VisitTable() {
   const [imageData, setImageData] = useState("")
   const [rotation, setRotation] = useState(0)
   const [address, setAddress] = useState("")
-
+  const [time, setTime] = useState("")
   useEffect(() => {
     if (user.role === "HR") {
       const fetchEmployees = async () => {
@@ -125,6 +125,7 @@ function VisitTable() {
       )
       const base64Data = response.data.data[0].Attachment
       setImageData(`data:image/jpeg;base64,${base64Data}`)
+      setTime(`${formatTime(response.data.data[0].VisitTime)} - ${formatDate(response.data.data[0].VisitTime)}`)
       setRotation(0)
       setOpenDialog(true)
 
@@ -423,19 +424,9 @@ function VisitTable() {
                         </TableCell>
                         <TableCell sx={{ py: 1 }}>
                           <Stack spacing={0.5}>
-                            <Chip 
-                              label={formatTime(visit.VisitTime)} 
-                              size="small" 
-                              sx={{ 
-                                height: 24, 
-                                fontSize: '0.7rem',
-                                bgcolor: alpha("#8d0638ff", 0.1),
-                                color: "#8d0638ff",
-                                border: `1px solid ${alpha("#8d0638ff", 0.3)}`,
-                              }} 
-                            />
+                            
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                              {formatDate(visit.VisitTime)}
+                             {formatTime(visit.VisitTime)} {formatDate(visit.VisitTime)}
                             </Typography>
                           </Stack>
                         </TableCell>
@@ -511,8 +502,8 @@ function VisitTable() {
         </DialogTitle>
         <DialogContent sx={{ p: 2.5 }}>
           {address && (
-            <Card sx={{ mb: 2, bgcolor: alpha("#8d0638ff", 0.04), border: `1px solid ${alpha("#8d0638ff", 0.1)}` }}>
-              <CardContent sx={{ py: 1.5 }}>
+            <Card sx={{ mb: 2, bgcolor: alpha("#8d0638ff", 0.04), border: `1px solid ${alpha("#8d0638ff", 0.1)}`, display: 'flex' }}>
+               <CardContent sx={{ py: 1.5 }}>
                 <Typography variant="subtitle2" color="#8d0638ff" gutterBottom sx={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
                   <LocationOn sx={{ mr: 1, fontSize: '1rem' }} />
                   Location Details
@@ -520,9 +511,20 @@ function VisitTable() {
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
                   {address}
                 </Typography>
-              </CardContent>
+
+               </CardContent>
+               <CardContent sx={{ py: 1.5 }}>
+                <Typography variant="subtitle2" color="#8d0638ff" gutterBottom sx={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                  <LocationOn sx={{ mr: 1, fontSize: '1rem' }} />
+                  Timestamp
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  {time}
+                </Typography>
+               </CardContent>
             </Card>
           )}
+          
 
           <Box sx={{ textAlign: "center", mt: 2 }}>
             {imageData ? (

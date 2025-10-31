@@ -727,41 +727,57 @@ const AttendanceList = () => {
   }
 
   const exportToCsv = () => {
-    const csvRows = [["Date", "Type", "Check In", "Check Out", "Working Hours", "Status", "Notes"]]
+  const csvRows = [
+    [
+      "Date", 
+      "Type", 
+      "Check In", 
+      "Check In Event", 
+      "Check Out", 
+      "Check Out Event", 
+      "Working Hours", 
+      "Status", 
+      "Notes"
+    ]
+  ]
 
-    filteredActivities.forEach((activity) => {
-      if (activity.type === "attendance") {
-        csvRows.push([
-          activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A",
-          "Attendance",
-          activity.firstIn,
-          activity.lastOut,
-          activity.workingHours,
-          activity.color === "green" ? "On Time" : "Late",
-          "",
-        ])
-      } else {
-        csvRows.push([
-          activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A",
-          activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
-          "-",
-          "-",
-          "-",
-          activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
-          activity.title,
-        ])
-      }
-    })
+  filteredActivities.forEach((activity) => {
+    if (activity.type === "attendance") {
+      csvRows.push([
+        activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A",
+        "Attendance",
+        activity.firstIn,
+        activity.firstEvent || "N/A",
+        activity.lastOut,
+        activity.lastEvent || "N/A",
+        activity.workingHours,
+        activity.color === "green" ? "On Time" : "Late",
+        "",
+      ])
+    } else {
+      csvRows.push([
+        activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A",
+        activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
+        "-",
+        "-",
+        "-",
+        "-",
+        "-",
+        activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
+        activity.title,
+      ])
+    }
+  })
 
-    const csvContent = csvRows.map((row) => row.join(",")).join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.href = url
-    link.setAttribute("download", `attendance_${selectedEmpId}_${months[selectedMonth].label}_${selectedYear}.csv`)
-    link.click()
-    URL.revokeObjectURL(url)
-  }
+  const csvContent = csvRows.map((row) => row.join(",")).join("\n")
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const link = document.createElement("a")
+  const url = URL.createObjectURL(blob)
+  link.href = url
+  link.setAttribute("download", `attendance_${selectedEmpId}_${months[selectedMonth].label}_${selectedYear}.csv`)
+  link.click()
+  URL.revokeObjectURL(url)
+}
 
   const refreshData = () => {
     console.log("Refreshing data...")

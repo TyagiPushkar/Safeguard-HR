@@ -21,6 +21,7 @@ import {
   Policy,
   Notifications,
   Person,
+  Business,
   BarChart,
   AccountBalanceWallet,
   AddLocationAlt,
@@ -171,6 +172,7 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
   if (user?.role === "HR") {
     allowedRoutes.push(
       { path: "/employees", name: "Employees", icon: <Person />, category: "HR" },
+      { path: "/offices", name: "Offices", icon: <Business />, category: "HR" },
       { path: "/report", name: "Reports", icon: <Summarize />, category: "Analytics" },
     )
   }

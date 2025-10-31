@@ -31,6 +31,7 @@ import EmployeeSalarySlip from './components/employee/EmployeeSalarySlip';
 import Regularise from './pages/Regularise';
 import Docket from './pages/Docket';
 import MainLayout from './components/layout/MainLayout';
+import Offices from './pages/Offices';
 
 // Wrapper component for routes that need layout
 const LayoutWrapper = ({ children }) => {
@@ -79,6 +80,14 @@ function App() {
               <PrivateRoute requiredRole="HR">
                 <LayoutWrapper>
                   <Employee />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+
+            <Route path="/offices" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <Offices />
                 </LayoutWrapper>
               </PrivateRoute>
             } />

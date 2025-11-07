@@ -1697,11 +1697,11 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
                                     <Visibility fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
-                                {/* <Tooltip title="Edit Employee">
+                                <Tooltip title="Edit Employee">
                                 <IconButton size="small" sx={{ color: "#8d0638ff" }} onClick={() => handleOpenForm("edit", employee)}>
                                   <Edit fontSize="small" />
                                 </IconButton>
-                              </Tooltip> */}
+                              </Tooltip>
                                 <Tooltip
                                   title={
                                     employee.IsActive ? "Deactivate" : "Activate"

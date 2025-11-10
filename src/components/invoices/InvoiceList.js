@@ -439,7 +439,7 @@ const formatDate = (dateString) => {
               <Receipt fontSize="small" />
             </Avatar>
             <Box>
-              <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem' }}>
+              <Typography onClick={() => onView(invoice.invoice_copy)} variant="body2" fontWeight="500" sx={{ fontSize: '0.8rem', cursor: 'pointer' }}>
                 {invoice.invoice_no}
               </Typography>
               <Typography variant="caption" color="text.secondary">

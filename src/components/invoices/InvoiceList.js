@@ -101,7 +101,8 @@ const InvoiceStatsCard = ({ title, value, color, icon, subtitle }) => {
 const StatusChip = ({ status }) => {
   const getStatusConfig = (status) => {
     const config = {
-      'Paid': { color: 'success', icon: <CheckCircle fontSize="small" /> },
+      'Received': { color: 'success', icon: <CheckCircle fontSize="small" /> },
+      'Paid': { color: 'info', icon: <Payment fontSize="small" /> },
       'Pending': { color: 'warning', icon: <Pending fontSize="small" /> },
       'Overdue': { color: 'error', icon: <Warning fontSize="small" /> }
     }
@@ -383,6 +384,21 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
 
 // Table Row Component for Desktop
 const InvoiceTableRow = ({ invoice, onView, onUpdateUTR, isAdmin, index }) => {
+    // Date format function for dd/mm/yyyy
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  
+  const date = new Date(dateString)
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '-'
+  
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
+  const year = date.getFullYear()
+  
+  return `${day}/${month}/${year}`
+}
   const theme = useTheme()
   const [utrDialogOpen, setUtrDialogOpen] = useState(false)
 
@@ -431,7 +447,7 @@ const InvoiceTableRow = ({ invoice, onView, onUpdateUTR, isAdmin, index }) => {
         </TableCell>
         <TableCell sx={{ py: 1 }}>
           <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-            {new Date(invoice.invoice_date).toLocaleDateString()}
+            {formatDate(invoice.invoice_date)}
           </Typography>
         </TableCell>
         <TableCell sx={{ py: 1 }}>
@@ -443,7 +459,7 @@ const InvoiceTableRow = ({ invoice, onView, onUpdateUTR, isAdmin, index }) => {
               fontWeight: isOverdue ? 600 : 'normal'
             }}
           >
-            {new Date(invoice.invoice_due_date).toLocaleDateString()}
+            {formatDate(invoice.invoice_due_date)}
             {isOverdue && (
               <Warning color="error" sx={{ fontSize: '0.8rem', ml: 0.5 }} />
             )}
@@ -529,7 +545,21 @@ function InvoiceList() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
   const isAdmin = user?.role === "HR" // This is now only used for display purposes
-
+// Date format function for dd/mm/yyyy
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  
+  const date = new Date(dateString)
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '-'
+  
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
+  const year = date.getFullYear()
+  
+  return `${day}/${month}/${year}`
+}
   const fetchInvoices = async () => {
     setLoading(true)
     try {

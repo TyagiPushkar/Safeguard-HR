@@ -425,13 +425,16 @@ const formatDate = (dateString) => {
       >
         <TableCell sx={{ py: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Avatar sx={{ 
+                      <Avatar
+                          onClick={() => onView(invoice.invoice_copy)}
+                          sx={{ 
               mr: 1.5, 
               width: 28, 
               height: 28, 
               bgcolor: alpha(theme.palette.primary.main, 0.1),
               color: theme.palette.primary.main,
-              fontSize: '0.8rem'
+                              fontSize: '0.8rem',
+              cursor: 'pointer'
             }}>
               <Receipt fontSize="small" />
             </Avatar>
@@ -486,7 +489,7 @@ const formatDate = (dateString) => {
         </TableCell>
         <TableCell sx={{ py: 1 }}>
           <Box sx={{ display: "flex", gap: 0.5 }}>
-            <Tooltip title="View Invoice">
+            {/* <Tooltip title="View Invoice">
               <IconButton
                 onClick={() => onView(invoice.invoice_copy)}
                 size="small"
@@ -500,7 +503,7 @@ const formatDate = (dateString) => {
               >
                 <Visibility fontSize="small" />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
 
             {/* FIXED: Removed isAdmin check - allow all users to update UTR for pending invoices */}
             {invoice.invoice_status === 'Pending' && (

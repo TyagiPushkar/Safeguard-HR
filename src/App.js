@@ -32,6 +32,7 @@ import Regularise from './pages/Regularise';
 import Docket from './pages/Docket';
 import MainLayout from './components/layout/MainLayout';
 import Offices from './pages/Offices';
+import Invoices from './pages/Invoices';
 
 // Wrapper component for routes that need layout
 const LayoutWrapper = ({ children }) => {
@@ -144,6 +145,14 @@ function App() {
               <PrivateRoute>
                 <LayoutWrapper>
                   <Expense />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+
+            <Route path="/invoices" element={
+              <PrivateRoute>
+                <LayoutWrapper>
+                  <Invoices />
                 </LayoutWrapper>
               </PrivateRoute>
             } />

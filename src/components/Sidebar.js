@@ -34,7 +34,7 @@ import {
 } from "@mui/icons-material"
 import { useAuth } from "./auth/AuthContext"
 import logo from "../assets/HRSmileLogo.jpeg"
-
+import ReceiptIcon from '@mui/icons-material/Receipt';
 // Simple logo
 const HRSmileLogo = () => (
   <Box
@@ -174,6 +174,7 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
       { path: "/employees", name: "Employees", icon: <Person />, category: "HR" },
       { path: "/offices", name: "Offices", icon: <Business />, category: "HR" },
       { path: "/report", name: "Reports", icon: <Summarize />, category: "Analytics" },
+      // { path: "/invoices", name: "Invoices", icon: <ReceiptIcon />, category: "Finance" },
     )
   }
 

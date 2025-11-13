@@ -643,7 +643,7 @@ function InvoiceList() {
 
   const getInvoiceStats = () => {
     const total = invoices.length
-    const paid = invoices.filter(invoice => invoice.invoice_status === 'Paid').length
+    const paid = invoices.filter(invoice => invoice.invoice_status === 'Received').length
     const pending = invoices.filter(invoice => invoice.invoice_status === 'Pending').length
     
     // FIXED: Overdue calculation - starts from day after due date
@@ -729,7 +729,7 @@ function InvoiceList() {
             </Grid>
             <Grid item xs={12} sm={6} md={2.4}>
               <InvoiceStatsCard
-                title="Paid"
+                title="Received"
                 value={stats.paid}
                 color={theme.palette.success.main}
                 icon={<CheckCircle />}

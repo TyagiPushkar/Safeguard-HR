@@ -192,8 +192,19 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
   const theme = useTheme()
   const [utrDialogOpen, setUtrDialogOpen] = useState(false)
 
-  const isOverdue = new Date(invoice.invoice_due_date) < new Date() && invoice.invoice_status === 'Pending'
+  // FIXED: Overdue starts from day after due date
+  const isOverdue = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const dueDate = new Date(invoice.invoice_due_date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    return dueDate < today && invoice.invoice_status === 'Pending';
+  }
 
+  const overdue = isOverdue();
+ 
   return (
     <>
       <motion.div
@@ -206,7 +217,7 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
             mb: 2,
             borderLeft: `3px solid ${
               invoice.invoice_status === 'Paid' ? theme.palette.success.main :
-              isOverdue ? theme.palette.error.main : theme.palette.warning.main
+              overdue ? theme.palette.error.main : theme.palette.warning.main
             }`,
             borderRadius: 2,
             background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.9)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
@@ -238,7 +249,7 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
                   </Typography>
                 </Box>
               </Box>
-              <StatusChip status={isOverdue ? 'Overdue' : invoice.invoice_status} />
+              <StatusChip status={overdue ? 'Overdue' : invoice.invoice_status} />
             </Box>
 
             {/* Invoice Details */}
@@ -260,7 +271,7 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
                   fontWeight="500" 
                   sx={{ 
                     fontSize: '0.8rem',
-                    color: isOverdue ? theme.palette.error.main : 'inherit'
+                    color: overdue ? theme.palette.error.main : 'inherit'
                   }}
                 >
                   {new Date(invoice.invoice_due_date).toLocaleDateString()}
@@ -354,7 +365,7 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
             </Box>
 
             {/* Warning for overdue invoices */}
-            {isOverdue && (
+            {overdue && (
               <Alert 
                 severity="error" 
                 sx={{ 
@@ -384,25 +395,37 @@ const InvoiceCard = ({ invoice, onView, onUpdateUTR, isAdmin }) => {
 
 // Table Row Component for Desktop
 const InvoiceTableRow = ({ invoice, onView, onUpdateUTR, isAdmin, index }) => {
-    // Date format function for dd/mm/yyyy
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  
-  const date = new Date(dateString)
-  
-  // Check if date is valid
-  if (isNaN(date.getTime())) return '-'
-  
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
-  const year = date.getFullYear()
-  
-  return `${day}/${month}/${year}`
-}
+  // Date format function for dd/mm/yyyy
+  const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    
+    const date = new Date(dateString)
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '-'
+    
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
+    const year = date.getFullYear()
+    
+    return `${day}/${month}/${year}`
+  }
+
   const theme = useTheme()
   const [utrDialogOpen, setUtrDialogOpen] = useState(false)
 
-  const isOverdue = new Date(invoice.invoice_due_date) < new Date() && invoice.invoice_status === 'Pending'
+  // FIXED: Overdue starts from day after due date
+  const isOverdue = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const dueDate = new Date(invoice.invoice_due_date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    return dueDate < today && invoice.invoice_status === 'Pending';
+  }
+
+  const overdue = isOverdue();
 
   return (
     <>
@@ -415,7 +438,7 @@ const formatDate = (dateString) => {
           "&:hover": {
             bgcolor: alpha(theme.palette.primary.main, 0.04),
           },
-          ...(isOverdue && {
+          ...(overdue && {
             bgcolor: alpha(theme.palette.error.main, 0.04),
             "&:hover": {
               bgcolor: alpha(theme.palette.error.main, 0.08),
@@ -425,17 +448,17 @@ const formatDate = (dateString) => {
       >
         <TableCell sx={{ py: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Avatar
-                          onClick={() => onView(invoice.invoice_copy)}
-                          sx={{ 
-              mr: 1.5, 
-              width: 28, 
-              height: 28, 
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-                              fontSize: '0.8rem',
-              cursor: 'pointer'
-            }}>
+            <Avatar
+              onClick={() => onView(invoice.invoice_copy)}
+              sx={{ 
+                mr: 1.5, 
+                width: 28, 
+                height: 28, 
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main,
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}>
               <Receipt fontSize="small" />
             </Avatar>
             <Box>
@@ -458,12 +481,12 @@ const formatDate = (dateString) => {
             variant="body2" 
             sx={{ 
               fontSize: '0.8rem',
-              color: isOverdue ? theme.palette.error.main : 'inherit',
-              fontWeight: isOverdue ? 600 : 'normal'
+              color: overdue ? theme.palette.error.main : 'inherit',
+              fontWeight: overdue ? 600 : 'normal'
             }}
           >
             {formatDate(invoice.invoice_due_date)}
-            {isOverdue && (
+            {overdue && (
               <Warning color="error" sx={{ fontSize: '0.8rem', ml: 0.5 }} />
             )}
           </Typography>
@@ -480,7 +503,7 @@ const formatDate = (dateString) => {
           </Box>
         </TableCell>
         <TableCell sx={{ py: 1 }}>
-          <StatusChip status={isOverdue ? 'Overdue' : invoice.invoice_status} />
+          <StatusChip status={overdue ? 'Overdue' : invoice.invoice_status} />
         </TableCell>
         <TableCell sx={{ py: 1 }}>
           <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
@@ -489,7 +512,7 @@ const formatDate = (dateString) => {
         </TableCell>
         <TableCell sx={{ py: 1 }}>
           <Box sx={{ display: "flex", gap: 0.5 }}>
-            {/* <Tooltip title="View Invoice">
+            <Tooltip title="View Invoice">
               <IconButton
                 onClick={() => onView(invoice.invoice_copy)}
                 size="small"
@@ -503,7 +526,7 @@ const formatDate = (dateString) => {
               >
                 <Visibility fontSize="small" />
               </IconButton>
-            </Tooltip> */}
+            </Tooltip>
 
             {/* FIXED: Removed isAdmin check - allow all users to update UTR for pending invoices */}
             {invoice.invoice_status === 'Pending' && (
@@ -548,21 +571,23 @@ function InvoiceList() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
   const isAdmin = user?.role === "HR" // This is now only used for display purposes
-// Date format function for dd/mm/yyyy
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  
-  const date = new Date(dateString)
-  
-  // Check if date is valid
-  if (isNaN(date.getTime())) return '-'
-  
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
-  const year = date.getFullYear()
-  
-  return `${day}/${month}/${year}`
-}
+
+  // Date format function for dd/mm/yyyy
+  const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    
+    const date = new Date(dateString)
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '-'
+    
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
+    const year = date.getFullYear()
+    
+    return `${day}/${month}/${year}`
+  }
+
   const fetchInvoices = async () => {
     setLoading(true)
     try {
@@ -620,9 +645,18 @@ const formatDate = (dateString) => {
     const total = invoices.length
     const paid = invoices.filter(invoice => invoice.invoice_status === 'Paid').length
     const pending = invoices.filter(invoice => invoice.invoice_status === 'Pending').length
-    const overdue = invoices.filter(invoice => 
-      new Date(invoice.invoice_due_date) < new Date() && invoice.invoice_status === 'Pending'
-    ).length
+    
+    // FIXED: Overdue calculation - starts from day after due date
+    const overdue = invoices.filter(invoice => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const dueDate = new Date(invoice.invoice_due_date);
+      dueDate.setHours(0, 0, 0, 0);
+      
+      return dueDate < today && invoice.invoice_status === 'Pending';
+    }).length
+    
     const totalAmount = invoices.reduce((sum, invoice) => sum + parseFloat(invoice.invoice_total_amount), 0)
     const pendingAmount = invoices
       .filter(invoice => invoice.invoice_status === 'Pending')

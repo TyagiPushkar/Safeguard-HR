@@ -263,9 +263,10 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
               variant="overline"
               sx={{
                 px: 2,
-                color: "text.secondary",
-                fontWeight: 600,
+                color: "#8d0638ff",
+                fontWeight: 800,
                 letterSpacing: 0.8,
+                fontSize: "1rem",
                 // Prevent text overflow
                 whiteSpace: "nowrap",
                 overflow: "hidden",

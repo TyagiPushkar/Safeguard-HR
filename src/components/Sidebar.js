@@ -267,7 +267,6 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
                 fontWeight: 800,
                 letterSpacing: 0.8,
                 fontSize: "1rem",
-                // Prevent text overflow
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",

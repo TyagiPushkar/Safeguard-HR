@@ -129,6 +129,7 @@ const StatsCard = ({ icon, title, value, color, subtitle, trend }) => {
 const LeaveCard = ({ leave, employee, onStatusChange, isHR, index }) => {
   const theme = useTheme()
   const [anchorEl, setAnchorEl] = useState(null)
+const [expanded, setExpanded] = useState(false);
 
   const formatDate = (dateString) => {
     try {
@@ -330,6 +331,7 @@ function ViewLeave() {
   const { user } = useAuth()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+const [expanded, setExpanded] = useState(false);
 
   const [leaves, setLeaves] = useState([])
   const [employees, setEmployees] = useState([])
@@ -666,159 +668,200 @@ function ViewLeave() {
         ) : (
           // Table View
           <TableContainer>
-            <Table sx={{ minWidth: 650 }} size="small">
-              <TableHead sx={{ bgcolor: "#8d0638ff" }}>
-                <TableRow>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Person sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                      Employee
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <CalendarToday sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                      Dates
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Category sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                      Category
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Description sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                      Reason
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Status</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Schedule sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                      Applied On
-                    </Box>
-                  </TableCell>
-                  {user.role === "HR" && <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <AnimatePresence>
-                  {filteredLeaves
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((leave, index) => {
-                      const employee = employees.find((emp) => emp.EmpId === leave.EmpId)
-                      const employeeName = employee ? employee.Name : "Unknown"
+  <Table sx={{ minWidth: 650 }} size="small">
+    <TableHead sx={{ bgcolor: "#8d0638ff" }}>
+      <TableRow>
+        <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Person sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+            Employee
+          </Box>
+        </TableCell>
+        <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <CalendarToday sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+            Dates
+          </Box>
+        </TableCell>
+        <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <AccessTime sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+            Leave Days
+          </Box>
+        </TableCell>
+        <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Category sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+            Category
+          </Box>
+        </TableCell>
+        <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Description sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+            Reason
+          </Box>
+        </TableCell>
+        <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Status</TableCell>
+        {/* <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Schedule sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+            Applied
+          </Box>
+        </TableCell> */}
+        {user.role === "HR" && <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>}
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      <AnimatePresence>
+        {filteredLeaves
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((leave, index) => {
+            const employee = employees.find((emp) => emp.EmpId === leave.EmpId)
+            const employeeName = employee ? employee.Name : "Unknown"
+            
+            // Calculate leave days
+            const calculateLeaveDays = (startDate, endDate) => {
+              const start = new Date(startDate);
+              const end = new Date(endDate);
+              const timeDiff = end.getTime() - start.getTime();
+              const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end dates
+              return dayDiff;
+            };
+            
+            const leaveDays = calculateLeaveDays(leave.StartDate, leave.EndDate);
 
-                      return (
-                        <motion.tr
-                          key={leave.Id}
-                          component={TableRow}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ delay: index * 0.03 }}
-                          sx={{
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.primary.main, 0.04),
-                            },
-                          }}
+            return (
+              <motion.tr
+                key={leave.Id}
+                component={TableRow}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ delay: index * 0.03 }}
+                sx={{
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  },
+                }}
+              >
+                <TableCell sx={{ py: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Avatar sx={{ 
+                      mr: 1.5, 
+                      width: 28, 
+                      height: 28, 
+                      bgcolor: theme.palette.primary.main,
+                      fontSize: '0.8rem'
+                    }}>
+                      <Person fontSize="small" />
+                    </Avatar>
+                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
+                      {employeeName}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell sx={{ py: 1 }}>
+                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                    {formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ py: 1 }}>
+                  <Chip 
+                    label={`${leaveDays} day${leaveDays !== 1 ? 's' : ''}`} 
+                    variant="filled" 
+                    size="small" 
+                    color="primary"
+                    sx={{ 
+                      height: 22, 
+                      fontSize: '0.7rem',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                </TableCell>
+                <TableCell sx={{ py: 1 }}>
+                  <Chip 
+                    label={leave.Category} 
+                    variant="outlined" 
+                    size="small" 
+                    sx={{ height: 22, fontSize: '0.7rem' }}
+                  />
+                </TableCell>
+                <TableCell sx={{ py: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      maxWidth: 150,
+                      overflow: expanded ? "visible" : "hidden",
+                      textOverflow: expanded ? "unset" : "ellipsis",
+                      whiteSpace: expanded ? "normal" : "nowrap",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {leave.Reason}
+                  </Typography>
+
+                  {/* Show More / Show Less Button */}
+                  {leave.Reason?.length > 20 && (
+                    <Typography
+                      onClick={() => setExpanded(!expanded)}
+                      sx={{
+                        color: "primary.main",
+                        fontSize: "0.7rem",
+                        cursor: "pointer",
+                        mt: 0.5,
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {expanded ? "Show Less" : "Show More"}
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell sx={{ py: 1 }}>
+                  <Chip 
+                    label={leave.Status} 
+                    color={getStatusColor(leave.Status)} 
+                    size="small" 
+                    sx={{ height: 22, fontSize: '0.7rem' }}
+                  />
+                </TableCell>
+                {/* <TableCell sx={{ py: 1 }}>
+                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{leave.CreatedAt}</Typography>
+                </TableCell> */}
+                {user.role === "HR" && (
+                  <TableCell sx={{ py: 1 }}>
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                      <Tooltip title="Approve">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => handleStatusChange(leave.Id, "Approved")}
+                          disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
+                          sx={{ fontSize: '0.8rem' }}
                         >
-                          <TableCell sx={{ py: 1 }}>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <Avatar sx={{ 
-                                mr: 1.5, 
-                                width: 28, 
-                                height: 28, 
-                                bgcolor: theme.palette.primary.main,
-                                fontSize: '0.8rem'
-                              }}>
-                                <Person fontSize="small" />
-                              </Avatar>
-                              <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
-                                {employeeName}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ py: 1 }}>
-                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                              {formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 1 }}>
-                            <Chip 
-                              label={leave.Category} 
-                              variant="outlined" 
-                              size="small" 
-                              sx={{ height: 22, fontSize: '0.7rem' }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ py: 1 }}>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                maxWidth: 150,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                fontSize: '0.8rem'
-                              }}
-                            >
-                              {leave.Reason}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 1 }}>
-                            <Chip 
-                              label={leave.Status} 
-                              color={getStatusColor(leave.Status)} 
-                              size="small" 
-                              sx={{ height: 22, fontSize: '0.7rem' }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ py: 1 }}>
-                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{leave.CreatedAt}</Typography>
-                          </TableCell>
-                          {user.role === "HR" && (
-                            <TableCell sx={{ py: 1 }}>
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Tooltip title="Approve">
-                                  <IconButton
-                                    size="small"
-                                    color="success"
-                                    onClick={() => handleStatusChange(leave.Id, "Approved")}
-                                    disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
-                                    sx={{ fontSize: '0.8rem' }}
-                                  >
-                                    <Check fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Reject">
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleStatusChange(leave.Id, "Rejected")}
-                                    disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
-                                    sx={{ fontSize: '0.8rem' }}
-                                  >
-                                    <Cancel fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="View Details">
-                                  <IconButton size="small" color="info" sx={{ fontSize: '0.8rem' }}>
-                                    <Visibility fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            </TableCell>
-                          )}
-                        </motion.tr>
-                      )
-                    })}
-                </AnimatePresence>
-              </TableBody>
-            </Table>
-          </TableContainer>
+                          <Check fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Reject">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleStatusChange(leave.Id, "Rejected")}
+                          disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
+                          sx={{ fontSize: '0.8rem' }}
+                        >
+                          <Cancel fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                )}
+              </motion.tr>
+            )
+          })}
+      </AnimatePresence>
+    </TableBody>
+  </Table>
+</TableContainer>
         )}
 
         <TablePagination
@@ -834,7 +877,7 @@ function ViewLeave() {
       </Paper>
 
       {/* Floating Action Button */}
-      <Zoom in={true}>
+      {/* <Zoom in={true}>
         <Fab
           color="primary"
           onClick={() => setApplyLeaveOpen(true)}
@@ -852,7 +895,7 @@ function ViewLeave() {
         >
           <Add />
         </Fab>
-      </Zoom>
+      </Zoom> */}
 
       {/* Apply Leave Dialog */}
       <ApplyLeave

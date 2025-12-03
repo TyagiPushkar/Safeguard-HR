@@ -447,7 +447,7 @@ const AttendanceReport = () => {
         </Grid>
 
         {/* Stats */}
-        {month && (
+        {/* {month && (
           <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
               Report for {stats.month} {stats.year}
@@ -471,7 +471,7 @@ const AttendanceReport = () => {
               </Grid>
             </Grid>
           </Box>
-        )}
+        )} */}
 
         {/* Loading State */}
         {loading && (

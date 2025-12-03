@@ -28,6 +28,7 @@ const AttendanceReport = () => {
   const { user } = useAuth()
   const [employees, setEmployees] = useState([])
   const [attendance, setAttendance] = useState([])
+  const [leaveData, setLeaveData] = useState([])
   const [month, setMonth] = useState("")
   const [year, setYear] = useState(new Date().getFullYear())
   const [loading, setLoading] = useState(false)
@@ -50,11 +51,12 @@ const AttendanceReport = () => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [employeesResponse, attendanceResponse] = await Promise.all([
+        const [employeesResponse, attendanceResponse, leaveResponse] = await Promise.all([
           axios.get(
             `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
           ),
           axios.get("https://namami-infotech.com/SAFEGUARD/src/attendance/get_attendance.php"),
+          axios.get("https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php?role=HR"),
         ])
 
         if (employeesResponse.data.success) {
@@ -63,6 +65,10 @@ const AttendanceReport = () => {
 
         if (attendanceResponse.data.success) {
           setAttendance(attendanceResponse.data.data)
+        }
+
+        if (leaveResponse.data.success) {
+          setLeaveData(leaveResponse.data.data)
         }
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -110,31 +116,64 @@ const AttendanceReport = () => {
     return hours > 9 || (hours === 9 && minutes > 5)
   }
 
-  const getAttendanceStatus = (employeeId, date) => {
-    // RULE 0: If it's Sunday, mark as Week Off (WO)
-    if (isSunday(date)) {
-      return "WO"
-    }
+  // Check if employee has approved leave for a specific date
+  const hasApprovedLeave = (employeeId, date) => {
+    const approvedLeaves = leaveData.filter(leave => 
+      leave.EmpId === employeeId && 
+      leave.Status === "Approved" &&
+      new Date(date) >= new Date(leave.StartDate) &&
+      new Date(date) <= new Date(leave.EndDate)
+    )
 
-    const records = attendance.filter(
+    if (approvedLeaves.length > 0) {
+      return {
+        hasLeave: true,
+        category: approvedLeaves[0].Category // CL or SL
+      }
+    }
+    
+    return { hasLeave: false, category: null }
+  }
+
+  const getAttendanceStatus = (employeeId, date) => {
+    const approvedLeave = hasApprovedLeave(employeeId, date)
+    
+    // Check if there's any attendance record for this day (including Sunday)
+    const attendanceRecords = attendance.filter(
       (record) => 
         record.EmpId === employeeId && 
         record.InTime && 
         record.InTime.startsWith(date)
     )
 
-    if (records.length === 0) return "A" // Absent - no entry at all
-
-    const record = records[0]
+    // RULE: If attendance found for Sunday, mark as Present (P)
+    if (isSunday(date) && attendanceRecords.length > 0) {
+      return "P"
+    }
     
-    // RULE 1: If only In entry exists (no Out entry), mark as Present
+    // RULE: If it's Sunday with no attendance, mark as Week Off (WO)
+    if (isSunday(date)) {
+      return "WO"
+    }
+
+    // RULE: If employee has approved leave, mark according to leave category
+    if (approvedLeave.hasLeave) {
+      return approvedLeave.category // "CL" or "SL"
+    }
+
+    // If no records at all (no attendance, no leave), mark as Absent
+    if (attendanceRecords.length === 0) return "A"
+
+    const record = attendanceRecords[0]
+    
+    // RULE: If only In entry exists (no Out entry), mark as Present
     if (!record.OutTime) return "P"
     
     const inTime = new Date(record.InTime)
     const outTime = new Date(record.OutTime)
     const workDuration = (outTime - inTime) / (1000 * 60 * 60) // hours
     
-    // RULE 2: If punched in after 9:05 AM, mark as Half Day (HD)
+    // RULE: If punched in after 9:05 AM, mark as Half Day (HD)
     if (isLatePunch(record.InTime)) {
       return "HD"
     }
@@ -150,25 +189,22 @@ const AttendanceReport = () => {
   }
 
   const getOTForDate = (employeeId, date) => {
-    // No OT on Sundays (Week Off)
-    if (isSunday(date)) {
-      return 0
-    }
-
-    const records = attendance.filter(
+    // No OT on Sundays (Week Off) unless there's attendance
+    const attendanceRecords = attendance.filter(
       (record) => 
         record.EmpId === employeeId && 
         record.InTime && 
         record.InTime.startsWith(date)
     )
 
-    if (records.length === 0) return 0
+    if (attendanceRecords.length === 0) return 0
 
-    const record = records[0]
+    const record = attendanceRecords[0]
     
     // No OT calculation if no OutTime
     if (!record.OutTime) return 0
 
+    // Allow OT calculation for Sundays with attendance
     return calculateOTHours(record.InTime, record.OutTime)
   }
 
@@ -179,16 +215,27 @@ const AttendanceReport = () => {
     let weeklyOffCount = 0
     let halfDayCount = 0
     let totalOTHours = 0
+    let clCount = 0
+    let slCount = 0
+    let sundayWorkingCount = 0
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       const status = getAttendanceStatus(employeeId, date)
       const otHours = getOTForDate(employeeId, date)
       
-      if (status === "P") presentCount++
+      if (status === "P") {
+        presentCount++
+        // Check if this is a Sunday working day
+        if (isSunday(date)) {
+          sundayWorkingCount++
+        }
+      }
       if (status === "A") absentCount++
       if (status === "WO") weeklyOffCount++
       if (status === "HD") halfDayCount++
+      if (status === "CL") clCount++
+      if (status === "SL") slCount++
       totalOTHours += otHours
     }
 
@@ -198,9 +245,10 @@ const AttendanceReport = () => {
       weeklyOffCount,
       halfDayCount,
       totalOTHours,
-      totalDays: presentCount + weeklyOffCount + halfDayCount,
-      clCount: 0, // You'll need to get this from leave API
-      slCount: 0, // You'll need to get this from leave API
+      clCount,
+      slCount,
+      sundayWorkingCount,
+      totalDays: presentCount + weeklyOffCount + halfDayCount + clCount + slCount,
     }
   }
 
@@ -294,7 +342,7 @@ const AttendanceReport = () => {
         summary.absentCount, // ABSENT
         0, // WI
         summary.totalDays, // TOTAL DAYS
-        0, // SUN WORKING (DOUBLE)
+        summary.sundayWorkingCount, // SUN WORKING (DOUBLE)
         summary.totalOTHours, // WORKING DAY OT HOURS
         summary.totalOTHours, // WORKING DAY OT HOURS (duplicate as in Excel)
         summary.totalOTHours * 1.25, // (Inc1DM+Inc2 DN)@1.25
@@ -320,11 +368,13 @@ const AttendanceReport = () => {
     // Calculate some stats from attendance data
     const uniqueEmployees = [...new Set(attendance.map(record => record.EmpId))].length
     const totalRecords = attendance.length
+    const approvedLeaves = leaveData.filter(leave => leave.Status === "Approved").length
 
     return {
       totalEmployees: employees.length,
       activeEmployees: uniqueEmployees,
       totalRecords,
+      approvedLeaves,
       month: new Date(year, parseInt(month) - 1).toLocaleString('default', { month: 'long' }),
       year: year
     }
@@ -395,6 +445,33 @@ const AttendanceReport = () => {
             </Stack>
           </Grid>
         </Grid>
+
+        {/* Stats */}
+        {month && (
+          <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Report for {stats.month} {stats.year}
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="body2" color="text.secondary">Total Employees</Typography>
+                <Typography variant="h6">{stats.totalEmployees}</Typography>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="body2" color="text.secondary">Active Employees</Typography>
+                <Typography variant="h6">{stats.activeEmployees}</Typography>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="body2" color="text.secondary">Approved Leaves</Typography>
+                <Typography variant="h6">{stats.approvedLeaves}</Typography>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="body2" color="text.secondary">Attendance Records</Typography>
+                <Typography variant="h6">{stats.totalRecords}</Typography>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
 
         {/* Loading State */}
         {loading && (

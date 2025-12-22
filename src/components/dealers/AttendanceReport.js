@@ -650,49 +650,6 @@ const AttendanceReport = () => {
             {error}
           </Alert>
         )}
-
-        {/* Example of formatted OT display */}
-        {!loading && !error && (
-          <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              OT Format Examples:
-            </Typography>
-            <Grid container spacing={1}>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="caption" color="text.secondary">
-                  1.5 hours
-                </Typography>
-                <Typography variant="body2">
-                  {formatHoursToHoursMinutes(1.5)}
-                </Typography>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="caption" color="text.secondary">
-                  2.25 hours
-                </Typography>
-                <Typography variant="body2">
-                  {formatHoursToHoursMinutes(2.25)}
-                </Typography>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="caption" color="text.secondary">
-                  3.75 hours
-                </Typography>
-                <Typography variant="body2">
-                  {formatHoursToHoursMinutes(3.75)}
-                </Typography>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="caption" color="text.secondary">
-                  0.5 hours
-                </Typography>
-                <Typography variant="body2">
-                  {formatHoursToHoursMinutes(0.5)}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-        )}
       </CardContent>
     </Card>
   );

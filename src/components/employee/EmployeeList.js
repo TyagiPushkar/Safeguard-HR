@@ -82,7 +82,11 @@ const EmployeeCard = ({
       <Card
         sx={{
           mb: 2,
-          borderLeft: `4px solid ${employee.IsActive ? theme.palette.success.main : theme.palette.error.main}`,
+          borderLeft: `4px solid ${
+            employee.IsActive
+              ? theme.palette.success.main
+              : theme.palette.error.main
+          }`,
           "&:hover": {
             transform: "translateY(-2px)",
             boxShadow: theme.shadows[8],
@@ -371,7 +375,7 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
 
       const response = await axios.post(
         "https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php",
-        payload,
+        payload
       );
 
       if (response.data.success) {
@@ -873,8 +877,8 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
                 {addingSalary
                   ? "Saving..."
                   : employeeSalary
-                    ? "Update Salary"
-                    : "Add Salary Information"}
+                  ? "Update Salary"
+                  : "Add Salary Information"}
               </Button>
             </Box>
           </Grid>
@@ -929,7 +933,8 @@ function EmployeeList() {
     LatLong: "",
     Distance: "", // Add Distance field
     OfficeIsActive: 1,
-    RM: "",
+    RM: "", // Reporting Manager (will store EmpId)
+    RMName: "", // Reporting Manager Name (for display)
     Shift: "",
     WeekOff: "",
     Designation: "",
@@ -938,6 +943,7 @@ function EmployeeList() {
     Grade: "",
     UAN: "",
     ESI: "",
+    ProbationPeriod: "", // Added Probation Period field
     // Salary fields
     basic_salary: "",
     hra: "",
@@ -967,8 +973,10 @@ function EmployeeList() {
   ];
 
   // Get distinct roles from employees data
-  const roleOptions1 = ["HR","Employee"];
-const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => role))].sort();
+  const roleOptions1 = ["HR", "Employee"];
+  const roleOptions = [
+    ...new Set(employees.map((emp) => emp.Role).filter((role) => role)),
+  ].sort();
   const weekDays = [
     "Sunday",
     "Monday",
@@ -978,6 +986,9 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
     "Friday",
     "Saturday",
   ];
+
+  // Get active employees for RM dropdown
+  const activeEmployees = employees.filter((emp) => emp.IsActive);
 
   useEffect(() => {
     fetchEmployees();
@@ -1002,7 +1013,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
     try {
       setLoading(true);
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+        `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
       );
       if (response.data.success) {
         setEmployees(response.data.data);
@@ -1032,7 +1043,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
   const fetchSalaryStructure = async () => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php`,
+        `https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php`
       );
       if (response.data.success) {
         setSalary(response.data.data);
@@ -1047,7 +1058,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
   const fetchOffices = async () => {
     try {
       const response = await axios.get(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/get_office.php",
+        "https://namami-infotech.com/SAFEGUARD/src/employee/get_office.php"
       );
       if (response.data.success) {
         setOffices(response.data.data);
@@ -1079,12 +1090,42 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
   const handleOpenForm = (mode, employee = null) => {
     setFormMode(mode);
     if (mode === "edit" && employee) {
-      const employeeSalary = salary.find((s) => s.empId === employee.EmpId);
+      // Find the RM name if RM exists
+      const rmEmployee = employees.find((emp) => emp.EmpId === employee.RM);
+      const rmName = rmEmployee ? rmEmployee.Name : "";
 
       setFormData({
         EmpId: employee.EmpId,
         Name: employee.Name,
-        // ... rest of your existing edit code
+        Password: "", // Don't show password in edit
+        Mobile: employee.Mobile,
+        EmailId: employee.EmailId,
+        Role: employee.Role,
+        OTP: "123456",
+        IsOTPExpired: 1,
+        IsGeofence: employee.IsGeofence || 0,
+        Tenent_Id: user.tenent_id,
+        IsActive: employee.IsActive || 1,
+        OfficeId: employee.OfficeId || null,
+        OfficeName: employee.OfficeName || "",
+        LatLong: employee.LatLong || "",
+        Distance: employee.Distance || "",
+        OfficeIsActive: 1,
+        RM: employee.RM || "",
+        RMName: rmName, // Set RM name for display
+        Shift: employee.Shift || "",
+        DOB: employee.DOB || "",
+        JoinDate: employee.JoinDate || "",
+        WeekOff: employee.WeekOff || "Sunday",
+        Designation: employee.Designation || "",
+        Grade: employee.Grade || "",
+        UAN: employee.UAN || "",
+        ESI: employee.ESI || "",
+        ProbationPeriod: employee.ProbationPeriod || "", // Added Probation Period
+        basic_salary: "",
+        hra: "",
+        conveyance: "",
+        special_allowance: "",
       });
     } else {
       // Auto-generate new employee ID for add mode
@@ -1112,6 +1153,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
         Distance: "",
         OfficeIsActive: 1,
         RM: "",
+        RMName: "",
         Shift: "",
         DOB: "",
         JoinDate: "",
@@ -1120,6 +1162,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
         Grade: "",
         UAN: "",
         ESI: "",
+        ProbationPeriod: "", // Added Probation Period
         basic_salary: "",
         hra: "",
         conveyance: "",
@@ -1152,6 +1195,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
       "Role",
       "OfficeName",
       "LatLong",
+      "Designation",
     ];
     for (const field of requiredFields) {
       if (!formData[field]) {
@@ -1173,7 +1217,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
       IsGeofence: formData.IsGeofence || 0,
       Tenent_Id: user.tenent_id,
       IsActive: formData.IsActive || 1,
-      RM: formData.RM,
+      RM: formData.RM, // This should be EmpId of the selected RM
       Shift: formData.Shift || "9:00 AM - 6:00 PM",
       DOB: formData.DOB || "",
       JoinDate: formData.JoinDate || "",
@@ -1182,6 +1226,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
       Grade: formData.Grade,
       UAN: formData.UAN,
       ESI: formData.ESI,
+      ProbationPeriod: formData.ProbationPeriod || "", // Added Probation Period
       Distance: distance,
       Offices: [
         {
@@ -1217,10 +1262,10 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
           } catch (salaryError) {
             console.error(
               "Salary addition failed but employee was created:",
-              salaryError,
+              salaryError
             );
             alert(
-              "Employee added successfully, but there was an issue adding salary information.",
+              "Employee added successfully, but there was an issue adding salary information."
             );
           }
         } else {
@@ -1236,10 +1281,10 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
     } catch (error) {
       console.error(
         "Error:",
-        error.response ? error.response.data : error.message,
+        error.response ? error.response.data : error.message
       );
       alert(
-        `Error: ${error.response ? error.response.data.message : error.message}`,
+        `Error: ${error.response ? error.response.data.message : error.message}`
       );
     } finally {
       setSubmitting(false);
@@ -1284,7 +1329,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
 
     const response = await axios.post(
       "https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php",
-      salaryPayload,
+      salaryPayload
     );
 
     if (!response.data.success) {
@@ -1297,7 +1342,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
   const handleOfficeChange = (event) => {
     const selectedOfficeIds = event.target.value;
     const selectedOffices = offices.filter((o) =>
-      selectedOfficeIds.includes(o.Id),
+      selectedOfficeIds.includes(o.Id)
     );
 
     // Extract distance from the first office's LatLong
@@ -1312,6 +1357,23 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
       LatLong: selectedOffices.map((o) => o.LatLong).join("|"),
       Distance: distance, // Set the distance
     }));
+  };
+
+  // Handle RM selection
+  const handleRMChange = (event, value) => {
+    if (value) {
+      setFormData({
+        ...formData,
+        RM: value.EmpId, // Store EmpId in RM field
+        RMName: value.Name, // Store Name for display
+      });
+    } else {
+      setFormData({
+        ...formData,
+        RM: "",
+        RMName: "",
+      });
+    }
   };
 
   const handleCloseForm = () => {
@@ -1332,7 +1394,7 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
         {
           EmpId: employee.EmpId,
           action: action,
-        },
+        }
       );
 
       if (response.data.success) {
@@ -1365,8 +1427,8 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
 
   // Calculate stats
   const totalEmployees = employees.length;
-  const activeEmployees = employees.filter((emp) => emp.IsActive).length;
-  const inactiveEmployees = totalEmployees - activeEmployees;
+  const activeEmployeesCount = employees.filter((emp) => emp.IsActive).length;
+  const inactiveEmployees = totalEmployees - activeEmployeesCount;
   const hrCount = employees.filter((emp) => emp.Role === "HR").length;
 
   if (loading) {
@@ -1385,851 +1447,933 @@ const roleOptions = [...new Set(employees.map(emp => emp.Role).filter(role => ro
   }
 
   return (
-      <Box
-        sx={{
-          px: { xs: 1, md: 2 },
-          py: { xs: 1, md: 1 },
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <Box sx={{ width: "100%", maxWidth: 1800 }}>
-          <Paper
-            elevation={4}
+    <Box
+      sx={{
+        px: { xs: 1, md: 2 },
+        py: { xs: 1, md: 1 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <Box sx={{ width: "100%", maxWidth: 1800 }}>
+        <Paper
+          elevation={4}
+          sx={{
+            p: { xs: 2, md: 3 },
+            mb: 3,
+            borderRadius: 3,
+            bgcolor: "background.paper",
+            background: "linear-gradient(135deg, #f8f0f4 0%, #fff 100%)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+          }}
+        >
+          <Box
             sx={{
-              p: { xs: 2, md: 3 },
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               mb: 3,
-              borderRadius: 3,
-              bgcolor: "background.paper",
-              background: "linear-gradient(135deg, #f8f0f4 0%, #fff 100%)",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+              flexWrap: "wrap",
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-                flexWrap: "wrap",
-              }}
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              color="#8d0638ff"
+              sx={{ flexGrow: 1 }}
             >
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                color="#8d0638ff"
-                sx={{ flexGrow: 1 }}
-              >
-                Employee Management
-              </Typography>
-  
-              <Box sx={{ display: "flex", gap: 1, mt: { xs: 2, md: 0 } }}>
-                <Tooltip title="Refresh Data">
-                  <IconButton
-                    onClick={fetchEmployees}
-                    sx={{
-                      bgcolor: "#fff",
-                      color: "#8d0638ff",
-                      "&:hover": { bgcolor: "#f2e6eb" },
-                    }}
-                  >
-                    <Refresh />
-                  </IconButton>
-                </Tooltip>
-                <Button
-                  variant="contained"
-                  startIcon={<PersonAdd />}
-                  onClick={() => handleOpenForm("add")}
-                  sx={{
-                    bgcolor: "#8d0638ff",
-                    color: "white",
-                    "&:hover": { bgcolor: "#6b042d" },
-                    borderRadius: 2,
-                    textTransform: "none",
-                  }}
-                >
-                  Add Employee
-                </Button>
-              </Box>
-            </Box>
-  
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              sx={{
-                mb: 1,
-                "& .MuiInputBase-root": { borderRadius: 2 },
-              }}
-            >
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Search employees..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
+              Employee Management
+            </Typography>
+
+            <Box sx={{ display: "flex", gap: 1, mt: { xs: 2, md: 0 } }}>
+              <Tooltip title="Refresh Data">
+                <IconButton
+                  onClick={fetchEmployees}
                   sx={{
                     bgcolor: "#fff",
-                    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
-                    "&:hover": { bgcolor: "#fefefe" },
+                    color: "#8d0638ff",
+                    "&:hover": { bgcolor: "#f2e6eb" },
                   }}
-                />
-              </Grid>
-  
-              <Grid item xs={6} md={3}>
-  <Autocomplete
-    options={roleOptions}
-    value={filterRole}
-    onChange={(event, newValue) => setFilterRole(newValue || "")}
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        label="Filter by Role"
-        variant="outlined"
-      />
-    )}
-    sx={{
-      '& .MuiOutlinedInput-root': {
-        bgcolor: "#fff",
-        borderRadius: 2,
-      }
-    }}
-  />
-</Grid>
-  
-              <Grid item xs={6} md={3}>
-                <FormControl fullWidth sx={{ bgcolor: "#fff", borderRadius: 2 }}>
-                  <InputLabel>Filter by Status</InputLabel>
-                  <Select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    label="Filter by Status"
-                  >
-                    <MenuItem value="">All Status</MenuItem>
-                    <MenuItem value="1">Active</MenuItem>
-                    <MenuItem value="0">Inactive</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+                >
+                  <Refresh />
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                startIcon={<PersonAdd />}
+                onClick={() => handleOpenForm("add")}
+                sx={{
+                  bgcolor: "#8d0638ff",
+                  color: "white",
+                  "&:hover": { bgcolor: "#6b042d" },
+                  borderRadius: 2,
+                  textTransform: "none",
+                }}
+              >
+                Add Employee
+              </Button>
+            </Box>
+          </Box>
+
+          <Grid
+            container
+            spacing={2}
+            alignItems="center"
+            sx={{
+              mb: 1,
+              "& .MuiInputBase-root": { borderRadius: 2 },
+            }}
+          >
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Search employees..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  bgcolor: "#fff",
+                  boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
+                  "&:hover": { bgcolor: "#fefefe" },
+                }}
+              />
             </Grid>
-          </Paper>
-  
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
-              {error}
-            </Alert>
-          )}
-  
-         
-  
-          <Paper elevation={2} sx={{ borderRadius: 2 }}>
-            {isMobile ? (
-              <Box sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Employee List ({filteredEmployees.length})
-                </Typography>
-                <AnimatePresence>
-                  {filteredEmployees
-                    .sort((a, b) => a.Name.localeCompare(b.Name))
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((employee) => (
-                      <EmployeeCard
-                        key={employee.EmpId}
-                        employee={employee}
-                        onEdit={(emp) => handleOpenForm("edit", emp)}
-                        onToggleStatus={handleToggleEmployeeStatus}
-                        onViewDetails={handleViewDetails}
-                        theme={theme}
-                      />
-                    ))}
-                </AnimatePresence>
-              </Box>
-            ) : (
-              // Desktop Table View
-              <TableContainer>
-                <Table>
-                  <TableHead sx={{ bgcolor: "#8d0638ff" }}>
-                    <TableRow>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Badge sx={{ mr: 1 }} />
-                          Employee ID
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Person sx={{ mr: 1 }} />
-                          Name
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Phone sx={{ mr: 1 }} />
-                          Mobile
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Email sx={{ mr: 1 }} />
-                          Email
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Work sx={{ mr: 1 }} />
-                          Role
-                        </Box>
-                      </TableCell>
-                      {/* <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+
+            <Grid item xs={6} md={3}>
+              <Autocomplete
+                options={roleOptions}
+                value={filterRole}
+                onChange={(event, newValue) => setFilterRole(newValue || "")}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Filter by Role"
+                    variant="outlined"
+                  />
+                )}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fff",
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={6} md={3}>
+              <FormControl fullWidth sx={{ bgcolor: "#fff", borderRadius: 2 }}>
+                <InputLabel>Filter by Status</InputLabel>
+                <Select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  label="Filter by Status"
+                >
+                  <MenuItem value="">All Status</MenuItem>
+                  <MenuItem value="1">Active</MenuItem>
+                  <MenuItem value="0">Inactive</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+            {error}
+          </Alert>
+        )}
+
+        <Paper elevation={2} sx={{ borderRadius: 2 }}>
+          {isMobile ? (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Employee List ({filteredEmployees.length})
+              </Typography>
+              <AnimatePresence>
+                {filteredEmployees
+                  .sort((a, b) => a.Name.localeCompare(b.Name))
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((employee) => (
+                    <EmployeeCard
+                      key={employee.EmpId}
+                      employee={employee}
+                      onEdit={(emp) => handleOpenForm("edit", emp)}
+                      onToggleStatus={handleToggleEmployeeStatus}
+                      onViewDetails={handleViewDetails}
+                      theme={theme}
+                    />
+                  ))}
+              </AnimatePresence>
+            </Box>
+          ) : (
+            // Desktop Table View
+            <TableContainer>
+              <Table>
+                <TableHead sx={{ bgcolor: "#8d0638ff" }}>
+                  <TableRow>
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Badge sx={{ mr: 1 }} />
+                        Employee ID
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Person sx={{ mr: 1 }} />
+                        Name
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Phone sx={{ mr: 1 }} />
+                        Mobile
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Email sx={{ mr: 1 }} />
+                        Email
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Work sx={{ mr: 1 }} />
+                        Role
+                      </Box>
+                    </TableCell>
+                    {/* <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Schedule sx={{ mr: 1 }} />
                         Shift
                       </Box>
                     </TableCell> */}
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        Status
-                      </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <AnimatePresence>
-                      {filteredEmployees
-                        .sort((a, b) => a.Name.localeCompare(b.Name))
-                        .slice(
-                          page * rowsPerPage,
-                          page * rowsPerPage + rowsPerPage,
-                        )
-                        .map((employee, index) => (
-                          <motion.tr
-                            key={employee.EmpId}
-                            component={TableRow}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ delay: index * 0.05 }}
-                            sx={{
-                              "&:hover": {
-                                bgcolor: theme.palette.action.hover,
-                                transform: "scale(1.01)",
-                                transition: "all 0.2s ease",
-                              },
-                            }}
-                          >
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="medium">
-                                {employee.EmpId}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: "flex", alignItems: "center" }}>
-                                <Avatar
-                                  sx={{
-                                    mr: 2,
-                                    width: 32,
-                                    height: 32,
-                                    bgcolor: theme.palette.primary.main,
-                                  }}
-                                  src={employee.Pic ? employee.Pic : undefined} // show image if available
-                                  alt={employee.Name}
-                                >
-                                  {!employee.Pic &&
-                                    employee.Name?.charAt(0).toUpperCase()}
-                                </Avatar>
-  
-                                <Typography variant="body2" fontWeight="medium">
-                                  {employee.Name}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2">
-                                {employee.Mobile}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography
-                                variant="body2"
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      Status
+                    </TableCell>
+                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <AnimatePresence>
+                    {filteredEmployees
+                      .sort((a, b) => a.Name.localeCompare(b.Name))
+                      .slice(
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage
+                      )
+                      .map((employee, index) => (
+                        <motion.tr
+                          key={employee.EmpId}
+                          component={TableRow}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ delay: index * 0.05 }}
+                          sx={{
+                            "&:hover": {
+                              bgcolor: theme.palette.action.hover,
+                              transform: "scale(1.01)",
+                              transition: "all 0.2s ease",
+                            },
+                          }}
+                        >
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              {employee.EmpId}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <Avatar
                                 sx={{
-                                  maxWidth: 200,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
+                                  mr: 2,
+                                  width: 32,
+                                  height: 32,
+                                  bgcolor: theme.palette.primary.main,
                                 }}
+                                src={employee.Pic ? employee.Pic : undefined} // show image if available
+                                alt={employee.Name}
                               >
-                                {employee.EmailId}
+                                {!employee.Pic &&
+                                  employee.Name?.charAt(0).toUpperCase()}
+                              </Avatar>
+
+                              <Typography variant="body2" fontWeight="medium">
+                                {employee.Name}
                               </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2">
-                                {employee.Mobile}
-                              </Typography>
-                            </TableCell>
-                            {/* <TableCell>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {employee.Mobile}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                maxWidth: 200,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {employee.EmailId}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {employee.Role}
+                            </Typography>
+                          </TableCell>
+                          {/* <TableCell>
                             <Typography variant="body2">{employee.Shift}</Typography>
                           </TableCell> */}
-                            <TableCell>
-                              <Chip
-                                label={employee.IsActive ? "Active" : "Inactive"}
-                                color={employee.IsActive ? "success" : "error"}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Tooltip title="View Details">
-                                  <IconButton
-                                    size="small"
-                                    color="info"
-                                    onClick={() => handleViewDetails(employee)}
-                                  >
-                                    <Visibility fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Edit Employee">
-                                <IconButton size="small" sx={{ color: "#8d0638ff" }} onClick={() => handleOpenForm("edit", employee)}>
+                          <TableCell>
+                            <Chip
+                              label={employee.IsActive ? "Active" : "Inactive"}
+                              color={employee.IsActive ? "success" : "error"}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: "flex", gap: 0.5 }}>
+                              <Tooltip title="View Details">
+                                <IconButton
+                                  size="small"
+                                  color="info"
+                                  onClick={() => handleViewDetails(employee)}
+                                >
+                                  <Visibility fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Edit Employee">
+                                <IconButton
+                                  size="small"
+                                  sx={{ color: "#8d0638ff" }}
+                                  onClick={() =>
+                                    handleOpenForm("edit", employee)
+                                  }
+                                >
                                   <Edit fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                                <Tooltip
-                                  title={
-                                    employee.IsActive ? "Deactivate" : "Activate"
+                              <Tooltip
+                                title={
+                                  employee.IsActive ? "Deactivate" : "Activate"
+                                }
+                              >
+                                <IconButton
+                                  size="small"
+                                  color={
+                                    employee.IsActive ? "error" : "success"
+                                  }
+                                  onClick={() =>
+                                    handleToggleEmployeeStatus(employee)
                                   }
                                 >
-                                  <IconButton
-                                    size="small"
-                                    color={
-                                      employee.IsActive ? "error" : "success"
-                                    }
-                                    onClick={() =>
-                                      handleToggleEmployeeStatus(employee)
-                                    }
-                                  >
-                                    {employee.IsActive ? (
-                                      <Close fontSize="small" />
-                                    ) : (
-                                      <CheckCircle fontSize="small" />
-                                    )}
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            </TableCell>
-                          </motion.tr>
-                        ))}
-                    </AnimatePresence>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-  
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              component="div"
-              count={filteredEmployees.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </Paper>
-  
-          <EmployeeDetails
-            employee={selectedEmployee}
-            open={openDetails}
-            onClose={handleCloseDetails}
-            salary={salary}
+                                  {employee.IsActive ? (
+                                    <Close fontSize="small" />
+                                  ) : (
+                                    <CheckCircle fontSize="small" />
+                                  )}
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
+                  </AnimatePresence>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component="div"
+            count={filteredEmployees.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
           />
-  
-          <Dialog
-            open={openForm}
-            onClose={handleCloseForm}
-            maxWidth="md"
-            fullWidth
-            TransitionComponent={Fade}
-            PaperProps={{
-              sx: {
-                borderRadius: 2,
-                maxHeight: "90vh",
-              },
+        </Paper>
+
+        <EmployeeDetails
+          employee={selectedEmployee}
+          open={openDetails}
+          onClose={handleCloseDetails}
+          salary={salary}
+        />
+
+        <Dialog
+          open={openForm}
+          onClose={handleCloseForm}
+          maxWidth="md"
+          fullWidth
+          TransitionComponent={Fade}
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              maxHeight: "90vh",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              bgcolor: "#8d0638ff",
+              color: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            <DialogTitle
-              sx={{
-                bgcolor: "#8d0638ff",
-                color: "white",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <PersonAdd sx={{ mr: 1 }} />
-                {formMode === "add" ? "Add New Employee" : "Edit Employee"}
-              </Box>
-              <IconButton onClick={handleCloseForm} sx={{ color: "white" }}>
-                <Close />
-              </IconButton>
-            </DialogTitle>
-  
-            <DialogContent sx={{ p: 3 }}>
-              <form onSubmit={handleFormSubmit}>
-                <Grid container spacing={3} sx={{ mt: 1 }}>
-                  <Grid item xs={12}>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: "flex", alignItems: "center" }}
-                    >
-                      <Person sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      Personal Information
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Employee ID"
-                      value={formData.EmpId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, EmpId: e.target.value })
-                      }
-                      required
-                      disabled
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Badge color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Full Name"
-                      value={formData.Name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, Name: e.target.value })
-                      }
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Person color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Password"
-                      type="password"
-                      value={formData.Password}
-                      onChange={(e) =>
-                        setFormData({ ...formData, Password: e.target.value })
-                      }
-                      required
-                      disabled={formMode === "edit"}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Mobile Number"
-                      value={formData.Mobile}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value.length <= 10) {
-                          setFormData({ ...formData, Mobile: value });
-                        }
-                      }}
-                      required
-                      type="number"
-                      inputProps={{ maxLength: 10 }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Phone color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Email Address"
-                      type="email"
-                      value={formData.EmailId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, EmailId: e.target.value })
-                      }
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Email color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Designation"
-                      value={formData.Designation}
-                      onChange={(e) =>
-                        setFormData({ ...formData, Designation: e.target.value })
-                      }
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Work color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Date of Birth"
-                      type="date"
-                      value={formData.DOB}
-                      onChange={(e) =>
-                        setFormData({ ...formData, DOB: e.target.value })
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CalendarToday color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Date of Joining"
-                      type="date"
-                      value={formData.JoinDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, JoinDate: e.target.value })
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CalendarToday color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  {/* Work Information Section */}
-                  <Grid item xs={12}>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: "flex", alignItems: "center", mt: 2 }}
-                    >
-                      <Work sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      Work Information
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                  </Grid>
-                  {/* Yash */}
-                  <Grid item xs={12} md={6}>
-                    <Autocomplete
-                      options={gradeOptions}
-                      value={
-                        gradeOptions.find((g) => g.value === formData.Grade) ||
-                        null
-                      }
-                      onChange={(_, newValue) =>
-                        setFormData({ ...formData, Grade: newValue?.value || "" })
-                      }
-                      getOptionLabel={(option) => option.label}
-                      renderInput={(params) => (
-                        <TextField {...params} label="Grade" required fullWidth />
-                      )}
-                    />
-                  </Grid>
-  
-                  {/* Role */}
-                  <Grid item xs={12} md={6}>
-                    <Autocomplete
-                      options={roleOptions1}
-                      value={formData.Role || ""}
-                      onChange={(_, newValue) =>
-                        setFormData({ ...formData, Role: newValue || "" })
-                      }
-                      renderInput={(params) => (
-                        <TextField {...params} label="Role" required fullWidth />
-                      )}
-                    />
-                  </Grid>
-  
-                  {/* Week Off (Multi Select) */}
-                  <Grid item xs={12} md={6}>
-                    <Autocomplete
-                      multiple
-                      options={weekDays}
-                      disableCloseOnSelect
-                      value={formData.WeekOff ? formData.WeekOff.split(",") : []}
-                      onChange={(_, newValue) =>
-                        setFormData({ ...formData, WeekOff: newValue.join(",") })
-                      }
-                      renderOption={(props, option, { selected }) => (
-                        <li {...props}>
-                          <Checkbox checked={selected} sx={{ mr: 1 }} />
-                          {option}
-                        </li>
-                      )}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Week Off"
-                          required
-                          fullWidth
-                        />
-                      )}
-                    />
-                  </Grid>
-  
-                  {/* Office (Multi Select with Label + Icon) */}
-                  <Grid item xs={12} md={6}>
-                    {" "}
-                    <FormControl fullWidth required>
-                      {" "}
-                      <InputLabel>Office</InputLabel>{" "}
-                      <Select
-                        multiple
-                        value={
-                          formData.OfficeId ? formData.OfficeId.split(",") : []
-                        }
-                        onChange={handleOfficeChange}
-                        label="Office"
-                        renderValue={(selected) =>
-                          selected
-                            .map((id) => {
-                              const office = offices.find((o) => o.Id === id);
-                              return office ? office.OfficeName : id;
-                            })
-                            .join(", ")
-                        }
-                      >
-                        {" "}
-                        {offices.map((office) => (
-                          <MenuItem key={office.Id} value={office.Id}>
-                            {" "}
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              {" "}
-                              <LocationOn
-                                sx={{ mr: 1, color: "text.secondary" }}
-                              />{" "}
-                              {office.OfficeName}{" "}
-                            </Box>{" "}
-                          </MenuItem>
-                        ))}{" "}
-                      </Select>{" "}
-                    </FormControl>{" "}
-                  </Grid>
-  
-                  {/* Salary Information Section */}
-                  <Grid item xs={12}>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: "flex", alignItems: "center", mt: 2 }}
-                    >
-                      <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      Salary Information
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Basic Salary"
-                      type="number"
-                      value={formData.basic_salary}
-                      onChange={(e) =>
-                        setFormData({ ...formData, basic_salary: e.target.value })
-                      }
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Money color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="HRA"
-                      type="number"
-                      value={formData.hra}
-                      onChange={(e) =>
-                        setFormData({ ...formData, hra: e.target.value })
-                      }
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Money color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Conveyance"
-                      type="number"
-                      value={formData.conveyance}
-                      onChange={(e) =>
-                        setFormData({ ...formData, conveyance: e.target.value })
-                      }
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Money color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Special Allowance"
-                      type="number"
-                      value={formData.special_allowance}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          special_allowance: e.target.value,
-                        })
-                      }
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Money color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-  
-                  <Grid item xs={12}>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: "flex", alignItems: "center", mt: 2 }}
-                    >
-                      <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      UAN/ESI Information
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="UAN"
-                      value={formData.UAN}
-                      onChange={(e) =>
-                        setFormData({ ...formData, UAN: e.target.value })
-                      }
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Money color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="ESI"
-                      value={formData.ESI}
-                      onChange={(e) =>
-                        setFormData({ ...formData, ESI: e.target.value })
-                      }
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Money color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <PersonAdd sx={{ mr: 1 }} />
+              {formMode === "add" ? "Add New Employee" : "Edit Employee"}
+            </Box>
+            <IconButton onClick={handleCloseForm} sx={{ color: "white" }}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent sx={{ p: 3 }}>
+            <form onSubmit={handleFormSubmit}>
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ display: "flex", alignItems: "center" }}
+                  >
+                    <Person sx={{ mr: 1, color: theme.palette.primary.main }} />
+                    Personal Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
                 </Grid>
-              </form>
-            </DialogContent>
-  
-            <DialogActions sx={{ p: 3, bgcolor: "#f5f5f5" }}>
-              <Button onClick={handleCloseForm} variant="outlined">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleFormSubmit}
-                variant="contained"
-                disabled={submitting}
-                startIcon={
-                  submitting ? <CircularProgress size={20} /> : <CheckCircle />
-                }
-                sx={{ bgcolor: "#8d0638ff", color: "white" }}
-              >
-                {submitting
-                  ? "Saving..."
-                  : formMode === "add"
-                    ? "Add Employee"
-                    : "Update Employee"}
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Box>{" "}
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Employee ID"
+                    value={formData.EmpId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, EmpId: e.target.value })
+                    }
+                    required
+                    disabled
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Badge color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Full Name"
+                    value={formData.Name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Name: e.target.value })
+                    }
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Password"
+                    type="password"
+                    value={formData.Password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Password: e.target.value })
+                    }
+                    required
+                    disabled={formMode === "edit"}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Mobile Number"
+                    value={formData.Mobile}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= 10) {
+                        setFormData({ ...formData, Mobile: value });
+                      }
+                    }}
+                    required
+                    type="number"
+                    inputProps={{ maxLength: 10 }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Email Address"
+                    type="email"
+                    value={formData.EmailId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, EmailId: e.target.value })
+                    }
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Email color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Designation"
+                    value={formData.Designation}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Designation: e.target.value })
+                    }
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Work color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Date of Birth"
+                    type="date"
+                    value={formData.DOB}
+                    onChange={(e) =>
+                      setFormData({ ...formData, DOB: e.target.value })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CalendarToday color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Date of Joining"
+                    type="date"
+                    value={formData.JoinDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, JoinDate: e.target.value })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CalendarToday color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                {/* Work Information Section */}
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ display: "flex", alignItems: "center", mt: 2 }}
+                  >
+                    <Work sx={{ mr: 1, color: theme.palette.primary.main }} />
+                    Work Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                {/* Grade */}
+                <Grid item xs={12} md={6}>
+                  <Autocomplete
+                    options={gradeOptions}
+                    value={
+                      gradeOptions.find((g) => g.value === formData.Grade) ||
+                      null
+                    }
+                    onChange={(_, newValue) =>
+                      setFormData({ ...formData, Grade: newValue?.value || "" })
+                    }
+                    getOptionLabel={(option) => option.label}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Grade" required fullWidth />
+                    )}
+                  />
+                </Grid>
+
+                {/* Role */}
+                <Grid item xs={12} md={6}>
+                  <Autocomplete
+                    options={roleOptions1}
+                    value={formData.Role || ""}
+                    onChange={(_, newValue) =>
+                      setFormData({ ...formData, Role: newValue || "" })
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Role" required fullWidth />
+                    )}
+                  />
+                </Grid>
+
+                {/* NEW: Probation Period Field */}
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Probation Period (Months)"
+                    type="number"
+                    value={formData.ProbationPeriod}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ProbationPeriod: e.target.value,
+                      })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Schedule color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">months</InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                {/* NEW: Reporting Manager Field */}
+                <Grid item xs={12} md={6}>
+                  <Autocomplete
+                    options={activeEmployees}
+                    value={
+                      activeEmployees.find(
+                        (emp) => emp.EmpId === formData.RM
+                      ) || null
+                    }
+                    onChange={handleRMChange}
+                    getOptionLabel={(option) =>
+                      `${option.Name} (${option.EmpId})`
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Reporting Manager"
+                        fullWidth
+                        helperText="Select from active employees"
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Avatar
+                            sx={{
+                              mr: 2,
+                              width: 24,
+                              height: 24,
+                              bgcolor: theme.palette.primary.main,
+                            }}
+                          >
+                            {option.Name?.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2">
+                              {option.Name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {option.EmpId} • {option.Role}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </li>
+                    )}
+                  />
+                </Grid>
+
+                {/* Week Off (Multi Select) */}
+                <Grid item xs={12} md={6}>
+                  <Autocomplete
+                    multiple
+                    options={weekDays}
+                    disableCloseOnSelect
+                    value={formData.WeekOff ? formData.WeekOff.split(",") : []}
+                    onChange={(_, newValue) =>
+                      setFormData({ ...formData, WeekOff: newValue.join(",") })
+                    }
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox checked={selected} sx={{ mr: 1 }} />
+                        {option}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Week Off"
+                        required
+                        fullWidth
+                      />
+                    )}
+                  />
+                </Grid>
+
+                {/* Office (Multi Select with Label + Icon) */}
+                <Grid item xs={12} md={6}>
+                  {" "}
+                  <FormControl fullWidth required>
+                    {" "}
+                    <InputLabel>Office</InputLabel>{" "}
+                    <Select
+                      multiple
+                      value={
+                        formData.OfficeId ? formData.OfficeId.split(",") : []
+                      }
+                      onChange={handleOfficeChange}
+                      label="Office"
+                      renderValue={(selected) =>
+                        selected
+                          .map((id) => {
+                            const office = offices.find((o) => o.Id === id);
+                            return office ? office.OfficeName : id;
+                          })
+                          .join(", ")
+                      }
+                    >
+                      {" "}
+                      {offices.map((office) => (
+                        <MenuItem key={office.Id} value={office.Id}>
+                          {" "}
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            {" "}
+                            <LocationOn
+                              sx={{ mr: 1, color: "text.secondary" }}
+                            />{" "}
+                            {office.OfficeName}{" "}
+                          </Box>{" "}
+                        </MenuItem>
+                      ))}{" "}
+                    </Select>{" "}
+                  </FormControl>{" "}
+                </Grid>
+
+                {/* Salary Information Section */}
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ display: "flex", alignItems: "center", mt: 2 }}
+                  >
+                    <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
+                    Salary Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Basic Salary"
+                    type="number"
+                    value={formData.basic_salary}
+                    onChange={(e) =>
+                      setFormData({ ...formData, basic_salary: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="HRA"
+                    type="number"
+                    value={formData.hra}
+                    onChange={(e) =>
+                      setFormData({ ...formData, hra: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Conveyance"
+                    type="number"
+                    value={formData.conveyance}
+                    onChange={(e) =>
+                      setFormData({ ...formData, conveyance: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Special Allowance"
+                    type="number"
+                    value={formData.special_allowance}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        special_allowance: e.target.value,
+                      })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ display: "flex", alignItems: "center", mt: 2 }}
+                  >
+                    <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
+                    UAN/ESI Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="UAN"
+                    value={formData.UAN}
+                    onChange={(e) =>
+                      setFormData({ ...formData, UAN: e.target.value })
+                    }
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="ESI"
+                    value={formData.ESI}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ESI: e.target.value })
+                    }
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </form>
+          </DialogContent>
+
+          <DialogActions sx={{ p: 3, bgcolor: "#f5f5f5" }}>
+            <Button onClick={handleCloseForm} variant="outlined">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleFormSubmit}
+              variant="contained"
+              disabled={submitting}
+              startIcon={
+                submitting ? <CircularProgress size={20} /> : <CheckCircle />
+              }
+              sx={{ bgcolor: "#8d0638ff", color: "white" }}
+            >
+              {submitting
+                ? "Saving..."
+                : formMode === "add"
+                ? "Add Employee"
+                : "Update Employee"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-    );
+    </Box>
+  );
 }
 
 export default EmployeeList;

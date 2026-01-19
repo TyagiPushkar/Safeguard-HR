@@ -14,12 +14,15 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { GetApp, Schedule } from "@mui/icons-material";
+import { DatePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import axios from "axios";
 import { saveAs } from "file-saver";
 import { useAuth } from "../auth/AuthContext";
@@ -30,13 +33,16 @@ const AttendanceReport = () => {
   const [attendance, setAttendance] = useState([]);
   const [leaveData, setLeaveData] = useState([]);
   const [salaryData, setSalaryData] = useState([]);
-  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  // Extract month and year from selectedDate
+  const month = selectedDate.getMonth() + 1;
+  const year = selectedDate.getFullYear();
 
   const monthNames = [
     "JAN",
@@ -404,7 +410,7 @@ const AttendanceReport = () => {
   // Calculate summary for employee
   const calculateEmployeeSummary = useCallback(
     (employeeId) => {
-      const currentMonth = parseInt(month);
+      const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
 
       let presentCount = 0;
@@ -487,7 +493,7 @@ const AttendanceReport = () => {
         };
       }
 
-      const currentMonth = parseInt(month);
+      const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
       const workingDays = daysInMonth - summary.weeklyOffCount;
 
@@ -558,7 +564,7 @@ const AttendanceReport = () => {
     setError("");
 
     try {
-      const currentMonth = parseInt(month);
+      const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
       const monthName = monthNames[currentMonth - 1];
 
@@ -715,171 +721,159 @@ const AttendanceReport = () => {
       attendanceRecords: attendance.length,
       leaveRecords: leaveData.length,
       salaryRecords: salaryData.length,
-      monthName: month ? monthNames[parseInt(month) - 1] : "",
+      monthName: month ? monthNames[month - 1] : "",
       year,
     }),
     [employees, attendance, leaveData, salaryData, month, year, monthNames]
   );
 
   return (
-    <Card sx={{ boxShadow: 3 }}>
-      <CardContent>
-        <Typography
-          variant="h5"
-          component="h2"
-          sx={{ mb: 3, color: "primary.main", fontWeight: 600 }}
-        >
-          <Schedule sx={{ mr: 1, verticalAlign: "middle" }} />
-          Monthly Attendance Report
-        </Typography>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Card sx={{ boxShadow: 3 }}>
+        <CardContent>
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={{ mb: 3, color: "primary.main", fontWeight: 600 }}
+          >
+            <Schedule sx={{ mr: 1, verticalAlign: "middle" }} />
+            Monthly Attendance Report
+          </Typography>
 
-        {/* Controls */}
-        <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Month</InputLabel>
-              <Select
-                value={month}
-                label="Month"
-                onChange={(e) => setMonth(e.target.value)}
-              >
-                {monthNames.map((name, index) => (
-                  <MenuItem key={index} value={(index + 1).toString()}>
-                    {name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <TextField
-              label="Year"
-              type="number"
-              variant="outlined"
-              size="small"
-              value={year}
-              onChange={(e) => setYear(parseInt(e.target.value))}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Stack
-              direction={isMobile ? "column" : "row"}
-              spacing={2}
-              justifyContent="flex-end"
-            >
-              <Button
-                variant="contained"
-                onClick={exportToCSV}
-                disabled={!month || loading || exporting}
-                sx={{
-                  bgcolor: "primary.main",
-                  "&:hover": { bgcolor: "primary.dark" },
-                  minWidth: 150,
-                }}
-              >
-                {exporting ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  <>
-                    <GetApp sx={{ mr: 1 }} />
-                    Export CSV
-                  </>
+          {/* Controls */}
+          <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
+            <Grid item xs={12} md={6}>
+              <DatePicker
+                views={['year', 'month']}
+                label="Select Month & Year"
+                value={selectedDate}
+                onChange={(newValue) => setSelectedDate(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    fullWidth
+                  />
                 )}
-              </Button>
-            </Stack>
-          </Grid>
-        </Grid>
+              />
+            </Grid>
 
-        {/* Stats Card */}
-        {month && (
-          <Card
-            sx={{
-              mb: 3,
-              bgcolor: "grey.50",
-              border: "1px solid",
-              borderColor: "grey.200",
-            }}
-          >
-            <CardContent>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: 600 }}
+            <Grid item xs={12} md={6}>
+              <Stack
+                direction={isMobile ? "column" : "row"}
+                spacing={2}
+                justifyContent="flex-end"
               >
-                {stats.monthName} {stats.year} - Data Overview
+                <Button
+                  variant="contained"
+                  onClick={exportToCSV}
+                  disabled={loading || exporting}
+                  sx={{
+                    bgcolor: "primary.main",
+                    "&:hover": { bgcolor: "primary.dark" },
+                    minWidth: 150,
+                  }}
+                >
+                  {exporting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    <>
+                      <GetApp sx={{ mr: 1 }} />
+                      Export CSV
+                    </>
+                  )}
+                </Button>
+              </Stack>
+            </Grid>
+          </Grid>
+
+          {/* Stats Card */}
+          {month && (
+            <Card
+              sx={{
+                mb: 3,
+                bgcolor: "grey.50",
+                border: "1px solid",
+                borderColor: "grey.200",
+              }}
+            >
+              {/* <CardContent>
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{ fontWeight: 600 }}
+                >
+                  {stats.monthName} {stats.year} - Data Overview
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Typography variant="body2" color="text.secondary">
+                      Employees
+                    </Typography>
+                    <Typography variant="h6">{stats.totalEmployees}</Typography>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Typography variant="body2" color="text.secondary">
+                      Attendance Records
+                    </Typography>
+                    <Typography variant="h6">
+                      {stats.attendanceRecords}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Typography variant="body2" color="text.secondary">
+                      Leave Records
+                    </Typography>
+                    <Typography variant="h6">{stats.leaveRecords}</Typography>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Typography variant="body2" color="text.secondary">
+                      Salary Records
+                    </Typography>
+                    <Typography variant="h6">{stats.salaryRecords}</Typography>
+                  </Grid>
+                </Grid>
+              </CardContent> */}
+            </Card>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                py: 4,
+              }}
+            >
+              <CircularProgress size={40} sx={{ mr: 2 }} />
+              <Typography variant="body1" color="text.secondary">
+                Loading data...
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Employees
-                  </Typography>
-                  <Typography variant="h6">{stats.totalEmployees}</Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Attendance Records
-                  </Typography>
-                  <Typography variant="h6">
-                    {stats.attendanceRecords}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Leave Records
-                  </Typography>
-                  <Typography variant="h6">{stats.leaveRecords}</Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Salary Records
-                  </Typography>
-                  <Typography variant="h6">{stats.salaryRecords}</Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        )}
+            </Box>
+          )}
 
-        {/* Loading State */}
-        {loading && (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              py: 4,
-            }}
-          >
-            <CircularProgress size={40} sx={{ mr: 2 }} />
-            <Typography variant="body1" color="text.secondary">
-              Loading data...
-            </Typography>
-          </Box>
-        )}
+          {/* Error State */}
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError("")}>
+              {error}
+            </Alert>
+          )}
 
-        {/* Error State */}
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError("")}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Information */}
-        {month && !loading && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              <strong>Note:</strong> Sunday working is counted as double present
-              days. OT is calculated at 1.25x rate. Salary is pro-rated based on
-              actual attendance.
-            </Typography>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
+          {/* Information */}
+          {month && !loading && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Note:</strong> Sunday working is counted as double present
+                days. OT is calculated at 1.25x rate. Salary is pro-rated based on
+                actual attendance.
+              </Typography>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    </LocalizationProvider>
   );
 };
 

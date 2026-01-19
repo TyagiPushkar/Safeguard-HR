@@ -2,24 +2,23 @@
   "name": "hrms-frontend",
   "version": "0.1.0",
   "private": true,
- "engines": {
-  "node": "22.x"
-},
-
+  "engines": {
+    "node": "22.x"
+  },
   "homepage": "/",
   "dependencies": {
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^5.16.5",
     "@mui/material": "^5.16.7",
-    "@mui/x-date-pickers": "^5.0.0",
+    "@mui/x-date-pickers": "^5.0.20",
     "@react-google-maps/api": "^2.19.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
     "chart.js": "^4.4.3",
-    "date-fns": "^2.25.0",
+    "date-fns": "^2.30.0",
     "dayjs": "^1.11.12",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.3.24",
@@ -76,4 +75,3 @@
     "postcss-normalize": "^13.0.0"
   }
 }
-

@@ -31,6 +31,11 @@ import {
   Fab,
   Zoom,
   alpha,
+  Modal,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material"
 import {
   Add,
@@ -50,6 +55,7 @@ import {
   Launch,
   Download,
   Settings,
+  Close,
 } from "@mui/icons-material"
 import { motion, AnimatePresence } from "framer-motion"
 import { format, parseISO, isValid } from "date-fns"
@@ -116,7 +122,7 @@ const StatsCard = ({ icon, title, value, color, subtitle, trend }) => {
 }
 
 // Enhanced Notification Card for Mobile View
-const NotificationCard = ({ notification, index, onView, onEdit, onDelete, isHR }) => {
+const NotificationCard = ({ notification, index }) => {
   const theme = useTheme()
 
   const formatDate = (dateString) => {
@@ -174,27 +180,6 @@ const NotificationCard = ({ notification, index, onView, onEdit, onDelete, isHR 
                 </Typography>
               </Box>
             </Box>
-            <Box sx={{ display: "flex", gap: 0.5 }}>
-              <Tooltip title="View Details">
-                <IconButton size="small" sx={{color:"#8d0638ff"}} onClick={() => onView(notification)}>
-                  <Visibility fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              {isHR && (
-                <>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" color="primary" onClick={() => onEdit(notification)}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => onDelete(notification)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-            </Box>
           </Box>
 
           <Grid container spacing={1} sx={{ mb: 1.5 }}>
@@ -250,6 +235,180 @@ const NotificationCard = ({ notification, index, onView, onEdit, onDelete, isHR 
   )
 }
 
+// Notification Detail Modal Component
+const NotificationDetailModal = ({ open, onClose, notification }) => {
+  const theme = useTheme()
+  
+  const formatDate = (dateString) => {
+    try {
+      const date = parseISO(dateString)
+      return isValid(date) ? format(date, "MMM dd, yyyy HH:mm") : "Invalid date"
+    } catch {
+      return "Invalid date"
+    }
+  }
+
+  if (!notification) return null
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          bgcolor: theme.palette.background.paper,
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        bgcolor: "#8d0638ff", 
+        color: "white",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        py: 2
+      }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <NotificationsActive />
+          <Typography variant="h6" fontWeight="600">
+            Notification Details
+          </Typography>
+        </Box>
+        <IconButton onClick={onClose} sx={{ color: "white" }}>
+          <Close />
+        </IconButton>
+      </DialogTitle>
+      
+      <DialogContent sx={{ p: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" color="text.secondary" fontWeight="500">
+                SUBJECT
+              </Typography>
+              <Typography variant="h6" fontWeight="600" sx={{ mt: 0.5 }}>
+                {notification.subject}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" color="text.secondary" fontWeight="500">
+                MESSAGE
+              </Typography>
+              <Typography variant="body1" sx={{ 
+                mt: 1.5, 
+                p: 2, 
+                bgcolor: alpha(theme.palette.primary.main, 0.04),
+                borderRadius: 1,
+                lineHeight: 1.6
+              }}>
+                {notification.body}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+              <AccessTime color="primary" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="500">
+                  PUSH TIME
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 0.5 }}>
+                  {formatDate(notification.push_time)}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+          
+          {notification.url && (
+            <Grid item xs={12} md={6}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                <LinkIcon color="secondary" />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" fontWeight="500">
+                    LINK
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    component="a"
+                    href={notification.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: "primary.main",
+                      textDecoration: "none",
+                      display: "block",
+                      mt: 0.5,
+                      "&:hover": { textDecoration: "underline" },
+                    }}
+                  >
+                    {notification.url}
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+          )}
+          
+          {notification.image && (
+            <Grid item xs={12}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" fontWeight="500">
+                  IMAGE
+                </Typography>
+                <Box sx={{ mt: 1.5, textAlign: "center" }}>
+                  <img
+                    src={notification.image}
+                    alt="Notification"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: 300,
+                      borderRadius: 8,
+                      objectFit: "contain",
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+      </DialogContent>
+      
+      <DialogActions sx={{ p: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+        <Button 
+          onClick={onClose} 
+          variant="outlined"
+          sx={{ borderRadius: 2 }}
+        >
+          Close
+        </Button>
+        {notification.url && (
+          <Button 
+            component="a"
+            href={notification.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="contained"
+            startIcon={<Launch />}
+            sx={{ 
+              borderRadius: 2,
+              bgcolor: "#8d0638ff",
+              "&:hover": { bgcolor: "#6d0430ff" }
+            }}
+          >
+            Open Link
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 function ViewNotifications() {
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
@@ -260,6 +419,8 @@ function ViewNotifications() {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [refreshing, setRefreshing] = useState(false)
   const [viewMode, setViewMode] = useState("table")
+  const [selectedNotification, setSelectedNotification] = useState(null)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
 
   const { user } = useAuth()
   const theme = useTheme()
@@ -294,15 +455,13 @@ function ViewNotifications() {
   const onNotificationAdded = () => fetchNotifications()
 
   const handleView = (notification) => {
-    console.log("View notification:", notification)
+    setSelectedNotification(notification)
+    setDetailModalOpen(true)
   }
 
-  const handleEdit = (notification) => {
-    console.log("Edit notification:", notification)
-  }
-
-  const handleDelete = (notification) => {
-    console.log("Delete notification:", notification)
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false)
+    setSelectedNotification(null)
   }
 
   const handleChangePage = (event, newPage) => {
@@ -541,10 +700,6 @@ function ViewNotifications() {
                     key={notification.id}
                     notification={notification}
                     index={index}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    isHR={user?.role === "HR"}
                   />
                 ))}
             </AnimatePresence>
@@ -587,9 +742,7 @@ function ViewNotifications() {
                       Image
                     </Box>
                   </TableCell>
-                  {user?.role === "HR" && (
-                    <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>
-                  )}
+                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -691,27 +844,13 @@ function ViewNotifications() {
                             <Chip label="No Image" size="small" variant="outlined" sx={{ height: 24, fontSize: '0.7rem' }} />
                           )}
                         </TableCell>
-                        {user?.role === "HR" && (
-                          <TableCell sx={{ py: 1 }}>
-                            <Box sx={{ display: "flex", gap: 0.5 }}>
-                              <Tooltip title="View">
-                                <IconButton size="small" sx={{color:"#8d0638ff"}} onClick={() => handleView(notification)}>
-                                  <Visibility fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Edit">
-                                <IconButton size="small" color="primary" onClick={() => handleEdit(notification)}>
-                                  <Edit fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Delete">
-                                <IconButton size="small" color="error" onClick={() => handleDelete(notification)}>
-                                  <Delete fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        )}
+                        <TableCell sx={{ py: 1 }}>
+                          <Tooltip title="View Details">
+                            <IconButton size="small" sx={{color:"#8d0638ff"}} onClick={() => handleView(notification)}>
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
                       </motion.tr>
                     ))}
                 </AnimatePresence>
@@ -759,6 +898,13 @@ function ViewNotifications() {
 
       {/* Add Notification Dialog */}
       <AddNotification open={dialogOpen} onClose={handleCloseDialog} onNotificationAdded={onNotificationAdded} />
+
+      {/* Notification Detail Modal (only for table view) */}
+      <NotificationDetailModal
+        open={detailModalOpen}
+        onClose={handleCloseDetailModal}
+        notification={selectedNotification}
+      />
     </Box>
   )
 }

@@ -1109,125 +1109,246 @@ useEffect(() => {
         }}
       >
         <Box sx={{ width: "100%", maxWidth: 1800 }}>
-          <Paper sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}>
-            <Box
-              display="flex"
-              flexDirection={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "stretch", md: "center" }}
-              gap={1.5}
-            >
-              <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
-                Attendance Management
-              </Typography>
+        <Paper sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}>
+  <Box display="flex" flexDirection="column" gap={2}>
+    {/* Title Row */}
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
+        Attendance Management
+      </Typography>
+      
+      {/* Mobile-only refresh button */}
+      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+        <Tooltip title="Refresh Data">
+          <IconButton 
+            onClick={refreshData} 
+            disabled={loading || todayLoading} 
+            size="small"
+            sx={{ ml: 1 }}
+          >
+            {loading || todayLoading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </Box>
 
-              <Grid container spacing={1.5} alignItems="center">
-                {user.role === "HR" && (
-                  <>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Autocomplete
-                        options={filteredEmployees}
-                        getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
-                        value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
-                        onChange={(e, newValue) => {
-                          setSelectedEmpId(newValue ? newValue.EmpId : "");
-                          setSelectedEmployee(newValue);
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Select Employee"
-                            variant="outlined"
-                            size="small"
-                            InputProps={{
-                              ...params.InputProps,
-                              startAdornment: <Person sx={{ mr: 1, color: "text.secondary" }} />,
-                            }}
-                          />
-                        )}
-                        loading={loading}
-                      />
-                    </Grid>
-                    
-                    {/* Employee Filter */}
-                    <Grid item xs={12} sm={6} md={3}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Employee Status</InputLabel>
-                        <Select 
-                          value={employeeFilter} 
-                          label="Employee Status" 
-                          onChange={(e) => handleEmployeeFilterChange(e.target.value)}
-                        >
-                          <MenuItem value="active">Active Only</MenuItem>
-                          <MenuItem value="inactive">Inactive Only</MenuItem>
-                          <MenuItem value="all">All Employees</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                  </>
-                )}
-
-                {/* Combined Month/Year Selector */}
-                <Grid item xs={12} sm={6} md={2}>
-                  <DatePicker
-                    views={['year', 'month']}
-                    label="Select Month & Year"
-                    value={selectedDate}
-                    onChange={(newValue) => setSelectedDate(newValue)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        size="small"
-                        fullWidth
-                      />
-                    )}
+    {/* Main Controls - Stack vertically on mobile, row on desktop */}
+    <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={2}>
+      {/* Left Side - Filters (Full width on mobile) */}
+      <Box 
+        flex={{ md: 1 }} 
+        display="flex" 
+        flexDirection={{ xs: "column", sm: "row" }}
+        gap={1.5}
+        sx={{ width: { xs: '100%', md: 'auto' } }}
+      >
+        {user.role === "HR" && (
+          <>
+            <Box flex={{ xs: 1, sm: 1 }}>
+              <Autocomplete
+                options={filteredEmployees}
+                getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
+                value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
+                onChange={(e, newValue) => {
+                  setSelectedEmpId(newValue ? newValue.EmpId : "");
+                  setSelectedEmployee(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Employee"
+                    variant="outlined"
+                    size="small"
+                    fullWidth
                   />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={2}>
-                  <Stack direction="row" spacing={0.5}>
-                    <Button
-                      variant={viewMode === "calendar" ? "contained" : "outlined"}
-                      onClick={() => setViewMode("calendar")}
-                      size="small"
-                    >
-                      <CalendarToday fontSize="small" />
-                    </Button>
-                    <Button
-                      variant={viewMode === "list" ? "contained" : "outlined"}
-                      onClick={() => setViewMode("list")}
-                      size="small"
-                    >
-                      <FilterList fontSize="small" />
-                    </Button>
-                  </Stack>
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={2}>
-                  <Stack direction="row" spacing={0.5} justifyContent={{ xs: "flex-start", md: "flex-end" }}>
-                    {user.role === "HR" && (
-                      <Button variant="outlined" onClick={regularise} size="small">
-                        <Settings fontSize="small" />
-                      </Button>
-                    )}
-                    <Button 
-                      variant="contained" 
-                      onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv} 
-                      disabled={activeTab === 0 ? filteredActivities.length === 0 : todayAttendance.length === 0} 
-                      size="small"
-                    >
-                      <Download fontSize="small" />
-                    </Button>
-                    <Tooltip title="Refresh Data">
-                      <IconButton onClick={refreshData} disabled={loading || todayLoading} size="small">
-                        {loading || todayLoading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </Grid>
-              </Grid>
+                )}
+                loading={loading}
+              />
             </Box>
-          </Paper>
+            
+            {/* Employee Filter */}
+            <Box flex={{ xs: 1, sm: 1 }} minWidth={{ sm: 140 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Employee Status</InputLabel>
+                <Select 
+                  value={employeeFilter} 
+                  label="Employee Status" 
+                  onChange={(e) => handleEmployeeFilterChange(e.target.value)}
+                >
+                  <MenuItem value="active">Active Only</MenuItem>
+                  <MenuItem value="inactive">Inactive Only</MenuItem>
+                  <MenuItem value="all">All Employees</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </>
+        )}
+
+        {/* Month/Year Selector */}
+        <Box flex={{ xs: 1, sm: 1 }}>
+          <DatePicker
+            views={['year', 'month']}
+            label="Select Month & Year"
+            value={selectedDate}
+            onChange={(newValue) => setSelectedDate(newValue)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                size="small"
+                fullWidth
+              />
+            )}
+          />
+        </Box>
+      </Box>
+
+      {/* Right Side - Action Buttons */}
+      <Box 
+        display="flex" 
+        alignItems="center"
+        justifyContent={{ xs: "space-between", md: "flex-end" }}
+        gap={1}
+        sx={{ 
+          width: { xs: '100%', md: 'auto' },
+          mt: { xs: 1, md: 0 }
+        }}
+      >
+        {/* View Mode Toggle - Mobile/Tablet */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 0.5 }}>
+          <Tooltip title="Calendar View">
+            <Button
+              variant={viewMode === "calendar" ? "contained" : "outlined"}
+              onClick={() => setViewMode("calendar")}
+              size="small"
+              sx={{ minWidth: 40, px: 1 }}
+            >
+              <CalendarToday fontSize="small" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="List View">
+            <Button
+              variant={viewMode === "list" ? "contained" : "outlined"}
+              onClick={() => setViewMode("list")}
+              size="small"
+              sx={{ minWidth: 40, px: 1 }}
+            >
+              <FilterList fontSize="small" />
+            </Button>
+          </Tooltip>
+        </Box>
+
+        {/* View Mode Toggle - Desktop */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5, mr: 1 }}>
+          <Tooltip title="Calendar View">
+            <Button
+              variant={viewMode === "calendar" ? "contained" : "outlined"}
+              onClick={() => setViewMode("calendar")}
+              size="small"
+              startIcon={<CalendarToday />}
+              sx={{ px: 2 }}
+            >
+              Calendar
+            </Button>
+          </Tooltip>
+          <Tooltip title="List View">
+            <Button
+              variant={viewMode === "list" ? "contained" : "outlined"}
+              onClick={() => setViewMode("list")}
+              size="small"
+              startIcon={<FilterList />}
+              sx={{ px: 2 }}
+            >
+              List
+            </Button>
+          </Tooltip>
+        </Box>
+
+        {/* Action Buttons */}
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          {user.role === "HR" && (
+            <Tooltip title="Regularise">
+              <IconButton
+                onClick={regularise}
+                size="small"
+                sx={{ 
+                  border: `1px solid ${theme.palette.primary.main}`,
+                  borderRadius: 1,
+                  width: 36,
+                  height: 36
+                }}
+              >
+                <Settings fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          
+          {/* Export Button - Mobile */}
+          <Tooltip title={activeTab === 0 ? "Export to CSV" : "Export Today's Data"}>
+            <IconButton
+              onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv}
+              disabled={activeTab === 0 ? filteredActivities.length === 0 : todayAttendance.length === 0}
+              size="small"
+              sx={{ 
+                border: `1px solid ${theme.palette.primary.main}`,
+                borderRadius: 1,
+                width: 36,
+                height: 36,
+                backgroundColor: theme.palette.primary.main,
+                color: '#fff',
+                '&:hover': { backgroundColor: theme.palette.primary.dark },
+                '&:disabled': { 
+                  backgroundColor: theme.palette.action.disabled,
+                  borderColor: theme.palette.action.disabled 
+                },
+                display: { xs: 'flex', md: 'none' }
+              }}
+            >
+              <Download fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          {/* Export Button - Desktop */}
+          <Tooltip title={activeTab === 0 ? "Export to CSV" : "Export Today's Data"}>
+            <Button
+              variant="contained"
+              onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv}
+              disabled={activeTab === 0 ? filteredActivities.length === 0 : todayAttendance.length === 0}
+              size="small"
+              startIcon={<Download />}
+              sx={{ 
+                height: 36,
+                display: { xs: 'none', md: 'flex' },
+                px: 2
+              }}
+            >
+              Export
+            </Button>
+          </Tooltip>
+
+          {/* Refresh Button - Desktop only (mobile is in title row) */}
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <Tooltip title="Refresh Data">
+              <IconButton 
+                onClick={refreshData} 
+                disabled={loading || todayLoading} 
+                size="small"
+                sx={{ 
+                  border: `1px solid ${theme.palette.primary.main}`,
+                  borderRadius: 1,
+                  width: 36,
+                  height: 36,
+                  ml: 0.5
+                }}
+              >
+                {loading || todayLoading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Stack>
+      </Box>
+    </Box>
+  </Box>
+</Paper>
 
           {/* Error Alert */}
           {error && (

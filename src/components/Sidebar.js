@@ -35,6 +35,9 @@ import {
 import { useAuth } from "./auth/AuthContext"
 import logo from "../assets/HRSmileLogo.jpeg"
 import ReceiptIcon from '@mui/icons-material/Receipt';
+// Add this import for Manual Attendance icon
+import EditCalendarIcon from '@mui/icons-material/EditCalendar';
+
 // Simple logo
 const HRSmileLogo = () => (
   <Box
@@ -149,6 +152,8 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
 
   const moduleMapping = {
     1: { path: "/attendance", name: "Attendance", icon: <BarChart />, category: "Analytics" },
+    // Add Manual Attendance to module mapping
+    16: { path: "/manual-attendance", name: "Manual Attendance", icon: <EditCalendarIcon />, category: "Analytics" },
     2: { path: "/leave", name: "Leave", icon: <Person />, category: "HR" },
     3: { path: "/expense", name: "Expense", icon: <AccountBalanceWallet />, category: "Finance" },
     4: { path: "/registration", name: "Leads", icon: <HowToReg />, category: "Sales" },
@@ -175,6 +180,10 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
       { path: "/offices", name: "Offices", icon: <Business />, category: "HR" },
       { path: "/report", name: "Reports", icon: <Summarize />, category: "Analytics" },
       // { path: "/invoices", name: "Invoices", icon: <ReceiptIcon />, category: "Finance" },
+    )
+    // Add Manual Attendance for HR users by default
+    allowedRoutes.push(
+      { path: "/manual-attendance", name: "Manual Attendance", icon: <EditCalendarIcon />, category: "Analytics" }
     )
   }
 

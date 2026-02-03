@@ -1098,21 +1098,24 @@ function EmployeeList() {
 
   const handleOfficeChange = (event) => {
     const selectedOfficeIds = event.target.value;
+    
+    // Ensure IDs are strings for comparison
+    const stringIds = selectedOfficeIds.map(id => id.toString());
     const selectedOffices = offices.filter((o) =>
-      selectedOfficeIds.includes(o.Id),
+      stringIds.includes(o.Id.toString())
     );
-
+  
     // Extract distance from the first office's LatLong
     const firstOffice = selectedOffices[0];
     const latLongParts = firstOffice?.LatLong?.split(",") || [];
     const distance = latLongParts[2] || "0";
-
+  
     setFormData((prevFormData) => ({
       ...prevFormData,
-      OfficeId: selectedOfficeIds.join(","),
-      OfficeName: selectedOffices.map((o) => o.OfficeName).join(","),
+      OfficeId: selectedOfficeIds.join(","), // Store IDs
+      OfficeName: selectedOffices.map((o) => o.OfficeName).join(","), // Store names for display
       LatLong: selectedOffices.map((o) => o.LatLong).join("|"),
-      Distance: distance, // Set the distance
+      Distance: distance,
     }));
   };
 
@@ -1994,42 +1997,51 @@ function EmployeeList() {
 
                 {/* Office (Multi Select with Label + Icon) */}
                 <Grid item xs={12} md={6}>
-                  {" "}
-                  <FormControl fullWidth required>
-                    {" "}
-                    <InputLabel>Office</InputLabel>{" "}
-                    <Select
-                      multiple
-                      value={
-                        formData.OfficeId ? formData.OfficeId.split(",") : []
-                      }
-                      onChange={handleOfficeChange}
-                      label="Office"
-                      renderValue={(selected) =>
-                        selected
-                          .map((id) => {
-                            const office = offices.find((o) => o.Id === id);
-                            return office ? office.OfficeName : id;
-                          })
-                          .join(", ")
-                      }
-                    >
-                      {" "}
-                      {offices.map((office) => (
-                        <MenuItem key={office.Id} value={office.Id}>
-                          {" "}
-                          <Box sx={{ display: "flex", alignItems: "center" }}>
-                            {" "}
-                            <LocationOn
-                              sx={{ mr: 1, color: "text.secondary" }}
-                            />{" "}
-                            {office.OfficeName}{" "}
-                          </Box>{" "}
-                        </MenuItem>
-                      ))}{" "}
-                    </Select>{" "}
-                  </FormControl>{" "}
-                </Grid>
+  <FormControl fullWidth required>
+    <InputLabel>Office</InputLabel>
+    <Select
+      multiple
+      value={formData.OfficeId ? formData.OfficeId.split(",").map(id => id.trim()) : []}
+      onChange={handleOfficeChange}
+      label="Office"
+      renderValue={(selected) => {
+        // Get office names for the selected IDs
+        const selectedOffices = offices.filter(office => 
+          selected.includes(office.Id.toString())
+        );
+        
+        if (selectedOffices.length === 0) {
+          return <Typography variant="body2" color="text.secondary">Select offices...</Typography>;
+        }
+        
+        return selectedOffices.map(office => office.OfficeName).join(", ");
+      }}
+      MenuProps={{
+        PaperProps: {
+          style: {
+            maxHeight: 300,
+          },
+        },
+      }}
+    >
+      {offices.map((office) => (
+        <MenuItem key={office.Id} value={office.Id}>
+          <Checkbox
+            checked={
+              formData.OfficeId 
+                ? formData.OfficeId.split(",").map(id => id.trim()).includes(office.Id.toString())
+                : false
+            }
+          />
+          <ListItemText 
+            primary={office.OfficeName}
+            secondary={office.Address || ""}
+          />
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+</Grid>
 
                 {/* Salary Information Section */}
                 <Grid item xs={12}>

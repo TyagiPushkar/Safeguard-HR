@@ -110,7 +110,7 @@ const ManualAttendancePage = () => {
             EmpId: emp.EmpId,
             Department: emp.Department || emp.Dept || "N/A",
             Designation: emp.Designation || emp.Role || "N/A",
-            TodayStatus: "Not Marked", // Default status
+            TodayStatus: "Not Marked",
           }))
           
           setEmployees(employeesData)

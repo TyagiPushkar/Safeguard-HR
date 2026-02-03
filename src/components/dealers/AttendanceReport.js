@@ -14,10 +14,6 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import { GetApp, Schedule } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -63,6 +59,15 @@ const AttendanceReport = () => {
   const NORMAL_SHIFT_HOURS = useMemo(() => 9, []);
   const LATE_THRESHOLD_MINUTES = useMemo(() => 30, []);
 
+  // Filter active employees - only where IsActive === 1
+  const filterActiveEmployees = useCallback((employees) => {
+    return employees.filter(employee => {
+      // Check if IsActive field exists and equals 1
+      const isActive = employee.IsActive || employee.isActive;
+      return isActive === 1 || isActive === "1";
+    });
+  }, []);
+
   // Fetch all data
   useEffect(() => {
     const fetchData = async () => {
@@ -90,7 +95,10 @@ const AttendanceReport = () => {
           employeesRes.status === "fulfilled" &&
           employeesRes.value.data.success
         ) {
-          setEmployees(employeesRes.value.data.data || []);
+          const allEmployees = employeesRes.value.data.data || [];
+          // Filter only active employees
+          const activeEmployees = filterActiveEmployees(allEmployees);
+          setEmployees(activeEmployees);
         }
 
         if (
@@ -129,9 +137,9 @@ const AttendanceReport = () => {
     };
 
     fetchData();
-  }, [user.tenent_id]);
+  }, [user.tenent_id, filterActiveEmployees]);
 
-  // Helper functions
+  // Helper functions (keep all your existing helper functions)
   const getDaysInMonth = useCallback((month, year) => {
     return new Date(year, month, 0).getDate();
   }, []);
@@ -568,7 +576,7 @@ const AttendanceReport = () => {
       const daysInMonth = getDaysInMonth(currentMonth, year);
       const monthName = monthNames[currentMonth - 1];
 
-      // Create header
+      // Create header - ADDED "OfficeName" column
       const header = [
         "S.R NO.",
         "UAN",
@@ -578,6 +586,7 @@ const AttendanceReport = () => {
         "Father Name",
         "Designation",
         "CADRE",
+        "OfficeName", // ADDED THIS COLUMN
         "DOJ",
         "",
       ];
@@ -635,7 +644,7 @@ const AttendanceReport = () => {
           const summary = calculateEmployeeSummary(employee.EmpId);
           const salary = calculateEmployeeSalary(employee.EmpId, summary);
 
-          // Start row
+          // Start row - ADDED OfficeName
           const row = [
             (i + j + 1).toString(), // S.R NO.
             employee.UAN || "", // UAN
@@ -645,6 +654,7 @@ const AttendanceReport = () => {
             employee.FatherName || "", // Father Name
             employee.Designation || "", // Designation
             employee.Grade || "", // CADRE
+            employee.OfficeName || employee.office_name || "", // OfficeName - ADDED
             employee.JoinDate
               ? `${employee.JoinDate.split("T")[0]} 00:00:00`
               : "", // DOJ
@@ -797,18 +807,18 @@ const AttendanceReport = () => {
                 borderColor: "grey.200",
               }}
             >
-              {/* <CardContent>
+              <CardContent>
                 <Typography
                   variant="subtitle1"
                   gutterBottom
                   sx={{ fontWeight: 600 }}
                 >
-                  {stats.monthName} {stats.year} - Data Overview
+                  {stats.monthName} {stats.year} - Active Employees
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="body2" color="text.secondary">
-                      Employees
+                      Active Employees
                     </Typography>
                     <Typography variant="h6">{stats.totalEmployees}</Typography>
                   </Grid>
@@ -833,7 +843,7 @@ const AttendanceReport = () => {
                     <Typography variant="h6">{stats.salaryRecords}</Typography>
                   </Grid>
                 </Grid>
-              </CardContent> */}
+              </CardContent>
             </Card>
           )}
 
@@ -849,7 +859,7 @@ const AttendanceReport = () => {
             >
               <CircularProgress size={40} sx={{ mr: 2 }} />
               <Typography variant="body1" color="text.secondary">
-                Loading data...
+                Loading active employee data...
               </Typography>
             </Box>
           )}
@@ -862,15 +872,15 @@ const AttendanceReport = () => {
           )}
 
           {/* Information */}
-          {month && !loading && (
+          {/* {month && !loading && (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                <strong>Note:</strong> Sunday working is counted as double present
-                days. OT is calculated at 1.25x rate. Salary is pro-rated based on
-                actual attendance.
+                <strong>Note:</strong> Report includes only active employees (IsActive = 1).
+                Sunday working is counted as double present days. OT is calculated at 1.25x rate.
+                Salary is pro-rated based on actual attendance. OfficeName column has been added to the report.
               </Typography>
             </Alert>
-          )}
+          )} */}
         </CardContent>
       </Card>
     </LocalizationProvider>

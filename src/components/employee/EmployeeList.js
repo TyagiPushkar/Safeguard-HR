@@ -57,11 +57,14 @@ import {
   Refresh,
   Visibility,
   PersonAdd,
+  Download,
+  Block,
 } from "@mui/icons-material";
 import { CheckBox } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useAuth } from "../auth/AuthContext";
+import * as XLSX from "xlsx";
 
 // Employee Card Component for Mobile View
 const EmployeeCard = ({
@@ -190,16 +193,17 @@ const EmployeeCard = ({
                 <Edit fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={employee.IsActive ? "Deactivate" : "Activate"}>
+            <Tooltip title={employee.IsActive ? "Disable Employee" : "Permanently Disabled"}>
               <IconButton
                 size="small"
-                color={employee.IsActive ? "error" : "success"}
+                color={employee.IsActive ? "error" : "default"}
                 onClick={() => onToggleStatus(employee)}
+                disabled={!employee.IsActive}
               >
                 {employee.IsActive ? (
-                  <Close fontSize="small" />
+                  <Block fontSize="small" />
                 ) : (
-                  <CheckCircle fontSize="small" />
+                  <Close fontSize="small" />
                 )}
               </IconButton>
             </Tooltip>
@@ -923,7 +927,7 @@ function EmployeeList() {
     Mobile: "",
     EmailId: "",
     Role: "",
-    OTP: "",
+    OTP: "123456",
     IsOTPExpired: 1,
     IsGeofence: 0,
     Tenent_Id: "",
@@ -951,8 +955,16 @@ function EmployeeList() {
     special_allowance: "",
   });
 
+  // NEW: State for disable dialog
+  const [disableDialogOpen, setDisableDialogOpen] = useState(false);
+  const [disableReason, setDisableReason] = useState("");
+  const [disableDate, setDisableDate] = useState("");
+  const [employeeToDisable, setEmployeeToDisable] = useState(null);
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [exporting, setExporting] = useState(false);
+
   const gradeOptions = [
     { value: "M1", label: "M1 - (Vice President(VP))" },
     { value: "M2", label: "M2 - (General Manager (GM))" },
@@ -1009,6 +1021,7 @@ function EmployeeList() {
 
     return `${prefix}${paddedNumber}`;
   };
+  
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -1088,31 +1101,55 @@ function EmployeeList() {
   };
 
   const handleOpenForm = (mode, employee = null) => {
+    // Check if offices are loaded before opening form
+    if (offices.length === 0) {
+      alert("Please wait, offices are loading...");
+      fetchOffices().then(() => {
+        // Once offices are loaded, proceed with opening form
+        openFormAfterOfficeLoad(mode, employee);
+      });
+      return;
+    }
+    
+    openFormAfterOfficeLoad(mode, employee);
+  };
+  
+  // Helper function to open form after offices are loaded
+  const openFormAfterOfficeLoad = (mode, employee = null) => {
     setFormMode(mode);
     if (mode === "edit" && employee) {
       // Find the RM name if RM exists
       const rmEmployee = employees.find((emp) => emp.EmpId === employee.RM);
       const rmName = rmEmployee ? rmEmployee.Name : "";
-
+      
+      // IMPORTANT: Find the matching office object from offices array
+      let officeObj = null;
+      if (employee.OfficeId  && offices.length > 0) {
+        officeObj = offices.find(o => o.Id == employee.OfficeId);
+      }
+  
       setFormData({
         EmpId: employee.EmpId,
         Name: employee.Name,
-        Password: "", // Don't show password in edit
+        Password: "",
         Mobile: employee.Mobile,
         EmailId: employee.EmailId,
-        Role: employee.Role,
+        Role:employee.new_role|| employee.Role,
         OTP: "123456",
         IsOTPExpired: 1,
         IsGeofence: employee.IsGeofence || 0,
         Tenent_Id: user.tenent_id,
         IsActive: employee.IsActive || 1,
-        OfficeId: employee.OfficeId || null,
-        OfficeName: employee.OfficeName || "",
-        LatLong: employee.LatLong || "",
-        Distance: employee.Distance || "",
-        OfficeIsActive: 1,
+      
+        OfficeId: officeObj ? officeObj.Id : null,
+        OfficeName: officeObj ? officeObj.OfficeName : "",
+        LatLong: officeObj ? officeObj.LatLong : "",
+        Distance: officeObj
+          ? officeObj.LatLong?.split(",")[2] || "0"
+          : "",
+      
         RM: employee.RM || "",
-        RMName: rmName, // Set RM name for display
+        RMName: rmName,
         Shift: employee.Shift || "",
         DOB: employee.DOB || "",
         JoinDate: employee.JoinDate || "",
@@ -1121,12 +1158,13 @@ function EmployeeList() {
         Grade: employee.Grade || "",
         UAN: employee.UAN || "",
         ESI: employee.ESI || "",
-        ProbationPeriod: employee.ProbationPeriod || "", // Added Probation Period
+        ProbationPeriod: employee.ProbationPeriod || "",
         basic_salary: "",
         hra: "",
         conveyance: "",
         special_allowance: "",
       });
+      
     } else {
       // Auto-generate new employee ID for add mode
       const lastEmpId =
@@ -1134,9 +1172,9 @@ function EmployeeList() {
           ? employees[employees.length - 1].EmpId
           : "SGM0000";
       const nextEmpId = generateNextEmployeeId(lastEmpId);
-
+  
       setFormData({
-        EmpId: nextEmpId, // Auto-generated ID
+        EmpId: nextEmpId,
         Name: "",
         Password: "",
         Mobile: "",
@@ -1162,7 +1200,7 @@ function EmployeeList() {
         Grade: "",
         UAN: "",
         ESI: "",
-        ProbationPeriod: "", // Added Probation Period
+        ProbationPeriod: "",
         basic_salary: "",
         hra: "",
         conveyance: "",
@@ -1183,9 +1221,9 @@ function EmployeeList() {
       return;
     }
 
-    // Extract distance from LatLong (assuming format: "lat,long,distance")
+   
     const latLongParts = formData.LatLong.split(",");
-    const distance = latLongParts[2] || "0"; // Get the distance part or default to "0"
+    const distance = latLongParts[2] || "0"; 
 
     const requiredFields = [
       "EmpId",
@@ -1193,25 +1231,49 @@ function EmployeeList() {
       "Mobile",
       "EmailId",
       "Role",
-      "OfficeName",
-      "LatLong",
+      "OfficeId",
       "Designation",
     ];
+    
     for (const field of requiredFields) {
       if (!formData[field]) {
-        alert(`Please fill in all required fields. Missing: ${field}`);
+        const fieldLabels = {
+          EmpId: "Employee ID",
+          Name: "Full Name",
+          Mobile: "Mobile Number",
+          EmailId: "Email Address",
+          Role: "Role",
+          OfficeId: "Office",
+          Designation: "Designation",
+        };
+        
+        alert(`Please fill in all required fields. Missing: ${fieldLabels[field] || field}`);
         setSubmitting(false);
         return;
       }
     }
-
+    
+    // Additional check for office details (but don't block submission if they exist)
+    if (!formData.OfficeName && formData.OfficeId) {
+      // If OfficeId exists but OfficeName doesn't, try to find it from offices array
+      const office = offices.find(o => o.Id == formData.OfficeId);
+      if (office) {
+        setFormData(prev => ({
+          ...prev,
+          OfficeName: office.OfficeName,
+          LatLong: office.LatLong || "",
+        }));
+      }
+    }
+    
+    
     const formattedFormData = {
       EmpId: formData.EmpId,
       Name: formData.Name,
       Password: formData.Password,
       Mobile: formData.Mobile,
       EmailId: formData.EmailId,
-      Role: formData.Role,
+      new_role: formData.Role,
       OTP: formData.OTP || "123456",
       IsOTPExpired: formData.IsOTPExpired || 1,
       IsGeofence: formData.IsGeofence || 0,
@@ -1228,13 +1290,13 @@ function EmployeeList() {
       ESI: formData.ESI,
       ProbationPeriod: formData.ProbationPeriod || "", // Added Probation Period
       Distance: distance,
-      Offices: [
+      Offices: formData.OfficeId ? [
         {
           OfficeName: formData.OfficeName,
           LatLong: formData.LatLong,
-          Distance: distance, // Add Distance field
-        },
-      ],
+          Distance: formData.Distance,
+        }
+      ] : [],
     };
 
     const url =
@@ -1339,24 +1401,28 @@ function EmployeeList() {
     return response.data;
   };
 
-  const handleOfficeChange = (event) => {
-    const selectedOfficeIds = event.target.value;
-    const selectedOffices = offices.filter((o) =>
-      selectedOfficeIds.includes(o.Id)
-    );
-
-    // Extract distance from the first office's LatLong
-    const firstOffice = selectedOffices[0];
-    const latLongParts = firstOffice?.LatLong?.split(",") || [];
-    const distance = latLongParts[2] || "0";
-
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      OfficeId: selectedOfficeIds.join(","),
-      OfficeName: selectedOffices.map((o) => o.OfficeName).join(","),
-      LatLong: selectedOffices.map((o) => o.LatLong).join("|"),
-      Distance: distance, // Set the distance
-    }));
+  const handleOfficeChange = (event, value) => {
+    if (value) {
+      // Extract distance from LatLong (assuming format: "lat,long,distance")
+      const latLongParts = value.LatLong.split(",");
+      const distance = latLongParts[2] || "0";
+      
+      setFormData({
+        ...formData,
+        OfficeId: value.Id,
+        OfficeName: value.OfficeName,
+        LatLong: value.LatLong,
+        Distance: distance,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        OfficeId: null,
+        OfficeName: "",
+        LatLong: "",
+        Distance: "",
+      });
+    }
   };
 
   // Handle RM selection
@@ -1381,32 +1447,129 @@ function EmployeeList() {
     setError("");
   };
 
+  // NEW: Open disable dialog
+  const handleOpenDisableDialog = (employee) => {
+    if (employee.IsActive) {
+      setEmployeeToDisable(employee);
+      setDisableReason("");
+      setDisableDate(new Date().toISOString().split('T')[0]); // Set today's date as default
+      setDisableDialogOpen(true);
+    }
+  };
+
+  // NEW: Close disable dialog
+  const handleCloseDisableDialog = () => {
+    setDisableDialogOpen(false);
+    setEmployeeToDisable(null);
+    setDisableReason("");
+    setDisableDate("");
+  };
+
+  // UPDATED: Handle employee status toggle
   const handleToggleEmployeeStatus = async (employee) => {
     if (!employee || !employee.EmpId) {
       console.error("Please provide both Employee ID and action");
       return;
     }
 
+    // If employee is active, open disable dialog instead of directly disabling
+    if (employee.IsActive) {
+      handleOpenDisableDialog(employee);
+      return;
+    }
+
+    // If employee is already disabled, show message that they cannot be re-enabled
+    if (!employee.IsActive) {
+      alert("This employee has been permanently disabled and cannot be re-enabled.");
+      return;
+    }
+  };
+
+  // NEW: Submit disable with reason and date
+  const handleSubmitDisable = async () => {
+    if (!employeeToDisable || !disableReason || !disableDate) {
+      alert("Please provide both reason and date for disabling");
+      return;
+    }
+
     try {
-      const action = employee.IsActive ? "disable" : "enable";
       const response = await axios.post(
         "https://namami-infotech.com/SAFEGUARD/src/employee/disable_employee.php",
         {
-          EmpId: employee.EmpId,
-          action: action,
+          EmpId: employeeToDisable.EmpId,
+          action: "disable",
+          office_leave_date: disableDate,
+          reason: disableReason,
         }
       );
 
       if (response.data.success) {
+        alert("Employee has been permanently disabled.");
         fetchEmployees();
         fetchSalaryStructure();
+        handleCloseDisableDialog();
       } else {
-        console.error("Error:", response.data.message);
+        alert("Failed to disable employee: " + response.data.message);
       }
     } catch (error) {
       console.error("Error:", error);
+      alert("Error disabling employee: " + error.message);
     }
   };
+
+ 
+const exportToExcel = () => {
+  if (filteredEmployees.length === 0) {
+    alert("No data to export");
+    return;
+  }
+
+  setExporting(true);
+  
+  try {
+    // Prepare data with the requested fields including OfficeName
+    const exportData = filteredEmployees.map(employee => ({
+      "Grade": employee.Grade || 'N/A',
+      "Name": employee.Name || 'N/A',
+      "ID": employee.EmpId || 'N/A',
+      "Designation": employee.Designation || 'N/A',
+      "Mobile No": employee.Mobile || 'N/A',
+      "Office": employee.OfficeName || 'N/A' // Added OfficeName field
+    }));
+    
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set column widths for better formatting
+    const wscols = [
+      { wch: 10 }, // Grade
+      { wch: 25 }, // Name
+      { wch: 15 }, // ID
+      { wch: 25 }, // Designation
+      { wch: 15 }, // Mobile No
+      { wch: 25 }  // Office (new column)
+    ];
+    ws['!cols'] = wscols;
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employee List");
+    
+    // Generate filename with current date
+    const date = new Date();
+    const formattedDate = `${date.getDate()}_${date.getMonth() + 1}_${date.getFullYear()}`;
+    const filename = `Employee_List_${formattedDate}.xlsx`;
+    
+    // Export to Excel
+    XLSX.writeFile(wb, filename);
+    
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+    alert("Failed to export to Excel. Please try again.");
+  } finally {
+    setExporting(false);
+  }
+};
 
   const filteredEmployees = employees.filter((employee) => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
@@ -1445,6 +1608,11 @@ function EmployeeList() {
       </Box>
     );
   }
+  const selectedRole = roleOptions1.includes(formData.Role)
+    ? formData.Role
+    : null;
+    
+    
 
   return (
     <Box
@@ -1500,6 +1668,28 @@ function EmployeeList() {
                   <Refresh />
                 </IconButton>
               </Tooltip>
+              
+              {/* Export Button - Simple single click */}
+              <Button
+                variant="outlined"
+                startIcon={exporting ? <CircularProgress size={20} /> : <Download />}
+                onClick={exportToExcel}
+                disabled={exporting || filteredEmployees.length === 0}
+                sx={{
+                  borderColor: "#8d0638ff",
+                  color: "#8d0638ff",
+                  "&:hover": {
+                    borderColor: "#6b042d",
+                    bgcolor: "#f8f0f4",
+                  },
+                  borderRadius: 2,
+                  textTransform: "none",
+                  minWidth: "120px",
+                }}
+              >
+                {exporting ? "Exporting..." : "Export"}
+              </Button>
+              
               <Button
                 variant="contained"
                 startIcon={<PersonAdd />}
@@ -1769,23 +1959,20 @@ function EmployeeList() {
                                 </IconButton>
                               </Tooltip>
                               <Tooltip
-                                title={
-                                  employee.IsActive ? "Deactivate" : "Activate"
-                                }
+                                title={employee.IsActive ? "Disable Employee" : "Permanently Disabled"}
                               >
                                 <IconButton
                                   size="small"
-                                  color={
-                                    employee.IsActive ? "error" : "success"
-                                  }
+                                  color={employee.IsActive ? "error" : "default"}
                                   onClick={() =>
                                     handleToggleEmployeeStatus(employee)
                                   }
+                                  disabled={!employee.IsActive}
                                 >
                                   {employee.IsActive ? (
-                                    <Close fontSize="small" />
+                                    <Block fontSize="small" />
                                   ) : (
-                                    <CheckCircle fontSize="small" />
+                                    <Close fontSize="small" />
                                   )}
                                 </IconButton>
                               </Tooltip>
@@ -1809,6 +1996,85 @@ function EmployeeList() {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Paper>
+
+        {/* NEW: Disable Employee Dialog */}
+        <Dialog
+          open={disableDialogOpen}
+          onClose={handleCloseDisableDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              bgcolor: "#8d0638ff",
+              color: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Block sx={{ mr: 1 }} />
+              Disable Employee
+            </Box>
+            <IconButton onClick={handleCloseDisableDialog} sx={{ color: "white" }}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          
+          <DialogContent sx={{ p: 3 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <strong>Warning:</strong> Once disabled, this employee cannot be re-enabled.
+              This action is permanent.
+            </Alert>
+            
+            <Typography variant="body1" gutterBottom>
+              You are about to disable <strong>{employeeToDisable?.Name}</strong> ({employeeToDisable?.EmpId})
+            </Typography>
+            
+            <Grid container spacing={2} sx={{ mt: 2 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Disable Date"
+                  type="date"
+                  value={disableDate}
+                  onChange={(e) => setDisableDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Reason for Disabling"
+                  value={disableReason}
+                  onChange={(e) => setDisableReason(e.target.value)}
+                  multiline
+                  rows={3}
+                  placeholder="e.g., Left organization, Terminated, Resigned, etc."
+                  required
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={handleCloseDisableDialog} variant="outlined">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitDisable}
+              variant="contained"
+              color="error"
+              disabled={!disableReason || !disableDate}
+              sx={{ bgcolor: "#8d0638ff", color: "white" }}
+            >
+              Confirm Disable
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <EmployeeDetails
           employee={selectedEmployee}
@@ -2052,16 +2318,17 @@ function EmployeeList() {
 
                 {/* Role */}
                 <Grid item xs={12} md={6}>
-                  <Autocomplete
-                    options={roleOptions1}
-                    value={formData.Role || ""}
-                    onChange={(_, newValue) =>
-                      setFormData({ ...formData, Role: newValue || "" })
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} label="Role" required fullWidth />
-                    )}
-                  />
+                <Autocomplete
+  options={roleOptions1}
+  value={selectedRole}
+  onChange={(_, newValue) =>
+    setFormData({ ...formData, Role: newValue || "" })
+  }
+  renderInput={(params) => (
+    <TextField {...params} label="Role" required fullWidth />
+  )}
+/>
+
                 </Grid>
 
                 {/* NEW: Probation Period Field */}
@@ -2168,44 +2435,57 @@ function EmployeeList() {
                   />
                 </Grid>
 
-                {/* Office (Multi Select with Label + Icon) */}
-                <Grid item xs={12} md={6}>
-                  {" "}
-                  <FormControl fullWidth required>
-                    {" "}
-                    <InputLabel>Office</InputLabel>{" "}
-                    <Select
-                      multiple
-                      value={
-                        formData.OfficeId ? formData.OfficeId.split(",") : []
-                      }
-                      onChange={handleOfficeChange}
-                      label="Office"
-                      renderValue={(selected) =>
-                        selected
-                          .map((id) => {
-                            const office = offices.find((o) => o.Id === id);
-                            return office ? office.OfficeName : id;
-                          })
-                          .join(", ")
-                      }
-                    >
-                      {" "}
-                      {offices.map((office) => (
-                        <MenuItem key={office.Id} value={office.Id}>
-                          {" "}
-                          <Box sx={{ display: "flex", alignItems: "center" }}>
-                            {" "}
-                            <LocationOn
-                              sx={{ mr: 1, color: "text.secondary" }}
-                            />{" "}
-                            {office.OfficeName}{" "}
-                          </Box>{" "}
-                        </MenuItem>
-                      ))}{" "}
-                    </Select>{" "}
-                  </FormControl>{" "}
-                </Grid>
+               {/* Office Selection - Single Select */}
+<Grid item xs={12} md={6}>
+  <FormControl fullWidth required>
+    <InputLabel>Office</InputLabel>
+    <Select
+      value={formData.OfficeId?.toString() || ""}
+      onChange={(e) => {
+        const selectedOfficeId = e.target.value;
+        
+        if (!selectedOfficeId) {
+          setFormData({
+            ...formData,
+            OfficeId: "",
+            OfficeName: "",
+            LatLong: "",
+            Distance: "",
+          });
+          return;
+        }
+        
+        const selectedOffice = offices.find(o => o.Id.toString() === selectedOfficeId);
+        
+        if (selectedOffice) {
+          const latLongParts = selectedOffice.LatLong?.split(",") || [];
+          const distance = latLongParts[2] || "0";
+          
+          setFormData({
+            ...formData,
+            OfficeId: selectedOffice.Id,
+            OfficeName: selectedOffice.OfficeName,
+            LatLong: selectedOffice.LatLong,
+            Distance: distance,
+          });
+        }
+      }}
+      label="Office"
+    >
+      <MenuItem value="">
+        <em>Select an office</em>
+      </MenuItem>
+      {offices.map((office) => (
+        <MenuItem key={office.Id} value={office.Id.toString()}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <LocationOn sx={{ mr: 1, color: "text.secondary" }} />
+            {office.OfficeName}
+          </Box>
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+</Grid>
 
                 {/* Salary Information Section */}
                 <Grid item xs={12}>

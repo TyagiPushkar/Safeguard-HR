@@ -11,6 +11,8 @@ import Employee from './pages/Employee';
 import Holiday from './pages/Holiday';
 import Policy from './pages/Policy';
 import Attendance from './pages/Attendance';
+
+import ManualAttendance from './pages/ManualAttendance'; 
 import Notification from './pages/Notification';
 import Leave from './pages/Leave';
 import Expense from './pages/Expense';
@@ -121,6 +123,15 @@ function App() {
               <PrivateRoute>
                 <LayoutWrapper>
                   <Attendance />
+                </LayoutWrapper>
+              </PrivateRoute>
+            } />
+            
+            {/* Add the Manual Attendance Route */}
+            <Route path="/manual-attendance" element={
+              <PrivateRoute requiredRole="HR">
+                <LayoutWrapper>
+                  <ManualAttendance />
                 </LayoutWrapper>
               </PrivateRoute>
             } />

@@ -224,11 +224,11 @@ const ManualAttendancePage = () => {
       setError(null);
 
       // Check if selected date is valid
-      if (!isDateValid(format(attendanceDate, "yyyy-MM-dd"))) {
-        setError("You can only mark attendance for the last 3 days and today.");
-        setSubmitting(false);
-        return;
-      }
+      // if (!isDateValid(format(attendanceDate, "yyyy-MM-dd"))) {
+      //   setError("You can only mark attendance for the last 3 days and today.");
+      //   setSubmitting(false);
+      //   return;
+      // }
 
       // Prepare in-time record
       const inTimeRecord = {

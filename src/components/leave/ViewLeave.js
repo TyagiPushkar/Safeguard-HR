@@ -327,6 +327,16 @@ const [expanded, setExpanded] = useState(false);
   )
 }
 
+const formatDateTime = (dateString) => {
+  try {
+    const date = parseISO(dateString);
+    return isValid(date)
+      ? format(date, "dd MMM yyyy hh:mm:ss a")
+      : "Invalid date";
+  } catch {
+    return "Invalid date";
+  }
+};
 function ViewLeave() {
   const { user } = useAuth()
   const theme = useTheme()
@@ -702,12 +712,12 @@ const [expanded, setExpanded] = useState(false);
           </Box>
         </TableCell>
         <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Status</TableCell>
-        {/* <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
+         <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Schedule sx={{ mr: 0.5, fontSize: '0.9rem' }} />
             Applied
           </Box>
-        </TableCell> */}
+        </TableCell> 
         {user.role === "HR" && <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>}
       </TableRow>
     </TableHead>
@@ -746,44 +756,50 @@ const [expanded, setExpanded] = useState(false);
               >
                 <TableCell sx={{ py: 1 }}>
                   <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Avatar sx={{ 
-                      mr: 1.5, 
-                      width: 28, 
-                      height: 28, 
-                      bgcolor: theme.palette.primary.main,
-                      fontSize: '0.8rem'
-                    }}>
+                    <Avatar
+                      sx={{
+                        mr: 1.5,
+                        width: 28,
+                        height: 28,
+                        bgcolor: theme.palette.primary.main,
+                        fontSize: "0.8rem",
+                      }}
+                    >
                       <Person fontSize="small" />
                     </Avatar>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight="medium"
+                      sx={{ fontSize: "0.8rem" }}
+                    >
                       {employeeName}
                     </Typography>
                   </Box>
                 </TableCell>
                 <TableCell sx={{ py: 1 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                  <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
                     {formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}
                   </Typography>
                 </TableCell>
                 <TableCell sx={{ py: 1 }}>
-                  <Chip 
-                    label={`${leaveDays} day${leaveDays !== 1 ? 's' : ''}`} 
-                    variant="filled" 
-                    size="small" 
+                  <Chip
+                    label={`${leaveDays} day${leaveDays !== 1 ? "s" : ""}`}
+                    variant="filled"
+                    size="small"
                     color="primary"
-                    sx={{ 
-                      height: 22, 
-                      fontSize: '0.7rem',
-                      fontWeight: 'bold'
+                    sx={{
+                      height: 22,
+                      fontSize: "0.7rem",
+                      fontWeight: "bold",
                     }}
                   />
                 </TableCell>
                 <TableCell sx={{ py: 1 }}>
-                  <Chip 
-                    label={leave.Category} 
-                    variant="outlined" 
-                    size="small" 
-                    sx={{ height: 22, fontSize: '0.7rem' }}
+                  <Chip
+                    label={leave.Category}
+                    variant="outlined"
+                    size="small"
+                    sx={{ height: 22, fontSize: "0.7rem" }}
                   />
                 </TableCell>
                 <TableCell sx={{ py: 1 }}>
@@ -817,16 +833,18 @@ const [expanded, setExpanded] = useState(false);
                   )}
                 </TableCell>
                 <TableCell sx={{ py: 1 }}>
-                  <Chip 
-                    label={leave.Status} 
-                    color={getStatusColor(leave.Status)} 
-                    size="small" 
-                    sx={{ height: 22, fontSize: '0.7rem' }}
+                  <Chip
+                    label={leave.Status}
+                    color={getStatusColor(leave.Status)}
+                    size="small"
+                    sx={{ height: 22, fontSize: "0.7rem" }}
                   />
                 </TableCell>
-                {/* <TableCell sx={{ py: 1 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{leave.CreatedAt}</Typography>
-                </TableCell> */}
+                <TableCell sx={{ py: 1 }}>
+                  <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+                    {formatDateTime(leave.CreatedAt)}
+                  </Typography>
+                </TableCell>
                 {user.role === "HR" && (
                   <TableCell sx={{ py: 1 }}>
                     <Box sx={{ display: "flex", gap: 0.5 }}>
@@ -834,9 +852,14 @@ const [expanded, setExpanded] = useState(false);
                         <IconButton
                           size="small"
                           color="success"
-                          onClick={() => handleStatusChange(leave.Id, "Approved")}
-                          disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
-                          sx={{ fontSize: '0.8rem' }}
+                          onClick={() =>
+                            handleStatusChange(leave.Id, "Approved")
+                          }
+                          disabled={
+                            leave.Status === "Approved" ||
+                            leave.Status === "Rejected"
+                          }
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           <Check fontSize="small" />
                         </IconButton>
@@ -845,9 +868,14 @@ const [expanded, setExpanded] = useState(false);
                         <IconButton
                           size="small"
                           color="error"
-                          onClick={() => handleStatusChange(leave.Id, "Rejected")}
-                          disabled={leave.Status === "Approved" || leave.Status === "Rejected"}
-                          sx={{ fontSize: '0.8rem' }}
+                          onClick={() =>
+                            handleStatusChange(leave.Id, "Rejected")
+                          }
+                          disabled={
+                            leave.Status === "Approved" ||
+                            leave.Status === "Rejected"
+                          }
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           <Cancel fontSize="small" />
                         </IconButton>
@@ -856,7 +884,7 @@ const [expanded, setExpanded] = useState(false);
                   </TableCell>
                 )}
               </motion.tr>
-            )
+            );
           })}
       </AnimatePresence>
     </TableBody>

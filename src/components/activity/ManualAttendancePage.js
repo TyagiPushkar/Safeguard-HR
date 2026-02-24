@@ -114,7 +114,7 @@ const ManualAttendancePage = () => {
 
   // Calculate min and max dates for the date picker
   const getMinDate = () => {
-    return format(subDays(new Date(), 3), "yyyy-MM-dd");
+    return format(subDays(new Date(), 30), "yyyy-MM-dd");
   };
 
   const getMaxDate = () => {
@@ -124,7 +124,7 @@ const ManualAttendancePage = () => {
   // Check if date is valid for selection
   const isDateValid = (date) => {
     const selectedDate = parseISO(date);
-    const minDate = subDays(new Date(), 3);
+    const minDate = subDays(new Date(), 30);
     const maxDate = new Date();
 
     return !isBefore(selectedDate, minDate) && !isAfter(selectedDate, maxDate);
@@ -578,7 +578,7 @@ const ManualAttendancePage = () => {
                   min: getMinDate(),
                   max: getMaxDate(),
                 }}
-                helperText="You can mark attendance for the last 3 days only"
+                helperText="You can mark attendance for the last 30 days only"
               />
               <Box display="flex" gap={2}>
                 <TextField

@@ -1109,250 +1109,316 @@ useEffect(() => {
         }}
       >
         <Box sx={{ width: "100%", maxWidth: 1800 }}>
-        <Paper sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}>
-  <Box display="flex" flexDirection="column" gap={2}>
-    {/* Title Row */}
-    <Box display="flex" justifyContent="space-between" alignItems="center">
-      <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
-        Attendance Management
-      </Typography>
-      
-      {/* Mobile-only refresh button */}
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        <Tooltip title="Refresh Data">
-          <IconButton 
-            onClick={refreshData} 
-            disabled={loading || todayLoading} 
-            size="small"
-            sx={{ ml: 1 }}
+          <Paper
+            sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}
           >
-            {loading || todayLoading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </Box>
-
-    {/* Main Controls - Stack vertically on mobile, row on desktop */}
-    <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={2}>
-      {/* Left Side - Filters (Full width on mobile) */}
-      <Box 
-        flex={{ md: 1 }} 
-        display="flex" 
-        flexDirection={{ xs: "column", sm: "row" }}
-        gap={1.5}
-        sx={{ width: { xs: '100%', md: 'auto' } }}
-      >
-        {user.role === "HR" && (
-          <>
-            <Box flex={{ xs: 1, sm: 1 }}>
-              <Autocomplete
-                options={filteredEmployees}
-                getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
-                value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
-                onChange={(e, newValue) => {
-                  setSelectedEmpId(newValue ? newValue.EmpId : "");
-                  setSelectedEmployee(newValue);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Employee"
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                  />
-                )}
-                loading={loading}
-              />
-            </Box>
-            
-            {/* Employee Filter */}
-            <Box flex={{ xs: 1, sm: 1 }} minWidth={{ sm: 140 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Employee Status</InputLabel>
-                <Select 
-                  value={employeeFilter} 
-                  label="Employee Status" 
-                  onChange={(e) => handleEmployeeFilterChange(e.target.value)}
+            <Box display="flex" flexDirection="column" gap={2}>
+              {/* Title Row */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
+                  sx={{ color: "#8d0638ff" }}
                 >
-                  <MenuItem value="active">Active Only</MenuItem>
-                  <MenuItem value="inactive">Inactive Only</MenuItem>
-                  <MenuItem value="all">All Employees</MenuItem>
-                </Select>
-              </FormControl>
+                  Attendance Management
+                </Typography>
+
+                {/* Mobile-only refresh button */}
+                <Box sx={{ display: { xs: "block", md: "none" } }}>
+                  <Tooltip title="Refresh Data">
+                    <IconButton
+                      onClick={refreshData}
+                      disabled={loading || todayLoading}
+                      size="small"
+                      sx={{ ml: 1 }}
+                    >
+                      {loading || todayLoading ? (
+                        <CircularProgress size={18} />
+                      ) : (
+                        <Refresh fontSize="small" />
+                      )}
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              {/* Main Controls - Stack vertically on mobile, row on desktop */}
+              <Box
+                display="flex"
+                flexDirection={{ xs: "column", md: "row" }}
+                gap={2}
+              >
+                {/* Left Side - Filters (Full width on mobile) */}
+                <Box
+                  flex={{ md: 1 }}
+                  display="flex"
+                  flexDirection={{ xs: "column", sm: "row" }}
+                  gap={1.5}
+                  sx={{ width: { xs: "100%", md: "auto" } }}
+                >
+                  {user.role === "HR" && (
+                    <>
+                      <Box flex={{ xs: 1, sm: 1 }}>
+                        <Autocomplete
+                          options={filteredEmployees}
+                          getOptionLabel={(option) =>
+                            `${option.Name} (${option.EmpId})`
+                          }
+                          value={
+                            employees.find(
+                              (emp) => emp.EmpId === selectedEmpId,
+                            ) || null
+                          }
+                          onChange={(e, newValue) => {
+                            setSelectedEmpId(newValue ? newValue.EmpId : "");
+                            setSelectedEmployee(newValue);
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Select Employee"
+                              variant="outlined"
+                              size="small"
+                              fullWidth
+                            />
+                          )}
+                          loading={loading}
+                        />
+                      </Box>
+
+                      {/* Employee Filter */}
+                      <Box flex={{ xs: 1, sm: 1 }} minWidth={{ sm: 140 }}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Employee Status</InputLabel>
+                          <Select
+                            value={employeeFilter}
+                            label="Employee Status"
+                            onChange={(e) =>
+                              handleEmployeeFilterChange(e.target.value)
+                            }
+                          >
+                            <MenuItem value="active">Active Only</MenuItem>
+                            <MenuItem value="inactive">Inactive Only</MenuItem>
+                            <MenuItem value="all">All Employees</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    </>
+                  )}
+
+                  {/* Month/Year Selector */}
+                  <Box flex={{ xs: 1, sm: 1 }}>
+                    <DatePicker
+                      views={["year", "month"]}
+                      label="Select Month & Year"
+                      value={selectedDate}
+                      onChange={(newValue) => setSelectedDate(newValue)}
+                      renderInput={(params) => (
+                        <TextField {...params} size="small" fullWidth />
+                      )}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Right Side - Action Buttons */}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent={{ xs: "space-between", md: "flex-end" }}
+                  gap={1}
+                  sx={{
+                    width: { xs: "100%", md: "auto" },
+                    mt: { xs: 1, md: 0 },
+                  }}
+                >
+                  {/* View Mode Toggle - Mobile/Tablet */}
+                  <Box sx={{ display: { xs: "flex", md: "none" }, gap: 0.5 }}>
+                    <Tooltip title="Calendar View">
+                      <Button
+                        variant={
+                          viewMode === "calendar" ? "contained" : "outlined"
+                        }
+                        onClick={() => setViewMode("calendar")}
+                        size="small"
+                        sx={{ minWidth: 40, px: 1 }}
+                      >
+                        <CalendarToday fontSize="small" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="List View">
+                      <Button
+                        variant={viewMode === "list" ? "contained" : "outlined"}
+                        onClick={() => setViewMode("list")}
+                        size="small"
+                        sx={{ minWidth: 40, px: 1 }}
+                      >
+                        <FilterList fontSize="small" />
+                      </Button>
+                    </Tooltip>
+                  </Box>
+
+                  {/* View Mode Toggle - Desktop */}
+                  <Box
+                    sx={{
+                      display: { xs: "none", md: "flex" },
+                      gap: 0.5,
+                      mr: 1,
+                    }}
+                  >
+                    <Tooltip title="Calendar View">
+                      <Button
+                        variant={
+                          viewMode === "calendar" ? "contained" : "outlined"
+                        }
+                        onClick={() => setViewMode("calendar")}
+                        size="small"
+                        startIcon={<CalendarToday />}
+                        sx={{ px: 2 }}
+                      >
+                        Calendar
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="List View">
+                      <Button
+                        variant={viewMode === "list" ? "contained" : "outlined"}
+                        onClick={() => setViewMode("list")}
+                        size="small"
+                        startIcon={<FilterList />}
+                        sx={{ px: 2 }}
+                      >
+                        List
+                      </Button>
+                    </Tooltip>
+                  </Box>
+
+                  {/* Action Buttons */}
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    {user.role === "HR" && (
+                      <Tooltip title="Regularise">
+                        <IconButton
+                          onClick={regularise}
+                          size="small"
+                          sx={{
+                            border: `1px solid ${theme.palette.primary.main}`,
+                            borderRadius: 1,
+                            width: 36,
+                            height: 36,
+                          }}
+                        >
+                          <Settings fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+
+                    {/* Export Button - Mobile */}
+                    <Tooltip
+                      title={
+                        activeTab === 0
+                          ? "Export to CSV"
+                          : "Export Today's Data"
+                      }
+                    >
+                      <IconButton
+                        onClick={
+                          activeTab === 0 ? exportToCsv : exportTodayToCsv
+                        }
+                        disabled={
+                          activeTab === 0
+                            ? filteredActivities.length === 0
+                            : todayAttendance.length === 0
+                        }
+                        size="small"
+                        sx={{
+                          border: `1px solid ${theme.palette.primary.main}`,
+                          borderRadius: 1,
+                          width: 36,
+                          height: 36,
+                          backgroundColor: theme.palette.primary.main,
+                          color: "#fff",
+                          "&:hover": {
+                            backgroundColor: theme.palette.primary.dark,
+                          },
+                          "&:disabled": {
+                            backgroundColor: theme.palette.action.disabled,
+                            borderColor: theme.palette.action.disabled,
+                          },
+                          display: { xs: "flex", md: "none" },
+                        }}
+                      >
+                        <Download fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* Export Button - Desktop */}
+                    <Tooltip
+                      title={
+                        activeTab === 0
+                          ? "Export to CSV"
+                          : "Export Today's Data"
+                      }
+                    >
+                      <Button
+                        variant="contained"
+                        onClick={
+                          activeTab === 0 ? exportToCsv : exportTodayToCsv
+                        }
+                        disabled={
+                          activeTab === 0
+                            ? filteredActivities.length === 0
+                            : todayAttendance.length === 0
+                        }
+                        size="small"
+                        startIcon={<Download />}
+                        sx={{
+                          height: 36,
+                          display: { xs: "none", md: "flex" },
+                          px: 2,
+                        }}
+                      >
+                        Export
+                      </Button>
+                    </Tooltip>
+
+                    {/* Refresh Button - Desktop only (mobile is in title row) */}
+                    <Box sx={{ display: { xs: "none", md: "block" } }}>
+                      <Tooltip title="Refresh Data">
+                        <IconButton
+                          onClick={refreshData}
+                          disabled={loading || todayLoading}
+                          size="small"
+                          sx={{
+                            border: `1px solid ${theme.palette.primary.main}`,
+                            borderRadius: 1,
+                            width: 36,
+                            height: 36,
+                            ml: 0.5,
+                          }}
+                        >
+                          {loading || todayLoading ? (
+                            <CircularProgress size={18} />
+                          ) : (
+                            <Refresh fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Box>
             </Box>
-          </>
-        )}
-
-        {/* Month/Year Selector */}
-        <Box flex={{ xs: 1, sm: 1 }}>
-          <DatePicker
-            views={['year', 'month']}
-            label="Select Month & Year"
-            value={selectedDate}
-            onChange={(newValue) => setSelectedDate(newValue)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                fullWidth
-              />
-            )}
-          />
-        </Box>
-      </Box>
-
-      {/* Right Side - Action Buttons */}
-      <Box 
-        display="flex" 
-        alignItems="center"
-        justifyContent={{ xs: "space-between", md: "flex-end" }}
-        gap={1}
-        sx={{ 
-          width: { xs: '100%', md: 'auto' },
-          mt: { xs: 1, md: 0 }
-        }}
-      >
-        {/* View Mode Toggle - Mobile/Tablet */}
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 0.5 }}>
-          <Tooltip title="Calendar View">
-            <Button
-              variant={viewMode === "calendar" ? "contained" : "outlined"}
-              onClick={() => setViewMode("calendar")}
-              size="small"
-              sx={{ minWidth: 40, px: 1 }}
-            >
-              <CalendarToday fontSize="small" />
-            </Button>
-          </Tooltip>
-          <Tooltip title="List View">
-            <Button
-              variant={viewMode === "list" ? "contained" : "outlined"}
-              onClick={() => setViewMode("list")}
-              size="small"
-              sx={{ minWidth: 40, px: 1 }}
-            >
-              <FilterList fontSize="small" />
-            </Button>
-          </Tooltip>
-        </Box>
-
-        {/* View Mode Toggle - Desktop */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5, mr: 1 }}>
-          <Tooltip title="Calendar View">
-            <Button
-              variant={viewMode === "calendar" ? "contained" : "outlined"}
-              onClick={() => setViewMode("calendar")}
-              size="small"
-              startIcon={<CalendarToday />}
-              sx={{ px: 2 }}
-            >
-              Calendar
-            </Button>
-          </Tooltip>
-          <Tooltip title="List View">
-            <Button
-              variant={viewMode === "list" ? "contained" : "outlined"}
-              onClick={() => setViewMode("list")}
-              size="small"
-              startIcon={<FilterList />}
-              sx={{ px: 2 }}
-            >
-              List
-            </Button>
-          </Tooltip>
-        </Box>
-
-        {/* Action Buttons */}
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          {user.role === "HR" && (
-            <Tooltip title="Regularise">
-              <IconButton
-                onClick={regularise}
-                size="small"
-                sx={{ 
-                  border: `1px solid ${theme.palette.primary.main}`,
-                  borderRadius: 1,
-                  width: 36,
-                  height: 36
-                }}
-              >
-                <Settings fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-          
-          {/* Export Button - Mobile */}
-          <Tooltip title={activeTab === 0 ? "Export to CSV" : "Export Today's Data"}>
-            <IconButton
-              onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv}
-              disabled={activeTab === 0 ? filteredActivities.length === 0 : todayAttendance.length === 0}
-              size="small"
-              sx={{ 
-                border: `1px solid ${theme.palette.primary.main}`,
-                borderRadius: 1,
-                width: 36,
-                height: 36,
-                backgroundColor: theme.palette.primary.main,
-                color: '#fff',
-                '&:hover': { backgroundColor: theme.palette.primary.dark },
-                '&:disabled': { 
-                  backgroundColor: theme.palette.action.disabled,
-                  borderColor: theme.palette.action.disabled 
-                },
-                display: { xs: 'flex', md: 'none' }
-              }}
-            >
-              <Download fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          {/* Export Button - Desktop */}
-          <Tooltip title={activeTab === 0 ? "Export to CSV" : "Export Today's Data"}>
-            <Button
-              variant="contained"
-              onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv}
-              disabled={activeTab === 0 ? filteredActivities.length === 0 : todayAttendance.length === 0}
-              size="small"
-              startIcon={<Download />}
-              sx={{ 
-                height: 36,
-                display: { xs: 'none', md: 'flex' },
-                px: 2
-              }}
-            >
-              Export
-            </Button>
-          </Tooltip>
-
-          {/* Refresh Button - Desktop only (mobile is in title row) */}
-          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-            <Tooltip title="Refresh Data">
-              <IconButton 
-                onClick={refreshData} 
-                disabled={loading || todayLoading} 
-                size="small"
-                sx={{ 
-                  border: `1px solid ${theme.palette.primary.main}`,
-                  borderRadius: 1,
-                  width: 36,
-                  height: 36,
-                  ml: 0.5
-                }}
-              >
-                {loading || todayLoading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Stack>
-      </Box>
-    </Box>
-  </Box>
-</Paper>
+          </Paper>
 
           {/* Error Alert */}
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            <Alert
+              severity="error"
+              sx={{ mb: 3 }}
+              onClose={() => setError(null)}
+            >
               {error}
             </Alert>
           )}
@@ -1362,7 +1428,9 @@ useEffect(() => {
             <Alert severity="info" sx={{ mb: 3 }}>
               <Box display="flex" alignItems="center" gap={2}>
                 <CircularProgress size={20} />
-                {activeTab === 0 ? "Loading attendance data..." : "Loading today's attendance..."}
+                {activeTab === 0
+                  ? "Loading attendance data..."
+                  : "Loading today's attendance..."}
               </Box>
             </Alert>
           )}
@@ -1375,20 +1443,20 @@ useEffect(() => {
               variant="fullWidth"
               sx={{
                 borderBottom: 1,
-                borderColor: 'divider',
-                '& .MuiTab-root': {
+                borderColor: "divider",
+                "& .MuiTab-root": {
                   minHeight: 48,
-                }
+                },
               }}
             >
-              <Tab 
-                icon={<CalendarToday />} 
-                label="Attendance History" 
+              <Tab
+                icon={<CalendarToday />}
+                label="Attendance History"
                 iconPosition="start"
               />
-              <Tab 
-                icon={<Today />} 
-                label="Today's Attendance" 
+              <Tab
+                icon={<Today />}
+                label="Today's Attendance"
                 iconPosition="start"
               />
             </Tabs>
@@ -1401,26 +1469,37 @@ useEffect(() => {
                 <Grid item xs={6} sm={3}>
                   <Card
                     sx={{
-                      background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                      background:
+                        "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
                       p: 0.5,
                       borderRadius: 1.5,
                       boxShadow: 0.5,
                     }}
                   >
                     <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Box>
                           <Typography variant="caption" color="text.secondary">
                             Working Days
                           </Typography>
-                          <Typography variant="subtitle2" fontWeight="bold" lineHeight={1}>
+                          <Typography
+                            variant="subtitle2"
+                            fontWeight="bold"
+                            lineHeight={1}
+                          >
                             {totalDays}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             Records
                           </Typography>
                         </Box>
-                        <CalendarToday sx={{ fontSize: 18, color: "#8d0638ff" }} />
+                        <CalendarToday
+                          sx={{ fontSize: 18, color: "#8d0638ff" }}
+                        />
                       </Box>
                     </CardContent>
                   </Card>
@@ -1429,14 +1508,19 @@ useEffect(() => {
                 <Grid item xs={6} sm={3}>
                   <Card
                     sx={{
-                      background: "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
+                      background:
+                        "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
                       p: 0.5,
                       borderRadius: 1.5,
                       boxShadow: 0.5,
                     }}
                   >
                     <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Box>
                           <Typography variant="caption" color="text.secondary">
                             On Time
@@ -1455,7 +1539,9 @@ useEffect(() => {
                               : "0%"}
                           </Typography>
                         </Box>
-                        <AccessTime sx={{ fontSize: 18, color: "success.main" }} />
+                        <AccessTime
+                          sx={{ fontSize: 18, color: "success.main" }}
+                        />
                       </Box>
                     </CardContent>
                   </Card>
@@ -1464,14 +1550,19 @@ useEffect(() => {
                 <Grid item xs={6} sm={3}>
                   <Card
                     sx={{
-                      background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
+                      background:
+                        "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
                       p: 0.5,
                       borderRadius: 1.5,
                       boxShadow: 0.5,
                     }}
                   >
                     <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Box>
                           <Typography variant="caption" color="text.secondary">
                             Late Arrivals
@@ -1499,14 +1590,19 @@ useEffect(() => {
                 <Grid item xs={6} sm={3}>
                   <Card
                     sx={{
-                      background: "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
+                      background:
+                        "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
                       p: 0.5,
                       borderRadius: 1.5,
                       boxShadow: 0.5,
                     }}
                   >
                     <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Box>
                           <Typography variant="caption" color="text.secondary">
                             Non-Working
@@ -1535,8 +1631,14 @@ useEffect(() => {
 
               {/* Main Content for History View */}
               {viewMode === "calendar" ? (
-                <Paper sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, boxShadow: 1 }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+                <Paper
+                  sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, boxShadow: 1 }}
+                >
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ fontWeight: 500 }}
+                  >
                     Attendance Calendar - {format(selectedDate, "MMMM yyyy")}
                   </Typography>
 
@@ -1568,15 +1670,25 @@ useEffect(() => {
               ) : (
                 <Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
                   <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ fontWeight: 500 }}
+                    >
                       All Records - {format(selectedDate, "MMMM yyyy")}
                     </Typography>
                     <Divider sx={{ mb: 2 }} />
 
                     {filteredActivities.length === 0 ? (
                       <Box sx={{ textAlign: "center", py: 6 }}>
-                        <CalendarToday sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                        <CalendarToday
+                          sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
+                        />
+                        <Typography
+                          variant="subtitle1"
+                          color="text.secondary"
+                          gutterBottom
+                        >
                           No records found
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -1588,64 +1700,114 @@ useEffect(() => {
                     ) : isMobile ? (
                       <Stack spacing={1}>
                         {filteredActivities
-                          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                          .slice(
+                            page * rowsPerPage,
+                            page * rowsPerPage + rowsPerPage,
+                          )
                           .map((activity, index) => (
-                            <AttendanceCard key={index} activity={activity} isMobile={isMobile} />
+                            <AttendanceCard
+                              key={index}
+                              activity={activity}
+                              isMobile={isMobile}
+                            />
                           ))}
                       </Stack>
                     ) : (
                       <TableContainer sx={{ borderRadius: 2 }}>
                         <Table>
                           <TableHead>
-                            <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                              {["Date", "Type", "Check In", "Check Out", "Working Hours", "Status"].map(
-                                (head) => (
-                                  <TableCell
-                                    key={head}
-                                    sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
-                                  >
-                                    {head}
-                                  </TableCell>
-                                )
-                              )}
+                            <TableRow
+                              sx={{
+                                backgroundColor: theme.palette.primary.main,
+                              }}
+                            >
+                              {[
+                                "Date",
+                                "Type",
+                                "Check In",
+                                "Check Out",
+                                "Working Hours",
+                                "Status",
+                              ].map((head) => (
+                                <TableCell
+                                  key={head}
+                                  sx={{
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    py: 1.2,
+                                  }}
+                                >
+                                  {head}
+                                </TableCell>
+                              ))}
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {filteredActivities
-                              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                              .slice(
+                                page * rowsPerPage,
+                                page * rowsPerPage + rowsPerPage,
+                              )
                               .map((activity, index) => (
                                 <TableRow
                                   key={index}
                                   sx={{
-                                    "&:hover": { backgroundColor: theme.palette.action.hover },
+                                    "&:hover": {
+                                      backgroundColor:
+                                        theme.palette.action.hover,
+                                    },
                                     borderLeft: `4px solid ${
                                       activity.type === "attendance"
                                         ? activity.color === "green"
                                           ? theme.palette.success.main
                                           : theme.palette.error.main
                                         : activity.type === "holiday"
-                                        ? theme.palette.warning.main
-                                        : activity.type === "weekoff"
-                                        ? theme.palette.secondary.main
-                                        : theme.palette.info.main
+                                          ? theme.palette.warning.main
+                                          : activity.type === "weekoff"
+                                            ? theme.palette.secondary.main
+                                            : theme.palette.info.main
                                     }`,
                                     transition: "background 0.3s",
                                   }}
                                 >
                                   <TableCell sx={{ py: 1 }}>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                      <CalendarToday fontSize="small" sx={{ color: "#8d0638ff" }} />
-                                      {activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A"}
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      <CalendarToday
+                                        fontSize="small"
+                                        sx={{ color: "#8d0638ff" }}
+                                      />
+                                      {activity.start
+                                        ? format(activity.start, "dd/MM/yyyy")
+                                        : "N/A"}
                                     </Box>
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                      {activity.type === "attendance" && <Person fontSize="small" />}
-                                      {activity.type === "holiday" && <Event fontSize="small" />}
-                                      {activity.type === "weekoff" && <Weekend fontSize="small" />}
-                                      {activity.type === "leave" && <BeachAccess fontSize="small" />}
-                                      <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      {activity.type === "attendance" && (
+                                        <Person fontSize="small" />
+                                      )}
+                                      {activity.type === "holiday" && (
+                                        <Event fontSize="small" />
+                                      )}
+                                      {activity.type === "weekoff" && (
+                                        <Weekend fontSize="small" />
+                                      )}
+                                      {activity.type === "leave" && (
+                                        <BeachAccess fontSize="small" />
+                                      )}
+                                      <Typography
+                                        variant="body2"
+                                        sx={{ textTransform: "capitalize" }}
+                                      >
                                         {activity.type}
                                       </Typography>
                                     </Box>
@@ -1653,10 +1815,14 @@ useEffect(() => {
 
                                   <TableCell sx={{ py: 1 }}>
                                     {activity.type === "attendance" ? (
-                                      <Tooltip title={`Location: ${activity.firstInLocation || "N/A"}`}>
+                                      <Tooltip
+                                        title={`Location: ${activity.firstInLocation || "N/A"}`}
+                                      >
                                         <Box
                                           component="a"
-                                          href={generateMapUrl(activity.firstInLocation)}
+                                          href={generateMapUrl(
+                                            activity.firstInLocation,
+                                          )}
                                           target="_blank"
                                           sx={{
                                             textDecoration: "none",
@@ -1664,15 +1830,21 @@ useEffect(() => {
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 1,
-                                            "&:hover": { textDecoration: "underline" },
+                                            "&:hover": {
+                                              textDecoration: "underline",
+                                            },
                                           }}
                                         >
                                           <LocationOn fontSize="small" />
-                                          {activity.firstIn} ({activity.firstEvent})
+                                          {activity.firstIn} (
+                                          {activity.firstEvent})
                                         </Box>
                                       </Tooltip>
                                     ) : (
-                                      <Typography variant="body2" color="text.secondary">
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
                                         -
                                       </Typography>
                                     )}
@@ -1681,10 +1853,14 @@ useEffect(() => {
                                   <TableCell sx={{ py: 1 }}>
                                     {activity.type === "attendance" ? (
                                       activity.lastOutLocation !== "N/A" ? (
-                                        <Tooltip title={`Location: ${activity.lastOutLocation}`}>
+                                        <Tooltip
+                                          title={`Location: ${activity.lastOutLocation}`}
+                                        >
                                           <Box
                                             component="a"
-                                            href={generateMapUrl(activity.lastOutLocation)}
+                                            href={generateMapUrl(
+                                              activity.lastOutLocation,
+                                            )}
                                             target="_blank"
                                             sx={{
                                               textDecoration: "none",
@@ -1692,21 +1868,34 @@ useEffect(() => {
                                               display: "flex",
                                               alignItems: "center",
                                               gap: 1,
-                                              "&:hover": { textDecoration: "underline" },
+                                              "&:hover": {
+                                                textDecoration: "underline",
+                                              },
                                             }}
                                           >
                                             <LocationOn fontSize="small" />
-                                            {activity.lastOut} ({activity.lastEvent})
+                                            {activity.lastOut} (
+                                            {activity.lastEvent})
                                           </Box>
                                         </Tooltip>
                                       ) : (
-                                        <Box display="flex" alignItems="center" gap={1}>
-                                          <Schedule fontSize="small" color="disabled" />
+                                        <Box
+                                          display="flex"
+                                          alignItems="center"
+                                          gap={1}
+                                        >
+                                          <Schedule
+                                            fontSize="small"
+                                            color="disabled"
+                                          />
                                           {activity.lastOut}
                                         </Box>
                                       )
                                     ) : (
-                                      <Typography variant="body2" color="text.secondary">
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
                                         -
                                       </Typography>
                                     )}
@@ -1714,12 +1903,24 @@ useEffect(() => {
 
                                   <TableCell sx={{ py: 1 }}>
                                     {activity.type === "attendance" ? (
-                                      <Box display="flex" alignItems="center" gap={1}>
-                                        <AccessTime fontSize="small" color="info" />
-                                        <Typography fontWeight={500}>{activity.workingHours}</Typography>
+                                      <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={1}
+                                      >
+                                        <AccessTime
+                                          fontSize="small"
+                                          color="info"
+                                        />
+                                        <Typography fontWeight={500}>
+                                          {activity.workingHours}
+                                        </Typography>
                                       </Box>
                                     ) : (
-                                      <Typography variant="body2" color="text.secondary">
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
                                         -
                                       </Typography>
                                     )}
@@ -1728,11 +1929,17 @@ useEffect(() => {
                                   <TableCell sx={{ py: 1 }}>
                                     {activity.type === "attendance" ? (
                                       <AttendanceStatusChip
-                                        status={activity.color === "green" ? "on-time" : "late"}
+                                        status={
+                                          activity.color === "green"
+                                            ? "on-time"
+                                            : "late"
+                                        }
                                         time=""
                                       />
                                     ) : (
-                                      <AttendanceStatusChip status={activity.type} />
+                                      <AttendanceStatusChip
+                                        status={activity.type}
+                                      />
                                     )}
                                   </TableCell>
                                 </TableRow>
@@ -1751,7 +1958,9 @@ useEffect(() => {
                         page={page}
                         onPageChange={(event, newPage) => setPage(newPage)}
                         onRowsPerPageChange={(event) => {
-                          setRowsPerPage(Number.parseInt(event.target.value, 10));
+                          setRowsPerPage(
+                            Number.parseInt(event.target.value, 10),
+                          );
                           setPage(0);
                         }}
                       />
@@ -1765,7 +1974,12 @@ useEffect(() => {
               {/* Today's Attendance View */}
               <Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
                 <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={2}
+                  >
                     <Typography variant="h6" sx={{ fontWeight: 500 }}>
                       Today's Attendance - {format(new Date(), "dd/MM/yyyy")}
                     </Typography>
@@ -1773,33 +1987,34 @@ useEffect(() => {
                       <Box display="flex" alignItems="center" gap={0.5}>
                         <Groups color="primary" fontSize="small" />
                         <Typography variant="body2">
-                          Total: <strong>{todayAttendance.length}</strong> employees
+                          Total: <strong>{filteredEmployees.length}</strong>{" "}
+                          employees
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Box 
-                          sx={{ 
-                            width: 8, 
-                            height: 8, 
-                            borderRadius: '50%', 
-                            backgroundColor: 'success.main' 
-                          }} 
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            backgroundColor: "success.main",
+                          }}
                         />
                         <Typography variant="body2">
                           Present: <strong>{presentCount}</strong>
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Box 
-                          sx={{ 
-                            width: 8, 
-                            height: 8, 
-                            borderRadius: '50%', 
-                            backgroundColor: 'error.main' 
-                          }} 
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            backgroundColor: "error.main",
+                          }}
                         />
                         <Typography variant="body2">
-                          Absent: <strong>{absentCount}</strong>
+                          Absent: <strong>{filteredEmployees.length-presentCount}</strong>
                         </Typography>
                       </Box>
                     </Box>
@@ -1809,23 +2024,33 @@ useEffect(() => {
 
                   {todayAttendance.length === 0 ? (
                     <Box sx={{ textAlign: "center", py: 6 }}>
-                      <Today sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                      <Today
+                        sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
+                      />
+                      <Typography
+                        variant="subtitle1"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         No attendance records for today
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        No employees have checked in yet or data is not available.
+                        No employees have checked in yet or data is not
+                        available.
                       </Typography>
                     </Box>
                   ) : isMobile ? (
                     <Stack spacing={1}>
                       {todayAttendance
-                        .slice(todayPage * todayRowsPerPage, todayPage * todayRowsPerPage + todayRowsPerPage)
+                        .slice(
+                          todayPage * todayRowsPerPage,
+                          todayPage * todayRowsPerPage + todayRowsPerPage,
+                        )
                         .map((attendance, index) => (
-                          <TodayAttendanceCard 
-                            key={index} 
-                            attendance={attendance} 
-                            isMobile={isMobile} 
+                          <TodayAttendanceCard
+                            key={index}
+                            attendance={attendance}
+                            isMobile={isMobile}
                             employees={employees}
                           />
                         ))}
@@ -1834,47 +2059,89 @@ useEffect(() => {
                     <TableContainer sx={{ borderRadius: 2 }}>
                       <Table>
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                            {["Employee", "Check In", "Check Out", "Working Hours", "Status", "Actions"].map(
-                              (head) => (
-                                <TableCell
-                                  key={head}
-                                  sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
-                                >
-                                  {head}
-                                </TableCell>
-                              )
-                            )}
+                          <TableRow
+                            sx={{ backgroundColor: theme.palette.primary.main }}
+                          >
+                            {[
+                              "Employee",
+                              "Check In",
+                              "Check Out",
+                              "Working Hours",
+                              "Status",
+                              "Actions",
+                            ].map((head) => (
+                              <TableCell
+                                key={head}
+                                sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
+                              >
+                                {head}
+                              </TableCell>
+                            ))}
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {todayAttendance
-                            .slice(todayPage * todayRowsPerPage, todayPage * todayRowsPerPage + todayRowsPerPage)
+                            .slice(
+                              todayPage * todayRowsPerPage,
+                              todayPage * todayRowsPerPage + todayRowsPerPage,
+                            )
                             .map((attendance, index) => {
-                              const employee = employees.find(emp => emp.EmpId === attendance.EmpId) || {}
-                              const status = attendance.FirstIn === "N/A" || !attendance.FirstIn ? "absent" : "present"
-                              
+                              const employee =
+                                employees.find(
+                                  (emp) => emp.EmpId === attendance.EmpId,
+                                ) || {};
+                              const status =
+                                attendance.FirstIn === "N/A" ||
+                                !attendance.FirstIn
+                                  ? "absent"
+                                  : "present";
+
                               return (
                                 <TableRow
                                   key={index}
                                   sx={{
-                                    "&:hover": { backgroundColor: theme.palette.action.hover },
+                                    "&:hover": {
+                                      backgroundColor:
+                                        theme.palette.action.hover,
+                                    },
                                     borderLeft: `4px solid ${
-                                      status === "present" ? theme.palette.success.main : theme.palette.error.main
+                                      status === "present"
+                                        ? theme.palette.success.main
+                                        : theme.palette.error.main
                                     }`,
                                     transition: "background 0.3s",
                                   }}
                                 >
                                   <TableCell sx={{ py: 1 }}>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                      <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
-                                        {employee.Name ? employee.Name.charAt(0).toUpperCase() : attendance.EmpId.charAt(0)}
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      <Avatar
+                                        sx={{
+                                          width: 32,
+                                          height: 32,
+                                          bgcolor: theme.palette.primary.main,
+                                        }}
+                                      >
+                                        {employee.Name
+                                          ? employee.Name.charAt(
+                                              0,
+                                            ).toUpperCase()
+                                          : attendance.EmpId.charAt(0)}
                                       </Avatar>
                                       <Box>
-                                        <Typography variant="body2" fontWeight="medium">
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="medium"
+                                        >
                                           {employee.Name || attendance.EmpId}
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                        >
                                           {attendance.EmpId}
                                         </Typography>
                                       </Box>
@@ -1882,10 +2149,14 @@ useEffect(() => {
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
-                                    <Tooltip title={`Location: ${attendance.FirstInLocation || "N/A"}`}>
+                                    <Tooltip
+                                      title={`Location: ${attendance.FirstInLocation || "N/A"}`}
+                                    >
                                       <Box
                                         component="a"
-                                        href={generateMapUrl(attendance.FirstInLocation)}
+                                        href={generateMapUrl(
+                                          attendance.FirstInLocation,
+                                        )}
                                         target="_blank"
                                         sx={{
                                           textDecoration: "none",
@@ -1893,21 +2164,28 @@ useEffect(() => {
                                           display: "flex",
                                           alignItems: "center",
                                           gap: 1,
-                                          "&:hover": { textDecoration: "underline" },
+                                          "&:hover": {
+                                            textDecoration: "underline",
+                                          },
                                         }}
                                       >
                                         <LocationOn fontSize="small" />
-                                        {attendance.FirstIn} ({attendance.FirstEvent})
+                                        {attendance.FirstIn} (
+                                        {attendance.FirstEvent})
                                       </Box>
                                     </Tooltip>
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
                                     {attendance.LastOutLocation !== "N/A" ? (
-                                      <Tooltip title={`Location: ${attendance.LastOutLocation}`}>
+                                      <Tooltip
+                                        title={`Location: ${attendance.LastOutLocation}`}
+                                      >
                                         <Box
                                           component="a"
-                                          href={generateMapUrl(attendance.LastOutLocation)}
+                                          href={generateMapUrl(
+                                            attendance.LastOutLocation,
+                                          )}
                                           target="_blank"
                                           sx={{
                                             textDecoration: "none",
@@ -1915,32 +2193,55 @@ useEffect(() => {
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 1,
-                                            "&:hover": { textDecoration: "underline" },
+                                            "&:hover": {
+                                              textDecoration: "underline",
+                                            },
                                           }}
                                         >
                                           <LocationOn fontSize="small" />
-                                          {attendance.LastOut} ({attendance.LastEvent})
+                                          {attendance.LastOut} (
+                                          {attendance.LastEvent})
                                         </Box>
                                       </Tooltip>
                                     ) : (
-                                      <Box display="flex" alignItems="center" gap={1}>
-                                        <Schedule fontSize="small" color="disabled" />
+                                      <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={1}
+                                      >
+                                        <Schedule
+                                          fontSize="small"
+                                          color="disabled"
+                                        />
                                         {attendance.LastOut}
                                       </Box>
                                     )}
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                      <AccessTime fontSize="small" color="info" />
-                                      <Typography fontWeight={500}>{attendance.WorkingHours}</Typography>
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      <AccessTime
+                                        fontSize="small"
+                                        color="info"
+                                      />
+                                      <Typography fontWeight={500}>
+                                        {attendance.WorkingHours}
+                                      </Typography>
                                     </Box>
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
                                     <AttendanceStatusChip
                                       status={status}
-                                      time={attendance.FirstIn !== "N/A" ? attendance.FirstIn : ""}
+                                      time={
+                                        attendance.FirstIn !== "N/A"
+                                          ? attendance.FirstIn
+                                          : ""
+                                      }
                                     />
                                   </TableCell>
 
@@ -1949,16 +2250,20 @@ useEffect(() => {
                                       <IconButton
                                         size="small"
                                         component="a"
-                                        href={generateMapUrl(attendance.FirstInLocation)}
+                                        href={generateMapUrl(
+                                          attendance.FirstInLocation,
+                                        )}
                                         target="_blank"
-                                        disabled={attendance.FirstInLocation === "N/A"}
+                                        disabled={
+                                          attendance.FirstInLocation === "N/A"
+                                        }
                                       >
                                         <LocationOn fontSize="small" />
                                       </IconButton>
                                     </Tooltip>
                                   </TableCell>
                                 </TableRow>
-                              )
+                              );
                             })}
                         </TableBody>
                       </Table>
@@ -1974,7 +2279,9 @@ useEffect(() => {
                       page={todayPage}
                       onPageChange={(event, newPage) => setTodayPage(newPage)}
                       onRowsPerPageChange={(event) => {
-                        setTodayRowsPerPage(Number.parseInt(event.target.value, 10));
+                        setTodayRowsPerPage(
+                          Number.parseInt(event.target.value, 10),
+                        );
                         setTodayPage(0);
                       }}
                     />
@@ -1986,7 +2293,7 @@ useEffect(() => {
         </Box>
       </Box>
     </LocalizationProvider>
-  )
+  );
 }
 
 export default AttendanceList

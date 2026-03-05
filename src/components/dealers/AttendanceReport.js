@@ -57,12 +57,10 @@ const AttendanceReport = () => {
 
   // Memoized constants
   const NORMAL_SHIFT_HOURS = useMemo(() => 9, []);
-  const LATE_THRESHOLD_MINUTES = useMemo(() => 30, []);
 
   // Filter active employees - only where IsActive === 1
   const filterActiveEmployees = useCallback((employees) => {
-    return employees.filter(employee => {
-      // Check if IsActive field exists and equals 1
+    return employees.filter((employee) => {
       const isActive = employee.IsActive || employee.isActive;
       return isActive === 1 || isActive === "1";
     });
@@ -77,26 +75,24 @@ const AttendanceReport = () => {
         const [employeesRes, attendanceRes, leaveRes, salaryRes] =
           await Promise.allSettled([
             axios.get(
-              `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
+              `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
             ),
             axios.get(
-              "https://namami-infotech.com/SAFEGUARD/src/attendance/get_attendance.php"
+              "https://namami-infotech.com/SAFEGUARD/src/attendance/get_attendance.php",
             ),
             axios.get(
-              "https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php?role=HR"
+              "https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php?role=HR",
             ),
             axios.get(
-              "https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php"
+              "https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php",
             ),
           ]);
 
-        // Process responses
         if (
           employeesRes.status === "fulfilled" &&
           employeesRes.value.data.success
         ) {
           const allEmployees = employeesRes.value.data.data || [];
-          // Filter only active employees
           const activeEmployees = filterActiveEmployees(allEmployees);
           setEmployees(activeEmployees);
         }
@@ -116,7 +112,6 @@ const AttendanceReport = () => {
           setSalaryData(salaryRes.value.data.data || []);
         }
 
-        // Check for errors
         const errors = [];
         if (employeesRes.status === "rejected") errors.push("Employees");
         if (attendanceRes.status === "rejected") errors.push("Attendance");
@@ -125,7 +120,7 @@ const AttendanceReport = () => {
 
         if (errors.length > 0) {
           setError(
-            `Failed to load: ${errors.join(", ")}. Some data may be incomplete.`
+            `Failed to load: ${errors.join(", ")}. Some data may be incomplete.`,
           );
         }
       } catch (error) {
@@ -139,7 +134,7 @@ const AttendanceReport = () => {
     fetchData();
   }, [user.tenent_id, filterActiveEmployees]);
 
-  // Helper functions (keep all your existing helper functions)
+  // Helper functions
   const getDaysInMonth = useCallback((month, year) => {
     return new Date(year, month, 0).getDate();
   }, []);
@@ -180,40 +175,13 @@ const AttendanceReport = () => {
         return 0;
       }
     },
-    [NORMAL_SHIFT_HOURS]
+    [NORMAL_SHIFT_HOURS],
   );
-
-  const isLatePunch = useCallback((inTime) => {
-    if (!inTime || inTime === "0000-00-00 00:00:00") return false;
-    try {
-      const inDate = new Date(inTime);
-      if (isNaN(inDate.getTime())) return false;
-      const hours = inDate.getHours();
-      const minutes = inDate.getMinutes();
-      return hours === 9 && minutes > 0 && minutes <= 30;
-    } catch {
-      return false;
-    }
-  }, []);
-
-  const isVeryLatePunch = useCallback((inTime) => {
-    if (!inTime || inTime === "0000-00-00 00:00:00") return false;
-    try {
-      const inDate = new Date(inTime);
-      if (isNaN(inDate.getTime())) return false;
-      const hours = inDate.getHours();
-      const minutes = inDate.getMinutes();
-      return hours > 9 || (hours === 9 && minutes > 30);
-    } catch {
-      return false;
-    }
-  }, []);
 
   // Get normalized employee ID for matching
   const normalizeEmpId = useCallback((empId) => {
     if (!empId) return "";
     const strId = String(empId).trim();
-    // Remove SGI prefix if present and pad to 4 digits
     const cleanId = strId.replace(/^SGI/i, "");
     return cleanId.padStart(4, "0");
   }, []);
@@ -230,15 +198,15 @@ const AttendanceReport = () => {
         const recordDate = record.InTime
           ? record.InTime.split(" ")[0]
           : record.attendance_date
-          ? record.attendance_date.split(" ")[0]
-          : record.Date
-          ? record.Date.split(" ")[0]
-          : "";
+            ? record.attendance_date.split(" ")[0]
+            : record.Date
+              ? record.Date.split(" ")[0]
+              : "";
 
         return recordEmpId === normalizedEmpId && recordDate === date;
       });
     },
-    [attendance, normalizeEmpId]
+    [attendance, normalizeEmpId],
   );
 
   // Find leave records for employee on specific date
@@ -264,7 +232,7 @@ const AttendanceReport = () => {
 
       return leave ? leave.Category || leave.category || "CL" : null;
     },
-    [leaveData, normalizeEmpId]
+    [leaveData, normalizeEmpId],
   );
 
   // Get salary for employee
@@ -274,7 +242,7 @@ const AttendanceReport = () => {
 
       const normalizedEmpId = normalizeEmpId(employeeId);
       const salary = salaryData.find(
-        (s) => normalizeEmpId(s.empId || s.EmpId) === normalizedEmpId
+        (s) => normalizeEmpId(s.empId || s.EmpId) === normalizedEmpId,
       );
 
       if (!salary) return null;
@@ -289,10 +257,10 @@ const AttendanceReport = () => {
         netTakeHome: parseFloat(salary.net_take_home) || 0,
       };
     },
-    [salaryData, normalizeEmpId]
+    [salaryData, normalizeEmpId],
   );
 
-  // Calculate attendance status for a day
+  // Calculate attendance status for a day (LATE COMING LOGIC REMOVED)
   const getDayStatus = useCallback(
     (employeeId, date) => {
       const leaveType = getLeaveForDate(employeeId, date);
@@ -314,26 +282,7 @@ const AttendanceReport = () => {
 
       // Only In time present
       if ((!outTime || outTime === "0000-00-00 00:00:00") && inTime) {
-        if (isVeryLatePunch(inTime)) return "HD";
-        if (isLatePunch(inTime)) {
-          // Count late days up to this date
-          const currentMonth = parseInt(date.split("-")[1]);
-          let lateCount = 0;
-          for (let day = 1; day < parseInt(date.split("-")[2]); day++) {
-            const checkDate = `${year}-${String(currentMonth).padStart(
-              2,
-              "0"
-            )}-${String(day).padStart(2, "0")}`;
-            const checkRecords = getAttendanceRecords(employeeId, checkDate);
-            if (checkRecords.length > 0) {
-              const checkInTime =
-                checkRecords[0].InTime || checkRecords[0].in_time;
-              if (checkInTime && isLatePunch(checkInTime)) lateCount++;
-            }
-          }
-          return lateCount < 3 ? "P" : "HD";
-        }
-        return "P";
+        return "P"; // Always present if they punched in (late logic removed)
       }
 
       // Both times present
@@ -343,52 +292,23 @@ const AttendanceReport = () => {
         inTime !== "0000-00-00 00:00:00" &&
         outTime !== "0000-00-00 00:00:00"
       ) {
-        if (isVeryLatePunch(inTime)) return "HD";
-
-        if (isLatePunch(inTime)) {
-          // Similar late count logic
-          const currentMonth = parseInt(date.split("-")[1]);
-          let lateCount = 0;
-          for (let day = 1; day < parseInt(date.split("-")[2]); day++) {
-            const checkDate = `${year}-${String(currentMonth).padStart(
-              2,
-              "0"
-            )}-${String(day).padStart(2, "0")}`;
-            const checkRecords = getAttendanceRecords(employeeId, checkDate);
-            if (checkRecords.length > 0) {
-              const checkInTime =
-                checkRecords[0].InTime || checkRecords[0].in_time;
-              if (checkInTime && isLatePunch(checkInTime)) lateCount++;
-            }
-          }
-          return lateCount < 3 ? "P" : "HD";
-        }
-
-        // Calculate work duration
+        // Calculate work duration to determine if it's a half day
         try {
           const inDate = new Date(inTime);
           const outDate = new Date(outTime);
           if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime())) {
             const workDuration = (outDate - inDate) / (1000 * 60 * 60);
             if (workDuration >= 8) return "P";
-            if (workDuration >= 4) return "HD";
+            if (workDuration >= 4) return "P";
           }
         } catch {
-          // If date parsing fails, assume present
           return "P";
         }
       }
 
       return "A";
     },
-    [
-      getLeaveForDate,
-      getAttendanceRecords,
-      isSunday,
-      isVeryLatePunch,
-      isLatePunch,
-      year,
-    ]
+    [getLeaveForDate, getAttendanceRecords, isSunday],
   );
 
   // Calculate OT for a day
@@ -412,7 +332,7 @@ const AttendanceReport = () => {
 
       return calculateOTHours(inTime, outTime);
     },
-    [getAttendanceRecords, calculateOTHours]
+    [getAttendanceRecords, calculateOTHours],
   );
 
   // Calculate summary for employee
@@ -432,7 +352,7 @@ const AttendanceReport = () => {
 
       for (let day = 1; day <= daysInMonth; day++) {
         const date = `${year}-${String(currentMonth).padStart(2, "0")}-${String(
-          day
+          day,
         ).padStart(2, "0")}`;
         const status = getDayStatus(employeeId, date);
         const otHours = getDayOT(employeeId, date);
@@ -483,10 +403,10 @@ const AttendanceReport = () => {
       getDayOT,
       isSunday,
       formatHoursToHoursMinutes,
-    ]
+    ],
   );
 
-  // Calculate salary for employee
+  // Calculate salary for employee (NEW FORMULA: salary/days in month * total working days)
   const calculateEmployeeSalary = useCallback(
     (employeeId, summary) => {
       const salary = getEmployeeSalary(employeeId);
@@ -503,43 +423,33 @@ const AttendanceReport = () => {
 
       const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
+
+      // NEW FORMULA: salary/days in month * total working days (effectivePresentDays)
+      // effectivePresentDays already accounts for half days (0.5) and double Sundays
+      const workingDaysRatio = summary.effectivePresentDays / daysInMonth;
+
+      // Calculate pro-rated salary based on days in month ratio
+      const calculatedBasic = Math.round(salary.basic * workingDaysRatio);
+      const calculatedHRA = Math.round(salary.hra * workingDaysRatio);
+      const calculatedConveyance = Math.round(
+        salary.conveyance * workingDaysRatio,
+      );
+      const calculatedSpecialAllowance = Math.round(
+        salary.specialAllowance * workingDaysRatio,
+      );
+
+      // OT calculation (keep OT separate)
       const workingDays = daysInMonth - summary.weeklyOffCount;
-
-      if (workingDays === 0) {
-        return {
-          basic: 0,
-          hra: 0,
-          conveyance: 0,
-          specialAllowance: 0,
-          netSalary: 0,
-          otWages: 0,
-        };
-      }
-
-      // Daily rates
-      const dailyRateBasic = salary.basic / workingDays;
-      const dailyRateHRA = salary.hra / workingDays;
-      const dailyRateConveyance = salary.conveyance / workingDays;
-      const dailyRateSpecialAllowance = salary.specialAllowance / workingDays;
-
-      // Pro-rated salary
-      const calculatedBasic = dailyRateBasic * summary.effectivePresentDays;
-      const calculatedHRA = dailyRateHRA * summary.effectivePresentDays;
-      const calculatedConveyance =
-        dailyRateConveyance * summary.effectivePresentDays;
-      const calculatedSpecialAllowance =
-        dailyRateSpecialAllowance * summary.effectivePresentDays;
-
-      // OT calculation
       const totalMonthlySalary =
         salary.basic + salary.hra + salary.conveyance + salary.specialAllowance;
-      const otRatePerHour = totalMonthlySalary / (workingDays * 8);
+      const otRatePerHour =
+        workingDays > 0 ? totalMonthlySalary / (workingDays * 8) : 0;
       const otWages =
         summary.totalOTHours > 0
-          ? summary.totalOTHours * otRatePerHour * 1.25
+          ? Math.round(summary.totalOTHours * otRatePerHour * 1.25)
           : 0;
 
-      // Total salary
+      // Total salary with OT
       const totalGross =
         calculatedBasic +
         calculatedHRA +
@@ -547,18 +457,18 @@ const AttendanceReport = () => {
         calculatedSpecialAllowance +
         otWages;
       const deductions = salary.epf + salary.esi;
-      const netSalary = totalGross - deductions;
+      const netSalary = Math.max(0, Math.round(totalGross - deductions));
 
       return {
-        basic: Math.round(calculatedBasic),
-        hra: Math.round(calculatedHRA),
-        conveyance: Math.round(calculatedConveyance),
-        specialAllowance: Math.round(calculatedSpecialAllowance),
-        netSalary: Math.max(0, Math.round(netSalary)),
-        otWages: Math.round(otWages),
+        basic: calculatedBasic,
+        hra: calculatedHRA,
+        conveyance: calculatedConveyance,
+        specialAllowance: calculatedSpecialAllowance,
+        netSalary,
+        otWages,
       };
     },
-    [month, year, getDaysInMonth, getEmployeeSalary]
+    [month, year, getDaysInMonth, getEmployeeSalary],
   );
 
   // Export to CSV
@@ -576,7 +486,7 @@ const AttendanceReport = () => {
       const daysInMonth = getDaysInMonth(currentMonth, year);
       const monthName = monthNames[currentMonth - 1];
 
-      // Create header - ADDED "OfficeName" column
+      // Create header - ONE column per date with simple date format
       const header = [
         "S.R NO.",
         "UAN",
@@ -586,25 +496,21 @@ const AttendanceReport = () => {
         "Father Name",
         "Designation",
         "CADRE",
-        "OfficeName", // ADDED THIS COLUMN
+        "OfficeName",
         "DOJ",
-        "",
       ];
 
-      // Add date columns
+      // Add ONE date column per day with simple date format (YYYY-MM-DD)
       for (let day = 1; day <= daysInMonth; day++) {
         header.push(
-          `${year}-${String(currentMonth).padStart(2, "0")}-${String(
-            day
-          ).padStart(2, "0")} 00:00:00`,
-          "",
-          "INCE."
+          `${year}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
         );
       }
 
-      // Add summary columns
+      // Add summary columns (INCLUDING HALF DAYS TOTAL)
       const summaryColumns = [
         "P",
+        "HD", // NEW COLUMN: Half Days Total
         "NT",
         "CL",
         "SL",
@@ -633,7 +539,7 @@ const AttendanceReport = () => {
 
       const csvRows = [header];
 
-      // Process employees in batches to avoid freezing
+      // Process employees in batches
       const batchSize = 10;
 
       for (let i = 0; i < employees.length; i += batchSize) {
@@ -644,7 +550,7 @@ const AttendanceReport = () => {
           const summary = calculateEmployeeSummary(employee.EmpId);
           const salary = calculateEmployeeSalary(employee.EmpId, summary);
 
-          // Start row - ADDED OfficeName
+          // Start row
           const row = [
             (i + j + 1).toString(), // S.R NO.
             employee.UAN || "", // UAN
@@ -654,29 +560,24 @@ const AttendanceReport = () => {
             employee.FatherName || "", // Father Name
             employee.Designation || "", // Designation
             employee.Grade || "", // CADRE
-            employee.OfficeName || employee.office_name || "", // OfficeName - ADDED
-            employee.JoinDate
-              ? `${employee.JoinDate.split("T")[0]} 00:00:00`
-              : "", // DOJ
-            "Status", // Status column
+            employee.OfficeName || employee.office_name || "", // OfficeName
+            employee.JoinDate ? employee.JoinDate.split("T")[0] : "", // DOJ (date only, no time)
           ];
 
-          // Add daily status
+          // Add ONE daily status per date
           for (let day = 1; day <= daysInMonth; day++) {
             const date = `${year}-${String(currentMonth).padStart(
               2,
-              "0"
+              "0",
             )}-${String(day).padStart(2, "0")}`;
             const status = getDayStatus(employee.EmpId, date);
-            const otHours = getDayOT(employee.EmpId, date);
-
-            row.push(status, status); // Two status columns
-            row.push(otHours > 0 ? formatHoursToHoursMinutes(otHours) : ""); // INCE.
+            row.push(status);
           }
 
-          // Add summary
+          // Add summary (INCLUDING HALF DAYS TOTAL)
           row.push(
             summary.presentCount.toString(), // P
+            summary.halfDayCount.toString(), // HD (NEW)
             "0", // NT
             summary.clCount.toString(), // CL
             summary.slCount.toString(), // SL
@@ -698,7 +599,7 @@ const AttendanceReport = () => {
             salary.hra.toString(), // HRA
             salary.conveyance.toString(), // CONVEYANCE
             salary.specialAllowance.toString(), // SPECIAL ALLOWANCE
-            salary.netSalary.toString() // NET SALARY
+            salary.netSalary.toString(), // NET SALARY
           );
 
           csvRows.push(row);
@@ -734,7 +635,7 @@ const AttendanceReport = () => {
       monthName: month ? monthNames[month - 1] : "",
       year,
     }),
-    [employees, attendance, leaveData, salaryData, month, year, monthNames]
+    [employees, attendance, leaveData, salaryData, month, year, monthNames],
   );
 
   return (
@@ -754,16 +655,12 @@ const AttendanceReport = () => {
           <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
             <Grid item xs={12} md={6}>
               <DatePicker
-                views={['year', 'month']}
+                views={["year", "month"]}
                 label="Select Month & Year"
                 value={selectedDate}
                 onChange={(newValue) => setSelectedDate(newValue)}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    fullWidth
-                  />
+                  <TextField {...params} size="small" fullWidth />
                 )}
               />
             </Grid>
@@ -870,17 +767,6 @@ const AttendanceReport = () => {
               {error}
             </Alert>
           )}
-
-          {/* Information */}
-          {/* {month && !loading && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                <strong>Note:</strong> Report includes only active employees (IsActive = 1).
-                Sunday working is counted as double present days. OT is calculated at 1.25x rate.
-                Salary is pro-rated based on actual attendance. OfficeName column has been added to the report.
-              </Typography>
-            </Alert>
-          )} */}
         </CardContent>
       </Card>
     </LocalizationProvider>

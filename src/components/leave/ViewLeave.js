@@ -772,7 +772,7 @@ const [expanded, setExpanded] = useState(false);
                       fontWeight="medium"
                       sx={{ fontSize: "0.8rem" }}
                     >
-                      {employeeName}
+                      {employeeName} ({leave.EmpId})
                     </Typography>
                   </Box>
                 </TableCell>

@@ -66,6 +66,13 @@ const AttendanceReport = () => {
     });
   }, []);
 
+  // Check if employee grade starts with S (S1, S2, S3, etc.) - for Sunday double pay
+  const isSGrade = useCallback((grade) => {
+    if (!grade) return false;
+    const gradeStr = String(grade).trim().toUpperCase();
+    return gradeStr.startsWith("S");
+  }, []);
+
   // Fetch all data
   useEffect(() => {
     const fetchData = async () => {
@@ -260,7 +267,7 @@ const AttendanceReport = () => {
     [salaryData, normalizeEmpId],
   );
 
-  // Calculate attendance status for a day (LATE COMING LOGIC REMOVED)
+  // Calculate attendance status for a day
   const getDayStatus = useCallback(
     (employeeId, date) => {
       const leaveType = getLeaveForDate(employeeId, date);
@@ -282,7 +289,7 @@ const AttendanceReport = () => {
 
       // Only In time present
       if ((!outTime || outTime === "0000-00-00 00:00:00") && inTime) {
-        return "P"; // Always present if they punched in (late logic removed)
+        return "P";
       }
 
       // Both times present
@@ -337,9 +344,10 @@ const AttendanceReport = () => {
 
   // Calculate summary for employee
   const calculateEmployeeSummary = useCallback(
-    (employeeId) => {
+    (employeeId, employeeGrade) => {
       const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
+      const isSGradeEmp = isSGrade(employeeGrade);
 
       let presentCount = 0;
       let absentCount = 0;
@@ -363,7 +371,10 @@ const AttendanceReport = () => {
           presentCount++;
           if (isSunday(date)) {
             sundayWorkingCount++;
-            presentCount++; // Double count for Sunday working
+            // Double count for Sunday working ONLY for S grade employees
+            if (isSGradeEmp) {
+              presentCount++; // Double count for Sunday working
+            }
           }
         } else if (status === "A") {
           absentCount++;
@@ -403,10 +414,11 @@ const AttendanceReport = () => {
       getDayOT,
       isSunday,
       formatHoursToHoursMinutes,
+      isSGrade,
     ],
   );
 
-  // Calculate salary for employee (NEW FORMULA: salary/days in month * total working days)
+  // Calculate salary for employee
   const calculateEmployeeSalary = useCallback(
     (employeeId, summary) => {
       const salary = getEmployeeSalary(employeeId);
@@ -424,8 +436,7 @@ const AttendanceReport = () => {
       const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
 
-      // NEW FORMULA: salary/days in month * total working days (effectivePresentDays)
-      // effectivePresentDays already accounts for half days (0.5) and double Sundays
+      // Formula: salary/days in month * total working days (effectivePresentDays)
       const workingDaysRatio = summary.effectivePresentDays / daysInMonth;
 
       // Calculate pro-rated salary based on days in month ratio
@@ -438,7 +449,7 @@ const AttendanceReport = () => {
         salary.specialAllowance * workingDaysRatio,
       );
 
-      // OT calculation (keep OT separate)
+      // OT calculation
       const workingDays = daysInMonth - summary.weeklyOffCount;
       const totalMonthlySalary =
         salary.basic + salary.hra + salary.conveyance + salary.specialAllowance;
@@ -486,7 +497,7 @@ const AttendanceReport = () => {
       const daysInMonth = getDaysInMonth(currentMonth, year);
       const monthName = monthNames[currentMonth - 1];
 
-      // Create header - ONE column per date with simple date format
+      // Create header - TWO columns per date (Status and INCE)
       const header = [
         "S.R NO.",
         "UAN",
@@ -500,17 +511,17 @@ const AttendanceReport = () => {
         "DOJ",
       ];
 
-      // Add ONE date column per day with simple date format (YYYY-MM-DD)
+      // Add TWO columns per day - Status and INCE
       for (let day = 1; day <= daysInMonth; day++) {
-        header.push(
-          `${year}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
-        );
+        const dateStr = `${year}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        header.push(dateStr); // Status column
+        header.push("INCE."); // INCE column
       }
 
-      // Add summary columns (INCLUDING HALF DAYS TOTAL)
+      // Add summary columns
       const summaryColumns = [
         "P",
-        "HD", // NEW COLUMN: Half Days Total
+        "HD",
         "NT",
         "CL",
         "SL",
@@ -539,6 +550,9 @@ const AttendanceReport = () => {
 
       const csvRows = [header];
 
+      // Process ALL active employees (not filtered by grade)
+      console.log(`Total active employees: ${employees.length}`);
+
       // Process employees in batches
       const batchSize = 10;
 
@@ -547,7 +561,11 @@ const AttendanceReport = () => {
 
         for (let j = 0; j < batch.length; j++) {
           const employee = batch[j];
-          const summary = calculateEmployeeSummary(employee.EmpId);
+          const employeeGrade = employee.Grade || employee.grade || "";
+          const summary = calculateEmployeeSummary(
+            employee.EmpId,
+            employeeGrade,
+          );
           const salary = calculateEmployeeSalary(employee.EmpId, summary);
 
           // Start row
@@ -559,25 +577,28 @@ const AttendanceReport = () => {
             employee.Name || "", // Name of Emp.
             employee.FatherName || "", // Father Name
             employee.Designation || "", // Designation
-            employee.Grade || "", // CADRE
+            employeeGrade, // CADRE (Grade)
             employee.OfficeName || employee.office_name || "", // OfficeName
-            employee.JoinDate ? employee.JoinDate.split("T")[0] : "", // DOJ (date only, no time)
+            employee.JoinDate ? employee.JoinDate.split("T")[0] : "", // DOJ
           ];
 
-          // Add ONE daily status per date
+          // Add TWO daily columns per date - Status and INCE
           for (let day = 1; day <= daysInMonth; day++) {
             const date = `${year}-${String(currentMonth).padStart(
               2,
               "0",
             )}-${String(day).padStart(2, "0")}`;
             const status = getDayStatus(employee.EmpId, date);
-            row.push(status);
+            const otHours = getDayOT(employee.EmpId, date);
+
+            row.push(status); // Status column
+            row.push(otHours > 0 ? formatHoursToHoursMinutes(otHours) : ""); // INCE column
           }
 
-          // Add summary (INCLUDING HALF DAYS TOTAL)
+          // Add summary
           row.push(
             summary.presentCount.toString(), // P
-            summary.halfDayCount.toString(), // HD (NEW)
+            summary.halfDayCount.toString(), // HD
             "0", // NT
             summary.clCount.toString(), // CL
             summary.slCount.toString(), // SL
@@ -614,9 +635,9 @@ const AttendanceReport = () => {
         .map((row) => row.map((field) => `"${field || ""}"`).join(","))
         .join("\n");
 
-      // Download
+      // Create blob and download
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      saveAs(blob, `ATTENDANCE_${monthName}_${year}.csv`);
+      saveAs(blob, `ATTENDANCE_REPORT_${monthName}_${year}.csv`);
     } catch (error) {
       console.error("Export error:", error);
       setError("Failed to generate report. Please try again.");
@@ -710,7 +731,7 @@ const AttendanceReport = () => {
                   gutterBottom
                   sx={{ fontWeight: 600 }}
                 >
-                  {stats.monthName} {stats.year} - Active Employees
+                  {stats.monthName} {stats.year} - All Active Employees
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={3}>
@@ -756,7 +777,7 @@ const AttendanceReport = () => {
             >
               <CircularProgress size={40} sx={{ mr: 2 }} />
               <Typography variant="body1" color="text.secondary">
-                Loading active employee data...
+                Loading employee data...
               </Typography>
             </Box>
           )}

@@ -533,8 +533,8 @@ const AttendanceReport = () => {
         calculatedBasic +
         calculatedHRA +
         calculatedConveyance +
-        calculatedSpecialAllowance +
-        otWages;
+        calculatedSpecialAllowance;
+        
       const deductions = salary.epf + salary.esi;
       const netSalary = Math.max(0, Math.round(totalGross - deductions));
 

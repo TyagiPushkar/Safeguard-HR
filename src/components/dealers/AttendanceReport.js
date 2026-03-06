@@ -57,6 +57,7 @@ const AttendanceReport = () => {
 
   // Memoized constants
   const NORMAL_SHIFT_HOURS = useMemo(() => 9, []);
+  const OT_THRESHOLD_HOURS = useMemo(() => 10, []); // OT starts after 10 hours
 
   // Filter active employees - only where IsActive === 1
   const filterActiveEmployees = useCallback((employees) => {
@@ -158,6 +159,7 @@ const AttendanceReport = () => {
     return `${hours} Hr ${minutes} Min`;
   }, []);
 
+  // Updated OT calculation to start after 10 hours (1 hour buffer)
   const calculateOTHours = useCallback(
     (inTime, outTime) => {
       if (
@@ -176,13 +178,17 @@ const AttendanceReport = () => {
         if (isNaN(inDate.getTime()) || isNaN(outDate.getTime())) return 0;
 
         const totalWorkedHours = (outDate - inDate) / (1000 * 60 * 60);
-        const otHours = Math.max(0, totalWorkedHours - NORMAL_SHIFT_HOURS - 1);
+
+        // OT only counted after 10 hours (9 hours normal + 1 hour buffer)
+        // So if someone works 11 hours, OT = 1 hour (11 - 10)
+        const otHours = Math.max(0, totalWorkedHours - OT_THRESHOLD_HOURS);
+
         return Math.round(otHours * 100) / 100;
       } catch {
         return 0;
       }
     },
-    [NORMAL_SHIFT_HOURS],
+    [OT_THRESHOLD_HOURS],
   );
 
   // Get normalized employee ID for matching
@@ -223,21 +229,55 @@ const AttendanceReport = () => {
 
       const normalizedEmpId = normalizeEmpId(employeeId);
       const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0); // Reset time part for accurate date comparison
 
       const leave = leaveData.find((record) => {
         const leaveEmpId = normalizeEmpId(record.EmpId || record.empId);
+
+        // Parse dates and set to start of day for comparison
         const startDate = new Date(record.StartDate || record.startDate);
+        startDate.setHours(0, 0, 0, 0);
+
         const endDate = new Date(record.EndDate || record.endDate);
+        endDate.setHours(23, 59, 59, 999); // End of day
 
         return (
           leaveEmpId === normalizedEmpId &&
-          record.Status === "Approved" &&
+          record.Status === "Approved" && // Only count approved leaves
           targetDate >= startDate &&
           targetDate <= endDate
         );
       });
 
-      return leave ? leave.Category || leave.category || "CL" : null;
+      if (!leave) return null;
+
+      // Map the category to the required format
+      const category = leave.Category || leave.category || "";
+
+      // Handle different category formats
+      switch (category) {
+        case "HalfDay":
+        case "HD":
+        case "HALF DAY":
+        case "Half Day":
+          return "HD";
+
+        case "LWP":
+        case "Leave Without Pay":
+        case "LWOP":
+          return "LWP";
+
+        case "CL":
+        case "Casual Leave":
+          return "CL";
+
+        case "SL":
+        case "Sick Leave":
+          return "SL";
+
+        default:
+          return category; // Return as is if it matches expected format
+      }
     },
     [leaveData, normalizeEmpId],
   );
@@ -270,8 +310,23 @@ const AttendanceReport = () => {
   // Calculate attendance status for a day
   const getDayStatus = useCallback(
     (employeeId, date) => {
+      // First check for leave (including HalfDay and LWP)
       const leaveType = getLeaveForDate(employeeId, date);
-      if (leaveType) return leaveType; // CL or SL
+
+      if (leaveType) {
+        // If it's a half day, check if there's attendance for the remaining half
+        if (leaveType === "HD") {
+          const records = getAttendanceRecords(employeeId, date);
+          if (records.length > 0) {
+            return "HD"; // Half day with attendance for remaining half
+          } else {
+            return "HD"; // Still half day even if no attendance (full day half day leave)
+          }
+        }
+
+        // Return the leave type (CL, SL, HD, LWP)
+        return leaveType;
+      }
 
       const records = getAttendanceRecords(employeeId, date);
 
@@ -292,28 +347,27 @@ const AttendanceReport = () => {
         return "P";
       }
 
-      // Both times present
+      // Both times present - check if it's a half day based on work duration
       if (
         inTime &&
         outTime &&
         inTime !== "0000-00-00 00:00:00" &&
         outTime !== "0000-00-00 00:00:00"
       ) {
-        // Calculate work duration to determine if it's a half day
         try {
           const inDate = new Date(inTime);
           const outDate = new Date(outTime);
           if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime())) {
             const workDuration = (outDate - inDate) / (1000 * 60 * 60);
             if (workDuration >= 8) return "P";
-            if (workDuration >= 4) return "P";
+            if (workDuration >= 4) return "HD"; // Half day if worked 4-8 hours
           }
         } catch {
           return "P";
         }
       }
 
-      return "A";
+      return "P";
     },
     [getLeaveForDate, getAttendanceRecords, isSunday],
   );
@@ -355,6 +409,7 @@ const AttendanceReport = () => {
       let halfDayCount = 0;
       let clCount = 0;
       let slCount = 0;
+      let lwpCount = 0;
       let sundayWorkingCount = 0;
       let totalOTHours = 0;
 
@@ -367,30 +422,42 @@ const AttendanceReport = () => {
 
         totalOTHours += otHours;
 
-        if (status === "P") {
-          presentCount++;
-          if (isSunday(date)) {
-            sundayWorkingCount++;
-            // Double count for Sunday working ONLY for S grade employees
-            if (isSGradeEmp) {
-              presentCount++; // Double count for Sunday working
+        // Count based on status
+        switch (status) {
+          case "P":
+            presentCount++;
+            if (isSunday(date)) {
+              sundayWorkingCount++;
             }
-          }
-        } else if (status === "A") {
-          absentCount++;
-        } else if (status === "WO") {
-          weeklyOffCount++;
-        } else if (status === "HD") {
-          halfDayCount++;
-          presentCount += 0.5; // Half day counts as 0.5
-        } else if (status === "CL") {
-          clCount++;
-        } else if (status === "SL") {
-          slCount++;
+            break;
+          case "A":
+            absentCount++;
+            break;
+          case "WO":
+            weeklyOffCount++;
+            break;
+          case "HD":
+            halfDayCount++;
+            break;
+          case "CL":
+            clCount++;
+            break;
+          case "SL":
+            slCount++;
+            break;
+          case "LWP":
+            lwpCount++;
+            break;
+          default:
+            break;
         }
       }
 
-      const effectivePresentDays = presentCount;
+      // Effective present days for salary calculation
+      // Present counts as 1, Half Day counts as 0.5, CL/SL count as 1 (paid leaves)
+      // LWP and Absent are NOT counted (unpaid)
+      const effectivePresentDays =
+        presentCount + halfDayCount * 0.5 + clCount + slCount;
 
       return {
         presentCount,
@@ -399,6 +466,7 @@ const AttendanceReport = () => {
         halfDayCount,
         clCount,
         slCount,
+        lwpCount,
         sundayWorkingCount,
         totalOTHours,
         totalOTFormatted: formatHoursToHoursMinutes(totalOTHours),
@@ -449,7 +517,7 @@ const AttendanceReport = () => {
         salary.specialAllowance * workingDaysRatio,
       );
 
-      // OT calculation
+      // OT calculation - using updated OT hours
       const workingDays = daysInMonth - summary.weeklyOffCount;
       const totalMonthlySalary =
         salary.basic + salary.hra + salary.conveyance + salary.specialAllowance;
@@ -550,7 +618,7 @@ const AttendanceReport = () => {
 
       const csvRows = [header];
 
-      // Process ALL active employees (not filtered by grade)
+      // Process ALL active employees
       console.log(`Total active employees: ${employees.length}`);
 
       // Process employees in batches
@@ -602,7 +670,7 @@ const AttendanceReport = () => {
             "0", // NT
             summary.clCount.toString(), // CL
             summary.slCount.toString(), // SL
-            "0", // LWP
+            summary.lwpCount.toString(), // LWP
             "0", // GH
             "0", // PWO
             summary.weeklyOffCount.toString(), // WO
@@ -614,7 +682,7 @@ const AttendanceReport = () => {
             summary.totalOTFormatted, // WORKING DAY OT
             summary.totalOTFormatted, // WORKING DAY OT (duplicate)
             formatHoursToHoursMinutes(summary.totalOTHours * 1.25), // (Inc1DM+Inc2 DN)@1.25
-            summary.effectivePresentDays.toString(), // TOTAL DAYS FOR EMP
+            summary.effectivePresentDays.toFixed(1), // TOTAL DAYS FOR EMP
             salary.otWages.toString(), // OT WAGES
             salary.basic.toString(), // BASIC SALARY
             salary.hra.toString(), // HRA
@@ -792,6 +860,6 @@ const AttendanceReport = () => {
       </Card>
     </LocalizationProvider>
   );
-};
+};;;;
 
 export default AttendanceReport;

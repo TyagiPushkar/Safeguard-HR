@@ -454,10 +454,11 @@ const AttendanceReport = () => {
       }
 
       // Effective present days for salary calculation
-      // Present counts as 1, Half Day counts as 0.5, CL/SL count as 1 (paid leaves)
-      // LWP and Absent are NOT counted (unpaid)
       const effectivePresentDays =
         presentCount + halfDayCount * 0.5 + clCount + slCount;
+
+      // Total days for EMP (P + CL + SL) - Sunday Working is already in P
+      const totalDaysForEmp = presentCount + clCount + slCount;
 
       return {
         presentCount,
@@ -471,6 +472,7 @@ const AttendanceReport = () => {
         totalOTHours,
         totalOTFormatted: formatHoursToHoursMinutes(totalOTHours),
         effectivePresentDays,
+        totalDaysForEmp,
         totalDays: daysInMonth,
       };
     },
@@ -533,8 +535,9 @@ const AttendanceReport = () => {
         calculatedBasic +
         calculatedHRA +
         calculatedConveyance +
-        calculatedSpecialAllowance;
-        
+        calculatedSpecialAllowance +
+        otWages;
+
       const deductions = salary.epf + salary.esi;
       const netSalary = Math.max(0, Math.round(totalGross - deductions));
 
@@ -545,6 +548,7 @@ const AttendanceReport = () => {
         specialAllowance: calculatedSpecialAllowance,
         netSalary,
         otWages,
+        totalGross, // Add this if needed
       };
     },
     [month, year, getDaysInMonth, getEmployeeSalary],
@@ -586,7 +590,7 @@ const AttendanceReport = () => {
         header.push("INCE."); // INCE column
       }
 
-      // Add summary columns
+      // Add summary columns with actual salary breakdown
       const summaryColumns = [
         "P",
         "HD",
@@ -607,11 +611,22 @@ const AttendanceReport = () => {
         "(Inc1DM+Inc2 DN)@1.25",
         "TOTAL DAYS FOR EMP",
         "OT WAGES",
-        "BASIC SALARY",
-        "HRA",
-        "CONVEYANCE",
-        "SPECIAL ALLOWANCE",
-        "NET SALARY",
+        // Actual Salary Breakdown
+        "ACTUAL BASIC",
+        "ACTUAL HRA",
+        "ACTUAL CONVEYANCE",
+        "ACTUAL SPECIAL ALLOWANCE",
+        "ACTUAL TOTAL",
+        "ACTUAL EPF",
+        "ACTUAL ESI",
+        "ACTUAL NET TAKE HOME",
+        // Calculated Salary Breakdown (Pro-rated)
+        "CALC BASIC",
+        "CALC HRA",
+        "CALC CONVEYANCE",
+        "CALC SPECIAL ALLOWANCE",
+        "CALC TOTAL",
+        "CALC NET SALARY",
       ];
 
       header.push(...summaryColumns);
@@ -635,6 +650,24 @@ const AttendanceReport = () => {
             employeeGrade,
           );
           const salary = calculateEmployeeSalary(employee.EmpId, summary);
+
+          // Get actual full salary (before pro-rata calculation)
+          const actualSalary = getEmployeeSalary(employee.EmpId);
+
+          // Calculate total actual salary (sum of all components)
+          const totalActualSalary = actualSalary
+            ? actualSalary.basic +
+              actualSalary.hra +
+              actualSalary.conveyance +
+              actualSalary.specialAllowance
+            : 0;
+
+          // Calculate total calculated salary (sum of pro-rated components)
+          const totalCalculatedSalary =
+            salary.basic +
+            salary.hra +
+            salary.conveyance +
+            salary.specialAllowance;
 
           // Start row
           const row = [
@@ -663,8 +696,9 @@ const AttendanceReport = () => {
             row.push(otHours > 0 ? formatHoursToHoursMinutes(otHours) : ""); // INCE column
           }
 
-          // Add summary
+          // Add summary with actual and calculated salary breakdown
           row.push(
+            // Attendance summary
             summary.presentCount.toString(), // P
             summary.halfDayCount.toString(), // HD
             "0", // NT
@@ -682,13 +716,26 @@ const AttendanceReport = () => {
             summary.totalOTFormatted, // WORKING DAY OT
             summary.totalOTFormatted, // WORKING DAY OT (duplicate)
             formatHoursToHoursMinutes(summary.totalOTHours * 1.25), // (Inc1DM+Inc2 DN)@1.25
-            summary.effectivePresentDays.toFixed(1), // TOTAL DAYS FOR EMP
+            summary.totalDaysForEmp.toString(), // TOTAL DAYS FOR EMP
             salary.otWages.toString(), // OT WAGES
-            salary.basic.toString(), // BASIC SALARY
-            salary.hra.toString(), // HRA
-            salary.conveyance.toString(), // CONVEYANCE
-            salary.specialAllowance.toString(), // SPECIAL ALLOWANCE
-            salary.netSalary.toString(), // NET SALARY
+
+            // Actual Salary Breakdown
+            actualSalary?.basic.toString() || "0", // ACTUAL BASIC
+            actualSalary?.hra.toString() || "0", // ACTUAL HRA
+            actualSalary?.conveyance.toString() || "0", // ACTUAL CONVEYANCE
+            actualSalary?.specialAllowance.toString() || "0", // ACTUAL SPECIAL ALLOWANCE
+            totalActualSalary.toString(), // ACTUAL TOTAL
+            actualSalary?.epf.toString() || "0", // ACTUAL EPF
+            actualSalary?.esi.toString() || "0", // ACTUAL ESI
+            actualSalary?.netTakeHome.toString() || "0", // ACTUAL NET TAKE HOME
+
+            // Calculated Salary Breakdown (Pro-rated)
+            salary.basic.toString(), // CALC BASIC
+            salary.hra.toString(), // CALC HRA
+            salary.conveyance.toString(), // CALC CONVEYANCE
+            salary.specialAllowance.toString(), // CALC SPECIAL ALLOWANCE
+            totalCalculatedSalary.toString(), // CALC TOTAL
+            salary.netSalary.toString(), // CALC NET SALARY
           );
 
           csvRows.push(row);
@@ -860,6 +907,6 @@ const AttendanceReport = () => {
       </Card>
     </LocalizationProvider>
   );
-};;;;
+};;;;;;;;;;;
 
 export default AttendanceReport;

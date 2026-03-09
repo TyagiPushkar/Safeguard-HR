@@ -396,12 +396,12 @@ const AttendanceReport = () => {
     [getAttendanceRecords, calculateOTHours],
   );
 
-  // Calculate summary for employee
+  // In calculateEmployeeSummary function
   const calculateEmployeeSummary = useCallback(
     (employeeId, employeeGrade) => {
       const currentMonth = month;
       const daysInMonth = getDaysInMonth(currentMonth, year);
-      const isSGradeEmp = isSGrade(employeeGrade);
+      const isSGradeEmp = isSGrade(employeeGrade); // True for S1, S2, S3, etc.
 
       let presentCount = 0;
       let absentCount = 0;
@@ -453,9 +453,49 @@ const AttendanceReport = () => {
         }
       }
 
-      // Effective present days for salary calculation
-      const effectivePresentDays =
-        presentCount + halfDayCount * 0.5 + clCount + slCount;
+      // UPDATED: Effective present days with conditional Sunday Working for S Cadre
+      let effectivePresentDays;
+
+      if (isSGradeEmp) {
+        // FOR S CADRE EMPLOYEES: Include Sunday Working days in effective present days
+        effectivePresentDays =
+          presentCount + // Full present days (including Sundays worked)
+          halfDayCount * 0.5 + // Half days count as 0.5
+          clCount + // Casual leaves count as full day
+          slCount + // Sick leaves count as full day
+          weeklyOffCount; // Weekly offs count as full day
+        // Note: Sunday working days are already included in presentCount
+      } else {
+        // FOR NON-S CADRE EMPLOYEES: Original calculation without Sunday working
+        effectivePresentDays =
+          presentCount + // Full present days
+          halfDayCount * 0.5 + // Half days count as 0.5
+          clCount + // Casual leaves count as full day
+          slCount + // Sick leaves count as full day
+          weeklyOffCount; // Weekly offs count as full day
+      }
+
+      // Alternative explicit version if you want to be more precise:
+      /*
+    if (isSGradeEmp) {
+      // For S Cadre: Count Sunday Working separately (already in presentCount)
+      effectivePresentDays = 
+        (presentCount - sundayWorkingCount) + // Regular present days (non-Sunday)
+        (sundayWorkingCount * 2) +             // Sunday working counts as 2 days (DOUBLE)
+        (halfDayCount * 0.5) +                 // Half days
+        clCount +                              // Casual leaves
+        slCount +                               // Sick leaves
+        weeklyOffCount;                         // Weekly offs
+    } else {
+      // For non-S Cadre: Regular calculation
+      effectivePresentDays = 
+        presentCount + 
+        (halfDayCount * 0.5) + 
+        clCount + 
+        slCount + 
+        weeklyOffCount;
+    }
+    */
 
       // Total days for EMP (P + CL + SL) - Sunday Working is already in P
       const totalDaysForEmp = presentCount + clCount + slCount;
@@ -474,6 +514,7 @@ const AttendanceReport = () => {
         effectivePresentDays,
         totalDaysForEmp,
         totalDays: daysInMonth,
+        isSGradeEmp, // Add this if needed elsewhere
       };
     },
     [
@@ -487,7 +528,6 @@ const AttendanceReport = () => {
       isSGrade,
     ],
   );
-
   // Calculate salary for employee
   const calculateEmployeeSalary = useCallback(
     (employeeId, summary) => {
@@ -907,6 +947,6 @@ const AttendanceReport = () => {
       </Card>
     </LocalizationProvider>
   );
-};;;;;;;;;;;
+};;;;;;;;;;;;;;
 
 export default AttendanceReport;

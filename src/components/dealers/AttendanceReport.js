@@ -345,9 +345,12 @@ const AttendanceReport = () => {
       const inTime = record.InTime || record.in_time;
       const outTime = record.OutTime || record.out_time;
 
-      // Only In time present
-      if ((!outTime || outTime === "0000-00-00 00:00:00") && inTime) {
-        return "P";
+      // NEW LOGIC: Only In time present (no Out time) = Half Day
+      if (inTime && (!outTime || outTime === "0000-00-00 00:00:00")) {
+        console.log(
+          `Employee ${employeeId} on ${date}: In only - marking as Half Day`,
+        );
+        return "HD"; // Mark as Half Day when only In time exists
       }
 
       // Both times present - check if it's a half day based on work duration
@@ -364,6 +367,8 @@ const AttendanceReport = () => {
             const workDuration = (outDate - inDate) / (1000 * 60 * 60);
             if (workDuration >= 8) return "P";
             if (workDuration >= 4) return "HD"; // Half day if worked 4-8 hours
+            // If worked less than 4 hours, still consider as Half Day?
+            return "HD"; // Less than 4 hours also half day
           }
         } catch {
           return "P";
@@ -398,8 +403,6 @@ const AttendanceReport = () => {
     },
     [getAttendanceRecords, calculateOTHours],
   );
-
-  
 
   // In calculateEmployeeSummary function
   const calculateEmployeeSummary = useCallback(
@@ -953,6 +956,6 @@ const AttendanceReport = () => {
       </Card>
     </LocalizationProvider>
   );
-};;;;;;;;;;;;;;;
+};;;;;;;;;;;;;;;;
 
 export default AttendanceReport;

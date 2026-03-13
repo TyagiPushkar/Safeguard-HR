@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useState, useEffect } from "react"
+import React from "react";
+import { useState, useEffect } from "react";
 import {
   Alert,
   Button,
@@ -35,7 +35,8 @@ import {
   MenuItem,
   Tabs,
   Tab,
-} from "@mui/material"
+  Badge,
+} from "@mui/material";
 import {
   Download,
   Settings,
@@ -54,8 +55,9 @@ import {
   Info,
   Today,
   Groups,
-} from "@mui/icons-material"
-import { Calendar, dateFnsLocalizer } from "react-big-calendar"
+} from "@mui/icons-material";
+import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import {
   format,
   parse,
@@ -67,18 +69,18 @@ import {
   eachDayOfInterval,
   parseISO,
   isToday,
-} from "date-fns"
-import "react-big-calendar/lib/css/react-big-calendar.css"
-import { useAuth } from "../auth/AuthContext"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
-import { DatePicker } from "@mui/x-date-pickers"
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns"
+} from "date-fns";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useAuth } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { DatePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const locales = {
   "en-US": require("date-fns/locale/en-US"),
-}
+};
 
 const localizer = dateFnsLocalizer({
   format,
@@ -86,7 +88,7 @@ const localizer = dateFnsLocalizer({
   startOfWeek: () => startOfWeek(new Date()),
   getDay,
   locales,
-})
+});
 
 // Mock auth context and navigate for demo
 const mockUseAuth = () => ({
@@ -98,56 +100,56 @@ const mockUseAuth = () => ({
     name: "Yash Jain",
     weekOff: "Saturday,Sunday",
   },
-})
+});
 
-const mockUseNavigate = () => (path) => console.log(`Navigate to: ${path}`)
+const mockUseNavigate = () => (path) => console.log(`Navigate to: ${path}`);
 
 const generateMapUrl = (geoLocation) => {
   if (!geoLocation || geoLocation === "N/A") {
-    return "#"
+    return "#";
   }
 
-  const [latitude, longitude] = geoLocation.split(",")
+  const [latitude, longitude] = geoLocation.split(",");
 
   if (!latitude || !longitude) {
-    return "#"
+    return "#";
   }
 
-  const lat = Number.parseFloat(latitude)
-  const lon = Number.parseFloat(longitude)
+  const lat = Number.parseFloat(latitude);
+  const lon = Number.parseFloat(longitude);
 
   if (isNaN(lat) || isNaN(lon)) {
-    return "#"
+    return "#";
   }
 
-  return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&zoom=15&basemap=satellite&markercolor=red`
-}
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&zoom=15&basemap=satellite&markercolor=red`;
+};
 
 const AttendanceStatusChip = ({ status, time }) => {
   const getStatusProps = () => {
     switch (status) {
       case "on-time":
-        return { color: "success", label: "On Time" }
+        return { color: "success", label: "On Time" };
       case "late":
-        return { color: "error", label: "Late" }
+        return { color: "error", label: "Late" };
       case "early":
-        return { color: "info", label: "Early" }
+        return { color: "info", label: "Early" };
       case "holiday":
-        return { color: "warning", label: "Holiday" }
+        return { color: "warning", label: "Holiday" };
       case "weekoff":
-        return { color: "secondary", label: "Week Off" }
+        return { color: "secondary", label: "Week Off" };
       case "leave":
-        return { color: "info", label: "Leave" }
+        return { color: "info", label: "Leave" };
       case "present":
-        return { color: "success", label: "Present" }
+        return { color: "success", label: "Present" };
       case "absent":
-        return { color: "error", label: "Absent" }
+        return { color: "error", label: "Absent" };
       default:
-        return { color: "default", label: "N/A" }
+        return { color: "default", label: "N/A" };
     }
-  }
+  };
 
-  const { color, label } = getStatusProps()
+  const { color, label } = getStatusProps();
 
   return (
     <Chip
@@ -156,26 +158,28 @@ const AttendanceStatusChip = ({ status, time }) => {
       label={`${label} ${time !== "N/A" && time ? `(${time})` : ""}`}
       sx={{ fontSize: "0.75rem" }}
     />
-  )
-}
+  );
+};
 
 const AttendanceCard = ({ activity, isMobile }) => {
-  const theme = useTheme()
+  const theme = useTheme();
 
   const getCardColor = () => {
     switch (activity.type) {
       case "attendance":
-        return activity.color === "green" ? theme.palette.success.main : theme.palette.error.main
+        return activity.color === "green"
+          ? theme.palette.success.main
+          : theme.palette.error.main;
       case "holiday":
-        return theme.palette.warning.main
+        return theme.palette.warning.main;
       case "weekoff":
-        return theme.palette.secondary.main
+        return theme.palette.secondary.main;
       case "leave":
-        return theme.palette.info.main
+        return theme.palette.info.main;
       default:
-        return theme.palette.grey[500]
+        return theme.palette.grey[500];
     }
-  }
+  };
 
   return (
     <Card
@@ -205,7 +209,9 @@ const AttendanceCard = ({ activity, isMobile }) => {
               <Grid item xs={6} sm={2}>
                 <Box display="flex" alignItems="center" gap={1}>
                   <AccessTime fontSize="small" color="success" />
-                  <Tooltip title={`Check-in location: ${activity.firstInLocation || "N/A"}`}>
+                  <Tooltip
+                    title={`Check-in location: ${activity.firstInLocation || "N/A"}`}
+                  >
                     <Typography
                       variant="body2"
                       component="a"
@@ -227,7 +233,9 @@ const AttendanceCard = ({ activity, isMobile }) => {
                 <Box display="flex" alignItems="center" gap={1}>
                   <Schedule fontSize="small" color="warning" />
                   {activity.lastOutLocation !== "N/A" ? (
-                    <Tooltip title={`Check-out location: ${activity.lastOutLocation}`}>
+                    <Tooltip
+                      title={`Check-out location: ${activity.lastOutLocation}`}
+                    >
                       <Typography
                         variant="body2"
                         component="a"
@@ -269,9 +277,15 @@ const AttendanceCard = ({ activity, isMobile }) => {
           ) : (
             <Grid item xs={12} sm={9}>
               <Box display="flex" alignItems="center" gap={2}>
-                {activity.type === "holiday" && <Event fontSize="small" color="warning" />}
-                {activity.type === "weekoff" && <Weekend fontSize="small" color="secondary" />}
-                {activity.type === "leave" && <BeachAccess fontSize="small" color="info" />}
+                {activity.type === "holiday" && (
+                  <Event fontSize="small" color="warning" />
+                )}
+                {activity.type === "weekoff" && (
+                  <Weekend fontSize="small" color="secondary" />
+                )}
+                {activity.type === "leave" && (
+                  <BeachAccess fontSize="small" color="info" />
+                )}
                 <Typography variant="body2" fontWeight="medium">
                   {activity.title}
                 </Typography>
@@ -282,18 +296,26 @@ const AttendanceCard = ({ activity, isMobile }) => {
         </Grid>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 // Legend Component
 const CalendarLegend = () => {
   const theme = useTheme();
 
   const legendItems = [
-    { color: theme.palette.success.main, label: "On Time", icon: <AccessTime /> },
+    {
+      color: theme.palette.success.main,
+      label: "On Time",
+      icon: <AccessTime />,
+    },
     { color: theme.palette.error.main, label: "Late", icon: <Schedule /> },
     { color: theme.palette.warning.main, label: "Holiday", icon: <Event /> },
-    { color: theme.palette.secondary.main, label: "Week Off", icon: <Weekend /> },
+    {
+      color: theme.palette.secondary.main,
+      label: "Week Off",
+      icon: <Weekend />,
+    },
     { color: theme.palette.info.main, label: "Leave", icon: <BeachAccess /> },
   ];
 
@@ -342,7 +364,9 @@ const CalendarLegend = () => {
                 justifyContent: "center",
               }}
             >
-              {React.cloneElement(item.icon, { sx: { fontSize: 12, color: "#fff" } })}
+              {React.cloneElement(item.icon, {
+                sx: { fontSize: 12, color: "#fff" },
+              })}
             </Box>
             <Typography variant="caption" sx={{ fontWeight: 500 }}>
               {item.label}
@@ -356,24 +380,27 @@ const CalendarLegend = () => {
 
 // Today's Attendance Card Component
 const TodayAttendanceCard = ({ attendance, isMobile, employees }) => {
-  const theme = useTheme()
-  const employee = employees.find(emp => emp.EmpId === attendance.EmpId) || {}
-  
+  const theme = useTheme();
+  const employee =
+    employees.find((emp) => emp.EmpId === attendance.EmpId) || {};
+
   const getStatus = () => {
     if (attendance.FirstIn === "N/A" || !attendance.FirstIn) {
-      return "absent"
+      return "absent";
     }
-    return "present"
-  }
+    return "present";
+  };
 
-  const status = getStatus()
+  const status = getStatus();
 
   return (
     <Card
       sx={{
         mb: 2,
         borderLeft: `4px solid ${
-          status === "present" ? theme.palette.success.main : theme.palette.error.main
+          status === "present"
+            ? theme.palette.success.main
+            : theme.palette.error.main
         }`,
         "&:hover": {
           boxShadow: theme.shadows[4],
@@ -386,8 +413,16 @@ const TodayAttendanceCard = ({ attendance, isMobile, employees }) => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={3}>
             <Box display="flex" alignItems="center" gap={1}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
-                {employee.Name ? employee.Name.charAt(0).toUpperCase() : attendance.EmpId.charAt(0)}
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: theme.palette.primary.main,
+                }}
+              >
+                {employee.Name
+                  ? employee.Name.charAt(0).toUpperCase()
+                  : attendance.EmpId.charAt(0)}
               </Avatar>
               <Box>
                 <Typography variant="body2" fontWeight="medium">
@@ -403,7 +438,9 @@ const TodayAttendanceCard = ({ attendance, isMobile, employees }) => {
           <Grid item xs={6} sm={2}>
             <Box display="flex" alignItems="center" gap={1}>
               <AccessTime fontSize="small" color="success" />
-              <Tooltip title={`Check-in location: ${attendance.FirstInLocation || "N/A"}`}>
+              <Tooltip
+                title={`Check-in location: ${attendance.FirstInLocation || "N/A"}`}
+              >
                 <Typography
                   variant="body2"
                   component="a"
@@ -425,7 +462,9 @@ const TodayAttendanceCard = ({ attendance, isMobile, employees }) => {
             <Box display="flex" alignItems="center" gap={1}>
               <Schedule fontSize="small" color="warning" />
               {attendance.LastOutLocation !== "N/A" ? (
-                <Tooltip title={`Check-out location: ${attendance.LastOutLocation}`}>
+                <Tooltip
+                  title={`Check-out location: ${attendance.LastOutLocation}`}
+                >
                   <Typography
                     variant="body2"
                     component="a"
@@ -466,51 +505,66 @@ const TodayAttendanceCard = ({ attendance, isMobile, employees }) => {
         </Grid>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 const AttendanceList = () => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const theme = useTheme()
-  const [employees, setEmployees] = useState([])
-  const [filteredEmployees, setFilteredEmployees] = useState([])
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [selectedEmpId, setSelectedEmpId] = useState(user.role === "HR" ? "" : user.emp_id)
-  const [allActivities, setAllActivities] = useState([])
-  const [filteredActivities, setFilteredActivities] = useState([])
-  const [todayAttendance, setTodayAttendance] = useState([])
-  const [holidays, setHolidays] = useState([])
-  const [leaves, setLeaves] = useState([])
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [todayLoading, setTodayLoading] = useState(false)
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [todayPage, setTodayPage] = useState(0)
-  const [todayRowsPerPage, setTodayRowsPerPage] = useState(10)
-  const [viewMode, setViewMode] = useState("calendar")
-  const [activeTab, setActiveTab] = useState(0)
-  
-  // Combined month-year selection
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  
-  // Employee filter state
-  const [employeeFilter, setEmployeeFilter] = useState("active") // "active", "inactive", "all"
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const theme = useTheme();
+  const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmpId, setSelectedEmpId] = useState(
+    user.role === "HR" ? "" : user.emp_id,
+  );
+  const [allActivities, setAllActivities] = useState([]);
+  const [filteredActivities, setFilteredActivities] = useState([]);
+  const [todayAttendance, setTodayAttendance] = useState([]);
+  const [filteredTodayAttendance, setFilteredTodayAttendance] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [leaves, setLeaves] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [todayLoading, setTodayLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [todayPage, setTodayPage] = useState(0);
+  const [todayRowsPerPage, setTodayRowsPerPage] = useState(10);
+  const [viewMode, setViewMode] = useState("calendar");
+  const [activeTab, setActiveTab] = useState(0);
 
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+  // Combined month-year selection for history
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Today's date picker state
+  const [selectedTodayDate, setSelectedTodayDate] = useState(new Date());
+
+  // Filter state for today's attendance
+  const [todayFilter, setTodayFilter] = useState("all"); // "all", "present", "absent"
+
+  // Employee filter state
+  const [employeeFilter, setEmployeeFilter] = useState("active"); // "active", "inactive", "all"
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Helper function to determine if employee is active
   const isEmployeeActive = (employee) => {
     // Check IsActive field - 1 means active, 0 or other means inactive
-    return employee.IsActive === 1 || employee.IsActive === "1" || employee.IsActive === true;
-  }
+    return (
+      employee.IsActive === 1 ||
+      employee.IsActive === "1" ||
+      employee.IsActive === true
+    );
+  };
 
   // Generate week off events
   const generateWeekOffEvents = (employee, startDate, endDate) => {
-    if (!employee?.WeekOff) return []
+    if (!employee?.WeekOff) return [];
 
-    const weekOffDays = employee.WeekOff.split(",").map((day) => day.trim().toLowerCase())
+    const weekOffDays = employee.WeekOff.split(",").map((day) =>
+      day.trim().toLowerCase(),
+    );
     const dayMap = {
       sunday: 0,
       monday: 1,
@@ -519,12 +573,14 @@ const AttendanceList = () => {
       thursday: 4,
       friday: 5,
       saturday: 6,
-    }
+    };
 
-    const weekOffNumbers = weekOffDays.map((day) => dayMap[day]).filter((num) => num !== undefined)
-    const events = []
+    const weekOffNumbers = weekOffDays
+      .map((day) => dayMap[day])
+      .filter((num) => num !== undefined);
+    const events = [];
 
-    const days = eachDayOfInterval({ start: startDate, end: endDate })
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     days.forEach((day) => {
       if (weekOffNumbers.includes(day.getDay())) {
@@ -535,12 +591,12 @@ const AttendanceList = () => {
           allDay: true,
           type: "weekoff",
           color: theme.palette.secondary.main,
-        })
+        });
       }
-    })
+    });
 
-    return events
-  }
+    return events;
+  };
 
   // Generate holiday events
   const generateHolidayEvents = () => {
@@ -551,17 +607,17 @@ const AttendanceList = () => {
       allDay: true,
       type: "holiday",
       color: theme.palette.warning.main,
-    }))
-  }
+    }));
+  };
 
   // Generate leave events
   const generateLeaveEvents = (empId) => {
     return leaves
       .filter((leave) => leave.EmpId === empId && leave.Status === "Approved")
       .flatMap((leave) => {
-        const startDate = parseISO(leave.StartDate)
-        const endDate = parseISO(leave.EndDate)
-        const days = eachDayOfInterval({ start: startDate, end: endDate })
+        const startDate = parseISO(leave.StartDate);
+        const endDate = parseISO(leave.EndDate);
+        const days = eachDayOfInterval({ start: startDate, end: endDate });
 
         return days.map((day) => ({
           title: `Leave (${leave.Category}) - ${leave.Reason}`,
@@ -572,129 +628,203 @@ const AttendanceList = () => {
           color: theme.palette.info.main,
           category: leave.Category,
           reason: leave.Reason,
-        }))
-      })
-  }
+        }));
+      });
+  };
 
- 
-useEffect(() => {
-  const startDate = startOfMonth(selectedDate)
-  const endDate = endOfMonth(selectedDate)
+  useEffect(() => {
+    const startDate = startOfMonth(selectedDate);
+    const endDate = endOfMonth(selectedDate);
 
-  let filtered = []
+    let filtered = [];
 
-  // Add attendance data
-  const attendanceEvents = allActivities.filter((activity) => {
-    if (!activity.start || activity.type !== "attendance") return false
-    return isWithinInterval(activity.start, { start: startDate, end: endDate })
-  })
+    // Add attendance data
+    const attendanceEvents = allActivities.filter((activity) => {
+      if (!activity.start || activity.type !== "attendance") return false;
+      return isWithinInterval(activity.start, {
+        start: startDate,
+        end: endDate,
+      });
+    });
 
-  // Add week off events
-  const weekOffEvents = selectedEmployee ? generateWeekOffEvents(selectedEmployee, startDate, endDate) : []
+    // Add week off events
+    const weekOffEvents = selectedEmployee
+      ? generateWeekOffEvents(selectedEmployee, startDate, endDate)
+      : [];
 
-  // Add holiday events
-  const holidayEvents = generateHolidayEvents().filter((holiday) =>
-    isWithinInterval(holiday.start, { start: startDate, end: endDate }),
-  )
+    // Add holiday events
+    const holidayEvents = generateHolidayEvents().filter((holiday) =>
+      isWithinInterval(holiday.start, { start: startDate, end: endDate }),
+    );
 
-  // Add leave events
-  const leaveEvents = selectedEmpId
-    ? generateLeaveEvents(selectedEmpId).filter((leave) =>
-        isWithinInterval(leave.start, { start: startDate, end: endDate }),
-      )
-    : []
+    // Add leave events
+    const leaveEvents = selectedEmpId
+      ? generateLeaveEvents(selectedEmpId).filter((leave) =>
+          isWithinInterval(leave.start, { start: startDate, end: endDate }),
+        )
+      : [];
 
-  // Combine all events
-  filtered = [...attendanceEvents, ...weekOffEvents, ...holidayEvents, ...leaveEvents]
+    // Combine all events
+    filtered = [
+      ...attendanceEvents,
+      ...weekOffEvents,
+      ...holidayEvents,
+      ...leaveEvents,
+    ];
 
-  // Sort by date in chronological order (earliest to latest)
-  filtered.sort((a, b) => {
-    // Handle null dates
-    if (!a.start && !b.start) return 0
-    if (!a.start) return -1
-    if (!b.start) return 1
-    
-    // Ensure dates are Date objects
-    const dateA = a.start instanceof Date ? a.start : new Date(a.start)
-    const dateB = b.start instanceof Date ? b.start : new Date(b.start)
-    
-    // Sort in ascending order (1st of month to last of month)
-    return dateA - dateB
-  })
+    // Sort by date in chronological order (earliest to latest)
+    filtered.sort((a, b) => {
+      // Handle null dates
+      if (!a.start && !b.start) return 0;
+      if (!a.start) return -1;
+      if (!b.start) return 1;
 
-  setFilteredActivities(filtered)
-  setPage(0)
-}, [allActivities, selectedDate, selectedEmployee, selectedEmpId, holidays, leaves])
+      // Ensure dates are Date objects
+      const dateA = a.start instanceof Date ? a.start : new Date(a.start);
+      const dateB = b.start instanceof Date ? b.start : new Date(b.start);
+
+      // Sort in ascending order (1st of month to last of month)
+      return dateA - dateB;
+    });
+
+    setFilteredActivities(filtered);
+    setPage(0);
+  }, [
+    allActivities,
+    selectedDate,
+    selectedEmployee,
+    selectedEmpId,
+    holidays,
+    leaves,
+  ]);
 
   // Fetch today's attendance
-  const fetchTodayAttendance = async () => {
-    setTodayLoading(true)
+  const fetchTodayAttendance = async (date = new Date()) => {
+    setTodayLoading(true);
     try {
-      console.log("Fetching today's attendance...")
-      
+      console.log("Fetching attendance for date:", format(date, "yyyy-MM-dd"));
+
       const response = await axios.get(
         `https://namami-infotech.com/SAFEGUARD/src/attendance/get_today_attendance.php`,
-        { timeout: 10000 }
-      )
+        {
+          params: {
+            date: format(date, "yyyy-MM-dd"),
+          },
+          timeout: 10000,
+        },
+      );
 
-      console.log("Today's Attendance API Response:", response.data)
+      console.log("Attendance API Response:", response.data);
 
       if (response.data.success && response.data.data) {
-        setTodayAttendance(response.data.data)
+        setTodayAttendance(response.data.data);
+        // Reset filter when fetching new data
+        setTodayFilter("all");
       } else {
-        setTodayAttendance([])
+        setTodayAttendance([]);
       }
     } catch (error) {
-      console.error("Error fetching today's attendance:", error)
-      setTodayAttendance([])
+      console.error("Error fetching attendance:", error);
+      setTodayAttendance([]);
     } finally {
-      setTodayLoading(false)
+      setTodayLoading(false);
     }
-  }
+  };
+
+  // Filter today's attendance based on present/absent filter
+  useEffect(() => {
+    // Get active employees only
+    const activeEmployees = employees.filter((emp) => isEmployeeActive(emp));
+
+    // Create a set of employee IDs that have attendance records
+    const presentEmpIds = new Set(todayAttendance.map((att) => att.EmpId));
+
+    // Create combined data with all active employees
+    const combinedData = [];
+
+    // Add present employees with their attendance data
+    todayAttendance.forEach((att) => {
+      combinedData.push({
+        ...att,
+        _status: "present",
+      });
+    });
+
+    // Add absent employees (active employees not in todayAttendance)
+    activeEmployees.forEach((emp) => {
+      if (!presentEmpIds.has(emp.EmpId)) {
+        combinedData.push({
+          EmpId: emp.EmpId,
+          Date: format(selectedTodayDate, "dd/MM/yyyy"),
+          FirstIn: "N/A",
+          FirstInLocation: "N/A",
+          LastOut: "N/A",
+          LastOutLocation: "N/A",
+          WorkingHours: "0h 0m",
+          FirstEvent: "N/A",
+          LastEvent: "N/A",
+          _status: "absent",
+          _employee: emp, // Store employee data for reference
+        });
+      }
+    });
+
+    // Apply filter
+    let filtered = combinedData;
+    if (todayFilter === "present") {
+      filtered = combinedData.filter((item) => item._status === "present");
+    } else if (todayFilter === "absent") {
+      filtered = combinedData.filter((item) => item._status === "absent");
+    }
+
+    setFilteredTodayAttendance(filtered);
+    setTodayPage(0); // Reset pagination when filter changes
+  }, [todayAttendance, employees, todayFilter, selectedTodayDate]);
 
   const fetchAttendance = async () => {
-    if (!selectedEmpId) return
+    if (!selectedEmpId) return;
 
-    setError(null)
-    setLoading(true)
+    setError(null);
+    setLoading(true);
 
     try {
-      console.log("Fetching attendance for EmpId:", selectedEmpId)
-      
+      console.log("Fetching attendance for EmpId:", selectedEmpId);
+
       const response = await axios.get(
         `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php`,
-        { 
+        {
           params: { EmpId: selectedEmpId },
-          timeout: 10000
-        }
-      )
+          timeout: 10000,
+        },
+      );
 
-      console.log("Attendance API Response:", response.data)
+      console.log("Attendance API Response:", response.data);
 
       if (response.data.success && response.data.data) {
         const attendanceData = response.data.data
           .map((activity) => {
             if (!activity.date) {
-              console.warn("Activity missing date:", activity)
-              return null
+              console.warn("Activity missing date:", activity);
+              return null;
             }
 
-            let formattedDate
+            let formattedDate;
             try {
-              formattedDate = parse(activity.date, "dd/MM/yyyy", new Date())
+              formattedDate = parse(activity.date, "dd/MM/yyyy", new Date());
               if (isNaN(formattedDate)) {
-                formattedDate = parseISO(activity.date)
+                formattedDate = parseISO(activity.date);
                 if (isNaN(formattedDate)) {
-                  console.error("Invalid date format:", activity.date)
-                  return null
+                  console.error("Invalid date format:", activity.date);
+                  return null;
                 }
               }
             } catch (error) {
-              console.error("Date parsing error:", error, activity.date)
-              return null
+              console.error("Date parsing error:", error, activity.date);
+              return null;
             }
 
-            const employeeShift = selectedEmployee?.Shift || user.shift || "9:00 AM - 6:00 PM"
+            const employeeShift =
+              selectedEmployee?.Shift || user.shift || "9:00 AM - 6:00 PM";
 
             return {
               title: `In: ${activity.firstIn || "N/A"}\nOut: ${activity.lastOut || "N/A"}`,
@@ -710,240 +840,277 @@ useEffect(() => {
               firstEvent: activity.firstEvent || "Unknown",
               lastEvent: activity.lastEvent || "Unknown",
               type: "attendance",
-            }
+            };
           })
-          .filter(Boolean)
+          .filter(Boolean);
 
-        console.log("Processed attendance data:", attendanceData)
-        setAllActivities(attendanceData)
+        console.log("Processed attendance data:", attendanceData);
+        setAllActivities(attendanceData);
       } else {
-        console.log("No attendance data found or API returned error:", response.data)
-        setAllActivities([])
+        console.log(
+          "No attendance data found or API returned error:",
+          response.data,
+        );
+        setAllActivities([]);
         if (!response.data.success) {
-          setError(response.data.message || "No attendance data found for the selected employee")
+          setError(
+            response.data.message ||
+              "No attendance data found for the selected employee",
+          );
         }
       }
     } catch (error) {
-      console.error("Error fetching attendance:", error)
-      setError("Error fetching attendance: " + (error.response?.data?.message || error.message))
-      setAllActivities([])
+      console.error("Error fetching attendance:", error);
+      setError(
+        "Error fetching attendance: " +
+          (error.response?.data?.message || error.message),
+      );
+      setAllActivities([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchHolidays = async () => {
     try {
-      console.log("Fetching holidays for Tenent_Id:", user.tenent_id)
-      
+      console.log("Fetching holidays for Tenent_Id:", user.tenent_id);
+
       const response = await axios.get(
         `https://namami-infotech.com/SAFEGUARD/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
-        { timeout: 10000 }
-      )
-      
-      console.log("Holidays API Response:", response.data)
-      
+        { timeout: 10000 },
+      );
+
+      console.log("Holidays API Response:", response.data);
+
       if (response.data.success && response.data.data) {
-        setHolidays(response.data.data)
+        setHolidays(response.data.data);
       } else {
-        setHolidays([])
+        setHolidays([]);
       }
     } catch (error) {
-      console.error("Error fetching holidays:", error)
-      setHolidays([])
+      console.error("Error fetching holidays:", error);
+      setHolidays([]);
     }
-  }
+  };
 
   const fetchLeaves = async (empId) => {
-    if (!empId) return
+    if (!empId) return;
 
     try {
-      console.log("Fetching leaves for empId:", empId)
-      
+      console.log("Fetching leaves for empId:", empId);
+
       const response = await axios.get(
         `https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php?empId=${empId}`,
-        { timeout: 10000 }
-      )
-      
-      console.log("Leaves API Response:", response.data)
-      
+        { timeout: 10000 },
+      );
+
+      console.log("Leaves API Response:", response.data);
+
       if (response.data.success && response.data.data) {
-        setLeaves(response.data.data)
+        setLeaves(response.data.data);
       } else {
-        setLeaves([])
+        setLeaves([]);
       }
     } catch (error) {
-      console.error("Error fetching leaves:", error)
-      setLeaves([])
+      console.error("Error fetching leaves:", error);
+      setLeaves([]);
     }
-  }
+  };
 
   // Employee filter handler
   const handleEmployeeFilterChange = (filter) => {
-    setEmployeeFilter(filter)
-    
+    setEmployeeFilter(filter);
+
     if (filter === "active") {
-      const activeEmployees = employees.filter(emp => isEmployeeActive(emp))
-      setFilteredEmployees(activeEmployees)
-      console.log(`Filtered to show ${activeEmployees.length} active employees`)
+      const activeEmployees = employees.filter((emp) => isEmployeeActive(emp));
+      setFilteredEmployees(activeEmployees);
+      console.log(
+        `Filtered to show ${activeEmployees.length} active employees`,
+      );
     } else if (filter === "inactive") {
-      const inactiveEmployees = employees.filter(emp => !isEmployeeActive(emp))
-      setFilteredEmployees(inactiveEmployees)
-      console.log(`Filtered to show ${inactiveEmployees.length} inactive employees`)
+      const inactiveEmployees = employees.filter(
+        (emp) => !isEmployeeActive(emp),
+      );
+      setFilteredEmployees(inactiveEmployees);
+      console.log(
+        `Filtered to show ${inactiveEmployees.length} inactive employees`,
+      );
     } else {
-      setFilteredEmployees(employees)
-      console.log(`Filtered to show all ${employees.length} employees`)
+      setFilteredEmployees(employees);
+      console.log(`Filtered to show all ${employees.length} employees`);
     }
-  }
+  };
 
   // Add employee fetching for HR role
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        setLoading(true)
-        console.log("Fetching employees for Tenent_Id:", user.tenent_id)
-        
+        setLoading(true);
+        console.log("Fetching employees for Tenent_Id:", user.tenent_id);
+
         const response = await axios.get(
           `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
-          { timeout: 10000 }
-        )
-        
-        console.log("=== RAW EMPLOYEE API RESPONSE ===")
-        console.log("Full API Response:", response.data)
-        console.log("Success status:", response.data.success)
-        
+          { timeout: 10000 },
+        );
+
+        console.log("=== RAW EMPLOYEE API RESPONSE ===");
+        console.log("Full API Response:", response.data);
+        console.log("Success status:", response.data.success);
+
         if (response.data.success && response.data.data) {
-          const fetchedEmployees = response.data.data
-          console.log("Number of employees fetched:", fetchedEmployees.length)
-          
+          const fetchedEmployees = response.data.data;
+          console.log("Number of employees fetched:", fetchedEmployees.length);
+
           // Log first employee to check structure
           if (fetchedEmployees.length > 0) {
-            console.log("First employee data:", fetchedEmployees[0])
-            console.log("IsActive field in first employee:", fetchedEmployees[0].IsActive)
-            console.log("Type of IsActive:", typeof fetchedEmployees[0].IsActive)
+            console.log("First employee data:", fetchedEmployees[0]);
+            console.log(
+              "IsActive field in first employee:",
+              fetchedEmployees[0].IsActive,
+            );
+            console.log(
+              "Type of IsActive:",
+              typeof fetchedEmployees[0].IsActive,
+            );
           }
-          
-          setEmployees(fetchedEmployees)
-          
+
+          setEmployees(fetchedEmployees);
+
           // Calculate active/inactive counts
-          const activeCount = fetchedEmployees.filter(emp => isEmployeeActive(emp)).length
-          const inactiveCount = fetchedEmployees.length - activeCount
-          
-          console.log(`Active employees: ${activeCount}, Inactive employees: ${inactiveCount}`)
-          
+          const activeCount = fetchedEmployees.filter((emp) =>
+            isEmployeeActive(emp),
+          ).length;
+          const inactiveCount = fetchedEmployees.length - activeCount;
+
+          console.log(
+            `Active employees: ${activeCount}, Inactive employees: ${inactiveCount}`,
+          );
+
           // Default: show active employees
-          const activeEmployees = fetchedEmployees.filter(emp => isEmployeeActive(emp))
-          console.log("Active employees count:", activeEmployees.length)
-          setFilteredEmployees(activeEmployees)
-          
+          const activeEmployees = fetchedEmployees.filter((emp) =>
+            isEmployeeActive(emp),
+          );
+          console.log("Active employees count:", activeEmployees.length);
+          setFilteredEmployees(activeEmployees);
+
           // If user is not HR, set current user as selected
           if (user.role !== "HR") {
-            const currentUserEmployee = fetchedEmployees.find(emp => emp.EmpId === user.emp_id) || {
+            const currentUserEmployee = fetchedEmployees.find(
+              (emp) => emp.EmpId === user.emp_id,
+            ) || {
               EmpId: user.emp_id,
               Name: user.name,
               WeekOff: user.weekOff || "Saturday,Sunday",
               Shift: user.shift || "9:00 AM - 6:00 PM",
-              IsActive: 1
-            }
-            setSelectedEmployee(currentUserEmployee)
-            setSelectedEmpId(user.emp_id)
+              IsActive: 1,
+            };
+            setSelectedEmployee(currentUserEmployee);
+            setSelectedEmpId(user.emp_id);
           }
         } else {
-          console.log("No employee data or API error:", response.data.message)
-          setEmployees([])
-          setFilteredEmployees([])
-          setError("Error fetching employee list: " + (response.data.message || "Unknown error"))
+          console.log("No employee data or API error:", response.data.message);
+          setEmployees([]);
+          setFilteredEmployees([]);
+          setError(
+            "Error fetching employee list: " +
+              (response.data.message || "Unknown error"),
+          );
         }
       } catch (error) {
-        console.error("Error fetching employees:", error)
-        console.error("Error details:", error.response?.data || error.message)
-        setError("Error fetching employee list: " + error.message)
-        setEmployees([])
-        setFilteredEmployees([])
+        console.error("Error fetching employees:", error);
+        console.error("Error details:", error.response?.data || error.message);
+        setError("Error fetching employee list: " + error.message);
+        setEmployees([]);
+        setFilteredEmployees([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    
-    fetchEmployees()
-    fetchHolidays()
-    fetchTodayAttendance()
-  }, [user.role, user.tenent_id, user.emp_id])
+    };
+
+    fetchEmployees();
+    fetchHolidays();
+    fetchTodayAttendance(selectedTodayDate);
+  }, [user.role, user.tenent_id, user.emp_id]);
+
+  // Update when selectedTodayDate changes
+  useEffect(() => {
+    fetchTodayAttendance(selectedTodayDate);
+  }, [selectedTodayDate]);
 
   useEffect(() => {
     if (selectedEmpId) {
-      console.log("Selected EmpId changed to:", selectedEmpId)
-      fetchAttendance()
-      fetchLeaves(selectedEmpId)
+      console.log("Selected EmpId changed to:", selectedEmpId);
+      fetchAttendance();
+      fetchLeaves(selectedEmpId);
     }
-  }, [selectedEmpId])
+  }, [selectedEmpId]);
 
   const parseTime = (timeString) => {
-    if (!timeString || timeString === "N/A") return null
+    if (!timeString || timeString === "N/A") return null;
 
-    const [time, modifier] = timeString.split(" ")
-    if (!time || !modifier) return null
+    const [time, modifier] = timeString.split(" ");
+    if (!time || !modifier) return null;
 
-    let [hours, minutes] = time.split(":")
-    if (!hours || !minutes) return null
+    let [hours, minutes] = time.split(":");
+    if (!hours || !minutes) return null;
 
-    hours = String(hours)
+    hours = String(hours);
 
     if (hours === "12") {
-      hours = "00"
+      hours = "00";
     }
     if (modifier === "PM" && hours !== "12") {
-      hours = String(Number.parseInt(hours, 10) + 12)
+      hours = String(Number.parseInt(hours, 10) + 12);
     } else if (modifier === "AM" && hours === "12") {
-      hours = "00"
+      hours = "00";
     }
 
-    return `${hours.padStart(2, "0")}:${minutes}`
-  }
+    return `${hours.padStart(2, "0")}:${minutes}`;
+  };
 
   const compareTimes = (attendanceTime, shiftTime) => {
     if (!attendanceTime || attendanceTime === "N/A" || !shiftTime) {
-      return "red"
+      return "red";
     }
 
     try {
-      const shiftStartTime = parseTime(shiftTime.split(" - ")[0])
-      const attendanceTime24 = parseTime(attendanceTime)
+      const shiftStartTime = parseTime(shiftTime.split(" - ")[0]);
+      const attendanceTime24 = parseTime(attendanceTime);
 
       if (!shiftStartTime || !attendanceTime24) {
-        return "red"
+        return "red";
       }
 
-      const shiftStart = new Date(`1970-01-01T${shiftStartTime}:00`)
-      const attendance = new Date(`1970-01-01T${attendanceTime24}:00`)
+      const shiftStart = new Date(`1970-01-01T${shiftStartTime}:00`);
+      const attendance = new Date(`1970-01-01T${attendanceTime24}:00`);
 
-      const diffInMinutes = (attendance - shiftStart) / (1000 * 60)
+      const diffInMinutes = (attendance - shiftStart) / (1000 * 60);
 
       if (diffInMinutes <= 5) {
-        return "green"
+        return "green";
       } else {
-        return "red"
+        return "red";
       }
     } catch (error) {
-      console.error("Error comparing times:", error)
-      return "red"
+      console.error("Error comparing times:", error);
+      return "red";
     }
-  }
+  };
 
   const exportToCsv = () => {
     const csvRows = [
       [
-        "Date", 
-        "Type", 
-        "Check In", 
-        "Check In Event", 
-        "Check Out", 
-        "Check Out Event", 
-        "Working Hours", 
-        "Status", 
-        "Notes"
-      ]
-    ]
+        "Date",
+        "Type",
+        "Check In",
+        "Check In Event",
+        "Check Out",
+        "Check Out Event",
+        "Working Hours",
+        "Status",
+        "Notes",
+      ],
+    ];
 
     filteredActivities.forEach((activity) => {
       if (activity.type === "attendance") {
@@ -957,7 +1124,7 @@ useEffect(() => {
           activity.workingHours,
           activity.color === "green" ? "On Time" : "Late",
           "",
-        ])
+        ]);
       } else {
         csvRows.push([
           activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A",
@@ -969,42 +1136,54 @@ useEffect(() => {
           "-",
           activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
           activity.title,
-        ])
+        ]);
       }
-    })
+    });
 
-    const csvContent = csvRows.map((row) => row.join(",")).join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.href = url
-    link.setAttribute("download", `attendance_${selectedEmpId}_${format(selectedDate, "MMM_yyyy")}.csv`)
-    link.click()
-    URL.revokeObjectURL(url)
-  }
+    const csvContent = csvRows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `attendance_${selectedEmpId}_${format(selectedDate, "MMM_yyyy")}.csv`,
+    );
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const exportTodayToCsv = () => {
     const csvRows = [
       [
-        "Employee ID", 
-        "Employee Name", 
-        "Date", 
-        "Check In", 
-        "Check In Location", 
-        "Check Out", 
-        "Check Out Location", 
-        "Working Hours", 
-        "Status"
-      ]
-    ]
+        "Employee ID",
+        "Employee Name",
+        "Contact No.",
+        "Date",
+        "Check In",
+        "Check In Location",
+        "Check Out",
+        "Check Out Location",
+        "Working Hours",
+        "Status",
+      ],
+    ];
 
-    todayAttendance.forEach((attendance) => {
-      const employee = employees.find(emp => emp.EmpId === attendance.EmpId) || {}
-      const status = attendance.FirstIn === "N/A" || !attendance.FirstIn ? "Absent" : "Present"
-      
+    filteredTodayAttendance.forEach((attendance) => {
+      const employee =
+        attendance._employee ||
+        employees.find((emp) => emp.EmpId === attendance.EmpId) ||
+        {};
+      const status =
+        attendance._status ||
+        (attendance.FirstIn === "N/A" || !attendance.FirstIn
+          ? "Absent"
+          : "Present");
+
       csvRows.push([
         attendance.EmpId,
         employee.Name || "N/A",
+        employee.Mobile || "N/A",
         attendance.Date,
         attendance.FirstIn,
         attendance.FirstInLocation,
@@ -1012,71 +1191,92 @@ useEffect(() => {
         attendance.LastOutLocation,
         attendance.WorkingHours,
         status,
-      ])
-    })
+      ]);
+    });
 
-    const csvContent = csvRows.map((row) => row.join(",")).join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.href = url
-    link.setAttribute("download", `today_attendance_${format(new Date(), "dd_MM_yyyy")}.csv`)
-    link.click()
-    URL.revokeObjectURL(url)
-  }
+    const csvContent = csvRows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `attendance_${format(selectedTodayDate, "dd_MM_yyyy")}.csv`,
+    );
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const refreshData = () => {
-    console.log("Refreshing data...")
+    console.log("Refreshing data...");
     if (selectedEmpId) {
-      fetchAttendance()
-      fetchLeaves(selectedEmpId)
+      fetchAttendance();
+      fetchLeaves(selectedEmpId);
     }
-    fetchHolidays()
-    fetchTodayAttendance()
-  }
+    fetchHolidays();
+    fetchTodayAttendance(selectedTodayDate);
+  };
 
   const regularise = () => {
-    navigate("/regularise")
-  }
+    navigate("/regularise");
+  };
 
   // Calculate statistics for filtered data (only attendance records)
-  const attendanceRecords = filteredActivities.filter((a) => a.type === "attendance")
-  const totalDays = attendanceRecords.length
-  const onTimeDays = attendanceRecords.filter((a) => a.color === "green").length
-  const lateDays = attendanceRecords.filter((a) => a.color === "red").length
+  const attendanceRecords = filteredActivities.filter(
+    (a) => a.type === "attendance",
+  );
+  const totalDays = attendanceRecords.length;
+  const onTimeDays = attendanceRecords.filter(
+    (a) => a.color === "green",
+  ).length;
+  const lateDays = attendanceRecords.filter((a) => a.color === "red").length;
   const avgHours =
     attendanceRecords.length > 0
       ? attendanceRecords.reduce((acc, activity) => {
-          const hours = Number.parseFloat(activity.workingHours.replace(/[^\d.]/g, "")) || 0
-          return acc + hours
+          const hours =
+            Number.parseFloat(activity.workingHours.replace(/[^\d.]/g, "")) ||
+            0;
+          return acc + hours;
         }, 0) / attendanceRecords.length
-      : 0
+      : 0;
 
   // Count other types
-  const holidayCount = filteredActivities.filter((a) => a.type === "holiday").length
-  const weekOffCount = filteredActivities.filter((a) => a.type === "weekoff").length
-  const leaveCount = filteredActivities.filter((a) => a.type === "leave").length
+  const holidayCount = filteredActivities.filter(
+    (a) => a.type === "holiday",
+  ).length;
+  const weekOffCount = filteredActivities.filter(
+    (a) => a.type === "weekoff",
+  ).length;
+  const leaveCount = filteredActivities.filter(
+    (a) => a.type === "leave",
+  ).length;
 
-  // Today's attendance statistics
-  const presentCount = todayAttendance.filter(att => att.FirstIn !== "N/A" && att.FirstIn).length
-  const absentCount = todayAttendance.length - presentCount
+  // Today's attendance statistics (based on active employees only)
+  const activeEmployeesCount = employees.filter((emp) =>
+    isEmployeeActive(emp),
+  ).length;
+  const presentCount = todayAttendance.length; // API returns only present employees
+  const absentCount = activeEmployeesCount - presentCount;
 
   const eventStyleGetter = (event) => {
-    let backgroundColor = "#3174ad"
+    let backgroundColor = "#3174ad";
 
     switch (event.type) {
       case "attendance":
-        backgroundColor = event.color === "green" ? theme.palette.success.main : theme.palette.error.main
-        break
+        backgroundColor =
+          event.color === "green"
+            ? theme.palette.success.main
+            : theme.palette.error.main;
+        break;
       case "holiday":
-        backgroundColor = theme.palette.warning.main
-        break
+        backgroundColor = theme.palette.warning.main;
+        break;
       case "weekoff":
-        backgroundColor = theme.palette.secondary.main
-        break
+        backgroundColor = theme.palette.secondary.main;
+        break;
       case "leave":
-        backgroundColor = theme.palette.info.main
-        break
+        backgroundColor = theme.palette.info.main;
+        break;
     }
 
     return {
@@ -1088,13 +1288,26 @@ useEffect(() => {
         border: "none",
         padding: "4px",
       },
-    }
-  }
+    };
+  };
 
   // Tab change handler
   const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue)
-  }
+    setActiveTab(newValue);
+  };
+
+  // Filter handlers for today's attendance
+  const handlePresentClick = () => {
+    setTodayFilter("present");
+  };
+
+  const handleAbsentClick = () => {
+    setTodayFilter("absent");
+  };
+
+  const handleAllClick = () => {
+    setTodayFilter("all");
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -1210,18 +1423,22 @@ useEffect(() => {
                     </>
                   )}
 
-                  {/* Month/Year Selector */}
-                  <Box flex={{ xs: 1, sm: 1 }}>
-                    <DatePicker
-                      views={["year", "month"]}
-                      label="Select Month & Year"
-                      value={selectedDate}
-                      onChange={(newValue) => setSelectedDate(newValue)}
-                      renderInput={(params) => (
-                        <TextField {...params} size="small" fullWidth />
-                      )}
-                    />
-                  </Box>
+                  {/* Month/Year Selector - Only show in History tab */}
+                  {activeTab === 0 && (
+                    <Box flex={{ xs: 1, sm: 1 }}>
+                      <LocalizationProvider dateAdapter={AdapterDateFns}>
+                        <DatePicker
+                          views={["year", "month"]}
+                          label="Select Month & Year"
+                          value={selectedDate}
+                          onChange={(newValue) => setSelectedDate(newValue)}
+                          renderInput={(params) => (
+                            <TextField {...params} size="small" fullWidth />
+                          )}
+                        />
+                      </LocalizationProvider>
+                    </Box>
+                  )}
                 </Box>
 
                 {/* Right Side - Action Buttons */}
@@ -1235,65 +1452,73 @@ useEffect(() => {
                     mt: { xs: 1, md: 0 },
                   }}
                 >
-                  {/* View Mode Toggle - Mobile/Tablet */}
-                  <Box sx={{ display: { xs: "flex", md: "none" }, gap: 0.5 }}>
-                    <Tooltip title="Calendar View">
-                      <Button
-                        variant={
-                          viewMode === "calendar" ? "contained" : "outlined"
-                        }
-                        onClick={() => setViewMode("calendar")}
-                        size="small"
-                        sx={{ minWidth: 40, px: 1 }}
-                      >
-                        <CalendarToday fontSize="small" />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="List View">
-                      <Button
-                        variant={viewMode === "list" ? "contained" : "outlined"}
-                        onClick={() => setViewMode("list")}
-                        size="small"
-                        sx={{ minWidth: 40, px: 1 }}
-                      >
-                        <FilterList fontSize="small" />
-                      </Button>
-                    </Tooltip>
-                  </Box>
+                  {/* View Mode Toggle - Mobile/Tablet (only in History tab) */}
+                  {activeTab === 0 && (
+                    <Box sx={{ display: { xs: "flex", md: "none" }, gap: 0.5 }}>
+                      <Tooltip title="Calendar View">
+                        <Button
+                          variant={
+                            viewMode === "calendar" ? "contained" : "outlined"
+                          }
+                          onClick={() => setViewMode("calendar")}
+                          size="small"
+                          sx={{ minWidth: 40, px: 1 }}
+                        >
+                          <CalendarToday fontSize="small" />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="List View">
+                        <Button
+                          variant={
+                            viewMode === "list" ? "contained" : "outlined"
+                          }
+                          onClick={() => setViewMode("list")}
+                          size="small"
+                          sx={{ minWidth: 40, px: 1 }}
+                        >
+                          <FilterList fontSize="small" />
+                        </Button>
+                      </Tooltip>
+                    </Box>
+                  )}
 
-                  {/* View Mode Toggle - Desktop */}
-                  <Box
-                    sx={{
-                      display: { xs: "none", md: "flex" },
-                      gap: 0.5,
-                      mr: 1,
-                    }}
-                  >
-                    <Tooltip title="Calendar View">
-                      <Button
-                        variant={
-                          viewMode === "calendar" ? "contained" : "outlined"
-                        }
-                        onClick={() => setViewMode("calendar")}
-                        size="small"
-                        startIcon={<CalendarToday />}
-                        sx={{ px: 2 }}
-                      >
-                        Calendar
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="List View">
-                      <Button
-                        variant={viewMode === "list" ? "contained" : "outlined"}
-                        onClick={() => setViewMode("list")}
-                        size="small"
-                        startIcon={<FilterList />}
-                        sx={{ px: 2 }}
-                      >
-                        List
-                      </Button>
-                    </Tooltip>
-                  </Box>
+                  {/* View Mode Toggle - Desktop (only in History tab) */}
+                  {activeTab === 0 && (
+                    <Box
+                      sx={{
+                        display: { xs: "none", md: "flex" },
+                        gap: 0.5,
+                        mr: 1,
+                      }}
+                    >
+                      <Tooltip title="Calendar View">
+                        <Button
+                          variant={
+                            viewMode === "calendar" ? "contained" : "outlined"
+                          }
+                          onClick={() => setViewMode("calendar")}
+                          size="small"
+                          startIcon={<CalendarToday />}
+                          sx={{ px: 2 }}
+                        >
+                          Calendar
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="List View">
+                        <Button
+                          variant={
+                            viewMode === "list" ? "contained" : "outlined"
+                          }
+                          onClick={() => setViewMode("list")}
+                          size="small"
+                          startIcon={<FilterList />}
+                          sx={{ px: 2 }}
+                        >
+                          List
+                        </Button>
+                      </Tooltip>
+                    </Box>
+                  )}
 
                   {/* Action Buttons */}
                   <Stack direction="row" spacing={0.5} alignItems="center">
@@ -1329,7 +1554,7 @@ useEffect(() => {
                         disabled={
                           activeTab === 0
                             ? filteredActivities.length === 0
-                            : todayAttendance.length === 0
+                            : filteredTodayAttendance.length === 0
                         }
                         size="small"
                         sx={{
@@ -1369,7 +1594,7 @@ useEffect(() => {
                         disabled={
                           activeTab === 0
                             ? filteredActivities.length === 0
-                            : todayAttendance.length === 0
+                            : filteredTodayAttendance.length === 0
                         }
                         size="small"
                         startIcon={<Download />}
@@ -1979,50 +2204,136 @@ useEffect(() => {
                     justifyContent="space-between"
                     alignItems="center"
                     mb={2}
+                    flexWrap="wrap"
+                    gap={2}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                      Today's Attendance - {format(new Date(), "dd/MM/yyyy")}
-                    </Typography>
                     <Box display="flex" alignItems="center" gap={2}>
-                      <Box display="flex" alignItems="center" gap={0.5}>
-                        <Groups color="primary" fontSize="small" />
-                        <Typography variant="body2">
-                          Total: <strong>{filteredEmployees.length}</strong>{" "}
-                          employees
+                      <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                        Daily Attendance
+                      </Typography>
+                      <LocalizationProvider dateAdapter={AdapterDateFns}>
+                        <DatePicker
+                          label="Select Date"
+                          value={selectedTodayDate}
+                          onChange={(newDate) => setSelectedTodayDate(newDate)}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              size="small"
+                              sx={{ width: 150 }}
+                            />
+                          )}
+                        />
+                      </LocalizationProvider>
+                    </Box>
+
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      gap={2}
+                      flexWrap="wrap"
+                    >
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Badge
+                          color="primary"
+                          badgeContent={activeEmployeesCount}
+                          sx={{ cursor: "pointer" }}
+                          onClick={handleAllClick}
+                        >
+                          <Groups
+                            color={todayFilter === "all" ? "primary" : "action"}
+                          />
+                        </Badge>
+                        <Typography
+                          variant="body2"
+                          onClick={handleAllClick}
+                          sx={{
+                            cursor: "pointer",
+                            fontWeight:
+                              todayFilter === "all" ? "bold" : "normal",
+                            borderBottom:
+                              todayFilter === "all"
+                                ? `2px solid ${theme.palette.primary.main}`
+                                : "none",
+                          }}
+                        >
+                          Total: <strong>{activeEmployeesCount}</strong>
                         </Typography>
                       </Box>
+
                       <Box display="flex" alignItems="center" gap={1}>
                         <Box
                           sx={{
-                            width: 8,
-                            height: 8,
+                            width: 12,
+                            height: 12,
                             borderRadius: "50%",
                             backgroundColor: "success.main",
+                            cursor: "pointer",
                           }}
+                          onClick={handlePresentClick}
                         />
-                        <Typography variant="body2">
+                        <Typography
+                          variant="body2"
+                          onClick={handlePresentClick}
+                          sx={{
+                            cursor: "pointer",
+                            fontWeight:
+                              todayFilter === "present" ? "bold" : "normal",
+                            borderBottom:
+                              todayFilter === "present"
+                                ? `2px solid ${theme.palette.success.main}`
+                                : "none",
+                          }}
+                        >
                           Present: <strong>{presentCount}</strong>
                         </Typography>
                       </Box>
+
                       <Box display="flex" alignItems="center" gap={1}>
                         <Box
                           sx={{
-                            width: 8,
-                            height: 8,
+                            width: 12,
+                            height: 12,
                             borderRadius: "50%",
                             backgroundColor: "error.main",
+                            cursor: "pointer",
                           }}
+                          onClick={handleAbsentClick}
                         />
-                        <Typography variant="body2">
-                          Absent: <strong>{filteredEmployees.length-presentCount}</strong>
+                        <Typography
+                          variant="body2"
+                          onClick={handleAbsentClick}
+                          sx={{
+                            cursor: "pointer",
+                            fontWeight:
+                              todayFilter === "absent" ? "bold" : "normal",
+                            borderBottom:
+                              todayFilter === "absent"
+                                ? `2px solid ${theme.palette.error.main}`
+                                : "none",
+                          }}
+                        >
+                          Absent: <strong>{absentCount}</strong>
                         </Typography>
                       </Box>
+
+                      {/* Clear filter button */}
+                      {todayFilter !== "all" && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => setTodayFilter("all")}
+                          sx={{ ml: 1 }}
+                        >
+                          Clear Filter
+                        </Button>
+                      )}
                     </Box>
                   </Box>
 
                   <Divider sx={{ mb: 2 }} />
 
-                  {todayAttendance.length === 0 ? (
+                  {filteredTodayAttendance.length === 0 ? (
                     <Box sx={{ textAlign: "center", py: 6 }}>
                       <Today
                         sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
@@ -2032,7 +2343,8 @@ useEffect(() => {
                         color="text.secondary"
                         gutterBottom
                       >
-                        No attendance records for today
+                        No attendance records for{" "}
+                        {format(selectedTodayDate, "dd/MM/yyyy")}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         No employees have checked in yet or data is not
@@ -2041,7 +2353,7 @@ useEffect(() => {
                     </Box>
                   ) : isMobile ? (
                     <Stack spacing={1}>
-                      {todayAttendance
+                      {filteredTodayAttendance
                         .slice(
                           todayPage * todayRowsPerPage,
                           todayPage * todayRowsPerPage + todayRowsPerPage,
@@ -2064,11 +2376,11 @@ useEffect(() => {
                           >
                             {[
                               "Employee",
+                              "Contact No.",
                               "Check In",
                               "Check Out",
                               "Working Hours",
                               "Status",
-                              "Actions",
                             ].map((head) => (
                               <TableCell
                                 key={head}
@@ -2080,21 +2392,24 @@ useEffect(() => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {todayAttendance
+                          {filteredTodayAttendance
                             .slice(
                               todayPage * todayRowsPerPage,
                               todayPage * todayRowsPerPage + todayRowsPerPage,
                             )
                             .map((attendance, index) => {
                               const employee =
+                                attendance._employee ||
                                 employees.find(
                                   (emp) => emp.EmpId === attendance.EmpId,
-                                ) || {};
+                                ) ||
+                                {};
                               const status =
-                                attendance.FirstIn === "N/A" ||
+                                attendance._status ||
+                                (attendance.FirstIn === "N/A" ||
                                 !attendance.FirstIn
                                   ? "absent"
-                                  : "present";
+                                  : "present");
 
                               return (
                                 <TableRow
@@ -2149,35 +2464,61 @@ useEffect(() => {
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
-                                    <Tooltip
-                                      title={`Location: ${attendance.FirstInLocation || "N/A"}`}
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
                                     >
-                                      <Box
-                                        component="a"
-                                        href={generateMapUrl(
-                                          attendance.FirstInLocation,
-                                        )}
-                                        target="_blank"
-                                        sx={{
-                                          textDecoration: "none",
-                                          color: "primary.main",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 1,
-                                          "&:hover": {
-                                            textDecoration: "underline",
-                                          },
-                                        }}
-                                      >
-                                        <LocationOn fontSize="small" />
-                                        {attendance.FirstIn} (
-                                        {attendance.FirstEvent})
-                                      </Box>
-                                    </Tooltip>
+                                      <LocalPhoneIcon
+                                        fontSize="small"
+                                        color="info"
+                                      />
+                                      <Typography fontWeight={500}>
+                                        {employee.Mobile || "N/A"}
+                                      </Typography>
+                                    </Box>
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
-                                    {attendance.LastOutLocation !== "N/A" ? (
+                                    {status === "present" ? (
+                                      <Tooltip
+                                        title={`Location: ${attendance.FirstInLocation || "N/A"}`}
+                                      >
+                                        <Box
+                                          component="a"
+                                          href={generateMapUrl(
+                                            attendance.FirstInLocation,
+                                          )}
+                                          target="_blank"
+                                          sx={{
+                                            textDecoration: "none",
+                                            color: "primary.main",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            "&:hover": {
+                                              textDecoration: "underline",
+                                            },
+                                          }}
+                                        >
+                                          <LocationOn fontSize="small" />
+                                          {attendance.FirstIn} (
+                                          {attendance.FirstEvent})
+                                        </Box>
+                                      </Tooltip>
+                                    ) : (
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        Not Checked In
+                                      </Typography>
+                                    )}
+                                  </TableCell>
+
+                                  <TableCell sx={{ py: 1 }}>
+                                    {status === "present" &&
+                                    attendance.LastOutLocation !== "N/A" ? (
                                       <Tooltip
                                         title={`Location: ${attendance.LastOutLocation}`}
                                       >
@@ -2219,48 +2560,40 @@ useEffect(() => {
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
-                                    <Box
-                                      display="flex"
-                                      alignItems="center"
-                                      gap={1}
-                                    >
-                                      <AccessTime
-                                        fontSize="small"
-                                        color="info"
-                                      />
-                                      <Typography fontWeight={500}>
-                                        {attendance.WorkingHours}
+                                    {status === "present" ? (
+                                      <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={1}
+                                      >
+                                        <AccessTime
+                                          fontSize="small"
+                                          color="info"
+                                        />
+                                        <Typography fontWeight={500}>
+                                          {attendance.WorkingHours}
+                                        </Typography>
+                                      </Box>
+                                    ) : (
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        0h 0m
                                       </Typography>
-                                    </Box>
+                                    )}
                                   </TableCell>
 
                                   <TableCell sx={{ py: 1 }}>
                                     <AttendanceStatusChip
                                       status={status}
                                       time={
+                                        status === "present" &&
                                         attendance.FirstIn !== "N/A"
                                           ? attendance.FirstIn
                                           : ""
                                       }
                                     />
-                                  </TableCell>
-
-                                  <TableCell sx={{ py: 1 }}>
-                                    <Tooltip title="View Location">
-                                      <IconButton
-                                        size="small"
-                                        component="a"
-                                        href={generateMapUrl(
-                                          attendance.FirstInLocation,
-                                        )}
-                                        target="_blank"
-                                        disabled={
-                                          attendance.FirstInLocation === "N/A"
-                                        }
-                                      >
-                                        <LocationOn fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
                                   </TableCell>
                                 </TableRow>
                               );
@@ -2270,11 +2603,11 @@ useEffect(() => {
                     </TableContainer>
                   )}
 
-                  {todayAttendance.length > 0 && (
+                  {filteredTodayAttendance.length > 0 && (
                     <TablePagination
                       rowsPerPageOptions={[5, 10, 25]}
                       component="div"
-                      count={todayAttendance.length}
+                      count={filteredTodayAttendance.length}
                       rowsPerPage={todayRowsPerPage}
                       page={todayPage}
                       onPageChange={(event, newPage) => setTodayPage(newPage)}
@@ -2294,6 +2627,6 @@ useEffect(() => {
       </Box>
     </LocalizationProvider>
   );
-}
+};
 
-export default AttendanceList
+export default AttendanceList;

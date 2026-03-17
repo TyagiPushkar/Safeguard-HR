@@ -29,6 +29,7 @@ const AttendanceReport = () => {
   const [attendance, setAttendance] = useState([]);
   const [leaveData, setLeaveData] = useState([]);
   const [salaryData, setSalaryData] = useState([]);
+  const [holidayData, setHolidayData] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -83,7 +84,7 @@ const AttendanceReport = () => {
       setLoading(true);
       setError("");
       try {
-        const [employeesRes, attendanceRes, leaveRes, salaryRes] =
+        const [employeesRes, attendanceRes, leaveRes, salaryRes, holidayRes] =
           await Promise.allSettled([
             axios.get(
               `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
@@ -96,6 +97,9 @@ const AttendanceReport = () => {
             ),
             axios.get(
               "https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php",
+            ),
+            axios.get(
+              `https://namami-infotech.com/SAFEGUARD/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
             ),
           ]);
 
@@ -123,11 +127,19 @@ const AttendanceReport = () => {
           setSalaryData(salaryRes.value.data.data || []);
         }
 
+        if (
+          holidayRes.status === "fulfilled" &&
+          holidayRes.value.data.success
+        ) {
+          setHolidayData(holidayRes.value.data.data || []);
+        }
+
         const errors = [];
         if (employeesRes.status === "rejected") errors.push("Employees");
         if (attendanceRes.status === "rejected") errors.push("Attendance");
         if (leaveRes.status === "rejected") errors.push("Leave");
         if (salaryRes.status === "rejected") errors.push("Salary");
+        if (holidayRes.status === "rejected") errors.push("Holiday");
 
         if (errors.length > 0) {
           setError(
@@ -154,6 +166,17 @@ const AttendanceReport = () => {
     const date = new Date(dateString);
     return date.getDay() === 0;
   }, []);
+
+  // Check if a date is a holiday
+  const isHoliday = useCallback(
+    (dateString) => {
+      if (!holidayData || holidayData.length === 0) return false;
+
+      const holiday = holidayData.find((h) => h.date === dateString);
+      return holiday ? holiday.title : false;
+    },
+    [holidayData],
+  );
 
   const formatHoursToHoursMinutes = useCallback((decimalHours) => {
     if (!decimalHours || decimalHours === 0) return "0 Hr 0 Min";
@@ -313,7 +336,13 @@ const AttendanceReport = () => {
   // Calculate attendance status for a day
   const getDayStatus = useCallback(
     (employeeId, date) => {
-      // First check for leave (including HalfDay and LWP)
+      // First check for holiday - if it's a holiday, mark as "P" with holiday title
+      const holidayTitle = isHoliday(date);
+      if (holidayTitle) {
+        return "WO"; // Holiday counts as Weekly Off
+      }
+
+      // Then check for leave (including HalfDay and LWP)
       const leaveType = getLeaveForDate(employeeId, date);
 
       if (leaveType) {
@@ -345,44 +374,25 @@ const AttendanceReport = () => {
       const inTime = record.InTime || record.in_time;
       const outTime = record.OutTime || record.out_time;
 
-      // NEW LOGIC: Only In time present (no Out time) = Half Day
-      if (inTime && (!outTime || outTime === "0000-00-00 00:00:00")) {
-        console.log(
-          `Employee ${employeeId} on ${date}: In only - marking as Half Day`,
-        );
-        return "HD"; // Mark as Half Day when only In time exists
-      }
-
-      // Both times present - check if it's a half day based on work duration
-      if (
-        inTime &&
-        outTime &&
-        inTime !== "0000-00-00 00:00:00" &&
-        outTime !== "0000-00-00 00:00:00"
-      ) {
-        try {
-          const inDate = new Date(inTime);
-          const outDate = new Date(outTime);
-          if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime())) {
-            const workDuration = (outDate - inDate) / (1000 * 60 * 60);
-            if (workDuration >= 8) return "P";
-            if (workDuration >= 4) return "HD"; // Half day if worked 4-8 hours
-            // If worked less than 4 hours, still consider as Half Day?
-            return "HD"; // Less than 4 hours also half day
-          }
-        } catch {
-          return "P";
-        }
+      // SIMPLIFIED LOGIC: If employee has In time, mark as Present
+      // No need to check work duration
+      if (inTime && inTime !== "0000-00-00 00:00:00") {
+        return "P"; // Mark as Present regardless of Out time or duration
       }
 
       return "P";
     },
-    [getLeaveForDate, getAttendanceRecords, isSunday],
+    [getLeaveForDate, getAttendanceRecords, isSunday, isHoliday],
   );
 
   // Calculate OT for a day
   const getDayOT = useCallback(
     (employeeId, date) => {
+      // No OT on holidays
+      if (isHoliday(date)) {
+        return 0;
+      }
+
       const records = getAttendanceRecords(employeeId, date);
       if (records.length === 0) return 0;
 
@@ -401,7 +411,7 @@ const AttendanceReport = () => {
 
       return calculateOTHours(inTime, outTime);
     },
-    [getAttendanceRecords, calculateOTHours],
+    [getAttendanceRecords, calculateOTHours, isHoliday],
   );
 
   // In calculateEmployeeSummary function
@@ -419,6 +429,7 @@ const AttendanceReport = () => {
       let slCount = 0;
       let lwpCount = 0;
       let sundayWorkingCount = 0;
+      let holidayCount = 0;
       let totalOTHours = 0;
 
       for (let day = 1; day <= daysInMonth; day++) {
@@ -429,6 +440,11 @@ const AttendanceReport = () => {
         const otHours = getDayOT(employeeId, date);
 
         totalOTHours += otHours;
+
+        // Count holidays separately
+        if (isHoliday(date)) {
+          holidayCount++;
+        }
 
         switch (status) {
           case "P":
@@ -481,10 +497,11 @@ const AttendanceReport = () => {
           halfDayCount * 0.5 + // Half days count as 0.5
           clCount + // Casual leaves count as full day
           slCount + // Sick leaves count as full day
-          weeklyOffCount; // Weekly offs count as full day
+          weeklyOffCount + // Weekly offs count as full day
+          holidayCount; // Holidays count as full day (Present)
 
         console.log(
-          `Regular Present: ${regularPresentDays}, Sunday Double: ${sundayDoubleDays}, Total: ${effectivePresentDays}`,
+          `Regular Present: ${regularPresentDays}, Sunday Double: ${sundayDoubleDays}, Holidays: ${holidayCount}, Total: ${effectivePresentDays}`,
         );
       } else {
         // FOR NON S1-S8 EMPLOYEES: Regular calculation (Sunday working counts as 1 day)
@@ -493,11 +510,12 @@ const AttendanceReport = () => {
           halfDayCount * 0.5 + // Half days count as 0.5
           clCount + // Casual leaves count as full day
           slCount + // Sick leaves count as full day
-          weeklyOffCount; // Weekly offs count as full day
+          weeklyOffCount + // Weekly offs count as full day
+          holidayCount; // Holidays count as full day (Present)
       }
 
-      // Total days for EMP (P + CL + SL)
-      const totalDaysForEmp = presentCount + clCount + slCount;
+      // Total days for EMP (P + CL + SL + Holiday)
+      const totalDaysForEmp = presentCount + clCount + slCount + holidayCount;
 
       return {
         presentCount,
@@ -508,6 +526,7 @@ const AttendanceReport = () => {
         slCount,
         lwpCount,
         sundayWorkingCount,
+        holidayCount,
         totalOTHours,
         totalOTFormatted: formatHoursToHoursMinutes(totalOTHours),
         effectivePresentDays,
@@ -522,6 +541,7 @@ const AttendanceReport = () => {
               halfDayEquivalent: halfDayCount * 0.5,
               leavesTotal: clCount + slCount,
               weeklyOffTotal: weeklyOffCount,
+              holidayTotal: holidayCount,
             }
           : null,
       };
@@ -535,8 +555,10 @@ const AttendanceReport = () => {
       isSunday,
       formatHoursToHoursMinutes,
       isSGrade,
+      isHoliday,
     ],
   );
+
   // Calculate salary for employee
   const calculateEmployeeSalary = useCallback(
     (employeeId, summary) => {
@@ -654,6 +676,7 @@ const AttendanceReport = () => {
         "ABSENT",
         "WI",
         "TOTAL DAYS",
+        "HOLIDAYS",
         "SUN WORKING (DOUBLE)",
         "WORKING DAY OT (EXTRA HOURS WORKING@1.25)",
         "WORKING DAY OT (EXTRA HOURS WORKING@1.25)",
@@ -761,6 +784,7 @@ const AttendanceReport = () => {
             summary.absentCount.toString(), // ABSENT
             "0", // WI
             summary.totalDays.toString(), // TOTAL DAYS
+            summary.holidayCount.toString(), // HOLIDAYS
             summary.sundayWorkingCount.toString(), // SUN WORKING (DOUBLE)
             summary.totalOTFormatted, // WORKING DAY OT
             summary.totalOTFormatted, // WORKING DAY OT (duplicate)
@@ -817,10 +841,20 @@ const AttendanceReport = () => {
       attendanceRecords: attendance.length,
       leaveRecords: leaveData.length,
       salaryRecords: salaryData.length,
+      holidayRecords: holidayData.length,
       monthName: month ? monthNames[month - 1] : "",
       year,
     }),
-    [employees, attendance, leaveData, salaryData, month, year, monthNames],
+    [
+      employees,
+      attendance,
+      leaveData,
+      salaryData,
+      holidayData,
+      month,
+      year,
+      monthNames,
+    ],
   );
 
   return (
@@ -880,7 +914,7 @@ const AttendanceReport = () => {
           </Grid>
 
           {/* Stats Card */}
-          {month && (
+          {/* {month && (
             <Card
               sx={{
                 mb: 3,
@@ -898,13 +932,13 @@ const AttendanceReport = () => {
                   {stats.monthName} {stats.year} - All Active Employees
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={6} sm={2.4}>
                     <Typography variant="body2" color="text.secondary">
                       Active Employees
                     </Typography>
                     <Typography variant="h6">{stats.totalEmployees}</Typography>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={6} sm={2.4}>
                     <Typography variant="body2" color="text.secondary">
                       Attendance Records
                     </Typography>
@@ -912,22 +946,28 @@ const AttendanceReport = () => {
                       {stats.attendanceRecords}
                     </Typography>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={6} sm={2.4}>
                     <Typography variant="body2" color="text.secondary">
                       Leave Records
                     </Typography>
                     <Typography variant="h6">{stats.leaveRecords}</Typography>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={6} sm={2.4}>
                     <Typography variant="body2" color="text.secondary">
                       Salary Records
                     </Typography>
                     <Typography variant="h6">{stats.salaryRecords}</Typography>
                   </Grid>
+                  <Grid item xs={6} sm={2.4}>
+                    <Typography variant="body2" color="text.secondary">
+                      Holiday Records
+                    </Typography>
+                    <Typography variant="h6">{stats.holidayRecords}</Typography>
+                  </Grid>
                 </Grid>
               </CardContent>
             </Card>
-          )}
+          )} */}
 
           {/* Loading State */}
           {loading && (
@@ -956,6 +996,6 @@ const AttendanceReport = () => {
       </Card>
     </LocalizationProvider>
   );
-};;;;;;;;;;;;;;;;
+};
 
 export default AttendanceReport;

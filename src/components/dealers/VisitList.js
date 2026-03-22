@@ -29,6 +29,7 @@ import { saveAs } from "file-saver"
 import AttendanceReport from "./AttendanceReport"
 import SalaryList from "../employee/SalaryList"
 import SalarySlip from "../employee/SalarySlip"
+import MonthlyInOutReport from "../activity/MonthlyInOutReport"
  
 const VisitList = () => {
   const [employees, setEmployees] = useState([])
@@ -302,6 +303,7 @@ const VisitList = () => {
       {/* Other Reports */}
       <Stack spacing={4}>
         <AttendanceReport />
+        <MonthlyInOutReport />
         {/* <SalaryList /> */}
         {/* <SalarySlip /> */}
       </Stack>

@@ -377,7 +377,7 @@ const MonthlyInOutReport = () => {
           </Grid>
 
           {/* Summary chips */}
-          {!loading && employees.length > 0 && (
+          {/* {!loading && employees.length > 0 && (
             <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap">
               <Chip
                 label={`${employees.length} Active Employees`}
@@ -405,7 +405,7 @@ const MonthlyInOutReport = () => {
                 />
               )}
             </Stack>
-          )}
+          )} */}
 
           {/* Loading State */}
           {loading && (

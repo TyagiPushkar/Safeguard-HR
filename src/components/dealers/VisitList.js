@@ -303,7 +303,7 @@ const VisitList = () => {
       {/* Other Reports */}
       <Stack spacing={4}>
         <AttendanceReport />
-        <MonthlyInOutReport />
+        {/* <MonthlyInOutReport /> */}
         {/* <SalaryList /> */}
         {/* <SalarySlip /> */}
       </Stack>

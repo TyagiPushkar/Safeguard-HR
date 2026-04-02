@@ -44,7 +44,7 @@ import {
   Clear,
   AccessTime,
 } from "@mui/icons-material";
-import { format, parseISO, subDays, isAfter, isBefore } from "date-fns";
+import { format, parseISO, subDays, addDays, isAfter, isBefore } from "date-fns";
 import axios from "axios";
 import { useAuth } from "../auth/AuthContext";
 
@@ -240,13 +240,19 @@ const ManualAttendancePage = () => {
         app_ver: "Manual",
       };
 
+      // If outTime is earlier than inTime, the checkout is on the next day (cross-midnight shift)
+      const outDate =
+        outTime <= inTime
+          ? format(addDays(attendanceDate, 1), "yyyy-MM-dd")
+          : format(attendanceDate, "yyyy-MM-dd");
+
       // Prepare out-time record
       const outTimeRecord = {
         EmpId: selectedEmployee.EmpId,
         LocationId: user.location_id || "3",
         Event: "Out",
         GeoLocation: "0.00000, 0.00000",
-        MobileDateTime: `${format(attendanceDate, "yyyy-MM-dd")} ${outTime}:00`,
+        MobileDateTime: `${outDate} ${outTime}:00`,
         app_ver: "Manual",
       };
 

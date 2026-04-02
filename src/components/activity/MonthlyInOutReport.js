@@ -35,7 +35,8 @@ import { useAuth } from "../auth/AuthContext";
 const MonthlyInOutReport = () => {
   const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
-  const [attendance, setAttendance] = useState([]);
+  // attendanceMap: { normalizedEmpId: [{ date "dd/MM/yyyy", firstIn, lastOut, workingHours }] }
+  const [attendanceMap, setAttendanceMap] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -59,33 +60,54 @@ const MonthlyInOutReport = () => {
     });
   }, []);
 
+  const normalizeEmpId = useCallback((empId) => {
+    if (!empId) return "";
+    const strId = String(empId).trim();
+    const cleanId = strId.replace(/^SGI/i, "");
+    return cleanId.padStart(4, "0");
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError("");
       try {
-        const [empRes, attRes] = await Promise.allSettled([
-          axios.get(
-            `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
-          ),
-          axios.get(
-            "https://namami-infotech.com/SAFEGUARD/src/attendance/get_attendance.php"
-          ),
-        ]);
+        const empRes = await axios.get(
+          `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
+        );
 
-        if (empRes.status === "fulfilled" && empRes.value.data.success) {
-          setEmployees(filterActiveEmployees(empRes.value.data.data || []));
-        }
-        if (attRes.status === "fulfilled" && attRes.value.data.success) {
-          setAttendance(attRes.value.data.data || []);
+        if (!empRes.data.success) {
+          setError("Failed to load employees.");
+          return;
         }
 
-        const errors = [];
-        if (empRes.status === "rejected") errors.push("Employees");
-        if (attRes.status === "rejected") errors.push("Attendance");
-        if (errors.length > 0) {
-          setError(`Failed to load: ${errors.join(", ")}. Some data may be incomplete.`);
+        const activeEmps = filterActiveEmployees(empRes.data.data || []);
+        setEmployees(activeEmps);
+
+        // Fetch attendance from view_attendance.php per employee — same source as daily logs
+        // so the In/Out times match exactly what the attendance page shows.
+        const BATCH = 10;
+        const map = {};
+        for (let i = 0; i < activeEmps.length; i += BATCH) {
+          const batch = activeEmps.slice(i, i + BATCH);
+          const results = await Promise.allSettled(
+            batch.map((emp) =>
+              axios.get(
+                `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${emp.EmpId}`
+              )
+            )
+          );
+          results.forEach((res, j) => {
+            const emp = batch[j];
+            const key = normalizeEmpId(emp.EmpId);
+            if (res.status === "fulfilled" && res.value.data.success) {
+              map[key] = res.value.data.data || [];
+            } else {
+              map[key] = [];
+            }
+          });
         }
+        setAttendanceMap(map);
       } catch (err) {
         setError("Failed to initialize data. Please refresh the page.");
       } finally {
@@ -94,68 +116,33 @@ const MonthlyInOutReport = () => {
     };
 
     fetchData();
-  }, [user.tenent_id, filterActiveEmployees]);
-
-  const normalizeEmpId = useCallback((empId) => {
-    if (!empId) return "";
-    const strId = String(empId).trim();
-    const cleanId = strId.replace(/^SGI/i, "");
-    return cleanId.padStart(4, "0");
-  }, []);
+  }, [user.tenent_id, filterActiveEmployees, normalizeEmpId]);
 
   const getDaysInMonth = useCallback((m, y) => new Date(y, m, 0).getDate(), []);
 
-  const getAttendanceForDay = useCallback(
-    (employeeId, date) => {
-      if (!employeeId || !date) return null;
-      const normalizedId = normalizeEmpId(employeeId);
-      const record = attendance.find((r) => {
-        const recId = normalizeEmpId(r.EmpId || r.empId);
-        const recDate = r.InTime
-          ? r.InTime.split(" ")[0]
-          : r.attendance_date
-          ? r.attendance_date.split(" ")[0]
-          : r.Date
-          ? r.Date.split(" ")[0]
-          : "";
-        return recId === normalizedId && recDate === date;
-      });
-      return record || null;
-    },
-    [attendance, normalizeEmpId]
-  );
-
-  const formatTime = useCallback((timeStr) => {
-    if (!timeStr || timeStr === "0000-00-00 00:00:00") return "-";
-    try {
-      const date = new Date(timeStr);
-      if (isNaN(date.getTime())) return "-";
-      let hours = date.getHours();
-      const minutes = date.getMinutes();
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${ampm}`;
-    } catch {
-      return "-";
-    }
+  // view_attendance.php returns date as "dd/MM/yyyy"; days[] uses "yyyy-MM-dd"
+  const toApiDateStr = useCallback((isoDate) => {
+    const [y, m, d] = isoDate.split("-");
+    return `${d}/${m}/${y}`;
   }, []);
 
-  const calculateWorkingHours = useCallback((inTime, outTime) => {
-    if (
-      !inTime ||
-      !outTime ||
-      inTime === "0000-00-00 00:00:00" ||
-      outTime === "0000-00-00 00:00:00"
-    )
-      return null;
-    try {
-      const diff = (new Date(outTime) - new Date(inTime)) / (1000 * 60 * 60);
-      if (diff <= 0) return null;
-      return diff;
-    } catch {
-      return null;
-    }
+  const getAttendanceForDay = useCallback(
+    (employeeId, dateStr) => {
+      if (!employeeId || !dateStr) return null;
+      const key = normalizeEmpId(employeeId);
+      const records = attendanceMap[key] || [];
+      const apiDate = toApiDateStr(dateStr);
+      return records.find((r) => r.date === apiDate) || null;
+    },
+    [attendanceMap, normalizeEmpId, toApiDateStr]
+  );
+
+  // Parse "Xh Ym" → decimal hours for summing totals
+  const parseWorkingHours = useCallback((hoursStr) => {
+    if (!hoursStr) return 0;
+    const match = String(hoursStr).match(/(\d+)h\s*(\d+)m/);
+    if (!match) return 0;
+    return parseInt(match[1], 10) + parseInt(match[2], 10) / 60;
   }, []);
 
   const formatHours = useCallback((decimalHours) => {
@@ -197,24 +184,21 @@ const MonthlyInOutReport = () => {
 
       const dayCells = days.map(({ dateStr }) => {
         const rec = getAttendanceForDay(emp.EmpId, dateStr);
-        if (rec) {
-          const inTime = rec.InTime || rec.in_time || "";
-          const outTime = rec.OutTime || rec.out_time || "";
-          const formattedIn = formatTime(inTime);
-          const formattedOut = formatTime(outTime);
-          if (inTime && inTime !== "0000-00-00 00:00:00") {
-            presentCount++;
-            const hrs = calculateWorkingHours(inTime, outTime);
-            if (hrs) totalHoursDecimal += hrs;
-          }
-          return { in: formattedIn, out: formattedOut, hasRecord: true };
+        if (rec && rec.firstIn && rec.firstIn !== "N/A") {
+          presentCount++;
+          totalHoursDecimal += parseWorkingHours(rec.workingHours);
+          return {
+            in: rec.firstIn,
+            out: rec.lastOut && rec.lastOut !== "N/A" ? rec.lastOut : "-",
+            hasRecord: true,
+          };
         }
         return { in: "-", out: "-", hasRecord: false };
       });
 
       return { emp, dayCells, presentCount, totalHoursDecimal };
     });
-  }, [displayedEmployees, days, getAttendanceForDay, formatTime, calculateWorkingHours]);
+  }, [displayedEmployees, days, getAttendanceForDay, parseWorkingHours]);
 
   const exportToCSV = async () => {
     setExporting(true);
@@ -251,17 +235,13 @@ const MonthlyInOutReport = () => {
 
           for (const { dateStr } of days) {
             const rec = getAttendanceForDay(emp.EmpId, dateStr);
-            if (rec) {
-              const inTime = rec.InTime || rec.in_time || "";
-              const outTime = rec.OutTime || rec.out_time || "";
-              row.push(formatTime(inTime));
-              row.push(formatTime(outTime));
-              const hrs = calculateWorkingHours(inTime, outTime);
-              row.push(hrs ? formatHours(hrs) : "-");
-              if (inTime && inTime !== "0000-00-00 00:00:00") {
-                presentCount++;
-                if (hrs) totalHoursDecimal += hrs;
-              }
+            if (rec && rec.firstIn && rec.firstIn !== "N/A") {
+              const hrs = parseWorkingHours(rec.workingHours);
+              row.push(rec.firstIn);
+              row.push(rec.lastOut && rec.lastOut !== "N/A" ? rec.lastOut : "-");
+              row.push(rec.workingHours || "-");
+              presentCount++;
+              totalHoursDecimal += hrs;
             } else {
               row.push("-", "-", "-");
             }

@@ -212,7 +212,7 @@ const MonthlyInOutReport = () => {
         header.push(`${dateStr} (${dayOfWeek}) Out`);
         header.push(`${dateStr} (${dayOfWeek}) Hrs`);
       }
-      header.push("Total Present Days", "Total Working Hours");
+      header.push("Total Present Days");
 
       const csvRows = [header];
       const targetEmployees = displayedEmployees;
@@ -248,7 +248,6 @@ const MonthlyInOutReport = () => {
           }
 
           row.push(presentCount.toString());
-          row.push(formatHours(totalHoursDecimal));
           csvRows.push(row);
         }
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -444,7 +443,6 @@ const MonthlyInOutReport = () => {
                       </TableCell>
                     ))}
                     <TableCell sx={{ ...headerCellSx, minWidth: 80 }}>Present</TableCell>
-                    <TableCell sx={{ ...headerCellSx, minWidth: 110 }}>Total Hrs</TableCell>
                   </TableRow>
 
                   {/* Row 2: In/Out sub-headers */}
@@ -466,7 +464,7 @@ const MonthlyInOutReport = () => {
                         </TableCell>
                       </>
                     ))}
-                    <TableCell sx={subHeaderCellSx} colSpan={2} />
+                    <TableCell sx={subHeaderCellSx} colSpan={1} />
                   </TableRow>
                 </TableHead>
 
@@ -525,9 +523,6 @@ const MonthlyInOutReport = () => {
                           }
                           sx={{ fontWeight: 700 }}
                         />
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 600, fontSize: "0.8rem" }}>
-                        {formatHours(totalHoursDecimal)}
                       </TableCell>
                     </TableRow>
                   ))}

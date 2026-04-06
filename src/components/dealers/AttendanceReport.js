@@ -374,13 +374,12 @@ const AttendanceReport = () => {
       const inTime = record.InTime || record.in_time;
       const outTime = record.OutTime || record.out_time;
 
-      // SIMPLIFIED LOGIC: If employee has In time, mark as Present
-      // No need to check work duration
       if (inTime && inTime !== "0000-00-00 00:00:00") {
-        return "P"; // Mark as Present regardless of Out time or duration
+        const hasOutTime = outTime && outTime !== "0000-00-00 00:00:00";
+        return hasOutTime ? "P" : "HD";
       }
 
-      return "P";
+      return "A";
     },
     [getLeaveForDate, getAttendanceRecords, isSunday, isHoliday],
   );

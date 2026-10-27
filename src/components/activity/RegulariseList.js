@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -357,7 +358,7 @@ const RegulariseList = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          "https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php",
+          `${BASE_URL}/employee/list_employee.php`,
           {
             params: { Tenent_Id: user.tenent_id },
           },
@@ -394,7 +395,7 @@ const RegulariseList = () => {
     try {
       setLoading(true);
       const params = { role: user.role, EmpId: user.emp_id };
-      const response = await axios.get('https://namami-infotech.com/SAFEGUARD/src/attendance/get_regularise.php', { params });
+      const response = await axios.get(`${BASE_URL}/attendance/get_regularise.php`, { params });
       
       if (response.data.success) {
         const filteredRegularisations = response.data.data.filter((reg) =>
@@ -435,7 +436,7 @@ const RegulariseList = () => {
       const updateDate = new Date().toISOString().split('T')[0];
       const updatedBy = user.emp_id;
 
-      const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/attendance/update_regularise.php', {
+      const response = await axios.post(`${BASE_URL}/attendance/update_regularise.php`, {
         RegID: selectedReg.RegID,
         Status: newStatus,
         UpdateDate: updateDate,

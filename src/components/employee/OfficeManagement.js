@@ -1,4 +1,5 @@
 "use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState, useEffect } from "react";
 import {
@@ -263,10 +264,10 @@ function OfficeManagement() {
     try {
       setLoading(true);
       const response = await axios.get(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/get_office.php"
+        `${BASE_URL}/employee/get_office.php`
       );
       if (response.data.success) {
-        setOffices(response.data.data);
+        setOffices(Array.isArray(response.data.data) ? response.data.data : []);
       } else {
         setError("Failed to fetch offices");
       }
@@ -280,7 +281,7 @@ function OfficeManagement() {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
+        `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
       );
       if (response.data.success) {
         setEmployees(response.data.data);
@@ -334,7 +335,7 @@ function OfficeManagement() {
   }
 
   try {
-    const url = "https://namami-infotech.com/SAFEGUARD/src/employee/add_office.php";
+    const url = `${BASE_URL}/employee/add_office.php`;
     const payload = {
       EmpId: "NI003", // Hardcoded EmpId
       OfficeName: formData.OfficeName,
@@ -369,7 +370,7 @@ function OfficeManagement() {
     try {
       // Since there's no delete API, we'll deactivate the office
       const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/add_office.php",
+        `${BASE_URL}/employee/add_office.php`,
         {
           ...office,
           IsActive: 0,
@@ -397,14 +398,19 @@ function OfficeManagement() {
     setPage(0);
   };
 
-  const filteredOffices = offices.filter((office) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    const matchesSearch = 
-      office.OfficeName.toLowerCase().includes(lowerCaseSearchTerm) ||
-      office.EmpId.toLowerCase().includes(lowerCaseSearchTerm) ||
-      office.LatLong.toLowerCase().includes(lowerCaseSearchTerm);
+  const filteredOffices = (Array.isArray(offices) ? offices : []).filter((office) => {
+    if (!office) return false;
 
-    const matchesStatus = filterStatus === "" || office.IsActive.toString() === filterStatus;
+    const lowerCaseSearchTerm = (searchTerm || "").toLowerCase().trim();
+    const matchesSearch =
+      !lowerCaseSearchTerm ||
+      (office.OfficeName && office.OfficeName.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (office.EmpId && office.EmpId.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (office.LatLong && office.LatLong.toLowerCase().includes(lowerCaseSearchTerm));
+
+    const matchesStatus =
+      filterStatus === "" ||
+      (office.IsActive !== undefined && office.IsActive !== null && office.IsActive.toString() === filterStatus);
 
     return matchesSearch && matchesStatus;
   });

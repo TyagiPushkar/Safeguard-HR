@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BASE_URL } from "../../api/endpoints";
 import {
     Box,
     Typography,
@@ -28,7 +29,7 @@ import {
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
-const DashboardData = ({EmpId}) => {
+const DashboardData = ({ EmpId }) => {
     const [employeeData, setEmployeeData] = useState(null);
     const [leaveDetails, setLeaveDetails] = useState(null);
     const [expenseDetails, setExpenseDetails] = useState(null);
@@ -53,13 +54,13 @@ const DashboardData = ({EmpId}) => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [employeeResponse, leaveResponse, expenseResponse, attendanceResponse, assetResponse,salaryResponse] = await Promise.all([
-                    axios.get(`https://namami-infotech.com/SAFEGUARD/src/employee/view_employee.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/SAFEGUARD/src/leave/balance_leave.php?empid=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/SAFEGUARD/src/expense/get_expense.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/SAFEGUARD/src/assets/get_issue_asset.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php?EmpId=${EmpId}`)
+                const [employeeResponse, leaveResponse, expenseResponse, attendanceResponse, assetResponse, salaryResponse] = await Promise.all([
+                    axios.get(`${BASE_URL}/employee/view_employee.php?EmpId=${EmpId}`),
+                    axios.get(`${BASE_URL}/leave/balance_leave.php?empid=${EmpId}`),
+                    axios.get(`${BASE_URL}/expense/get_expense.php?EmpId=${EmpId}`),
+                    axios.get(`${BASE_URL}/attendance/view_attendance.php?EmpId=${EmpId}`),
+                    axios.get(`${BASE_URL}/assets/get_issue_asset.php?EmpId=${EmpId}`),
+                    axios.get(`${BASE_URL}/salary/get_salary.php?EmpId=${EmpId}`)
                 ]);
 
                 setEmployeeData(employeeResponse.data.data);
@@ -67,7 +68,7 @@ const DashboardData = ({EmpId}) => {
                 setExpenseDetails(expenseResponse.data.data);
                 setAttendanceDetails(attendanceResponse.data.data);
                 setAssetDetails(assetResponse.data.data);
-                 setSalaryDetails(salaryResponse.data.data);
+                setSalaryDetails(salaryResponse.data.data);
             } catch (err) {
                 setError('Failed to fetch data');
                 console.error(err);
@@ -116,18 +117,20 @@ const DashboardData = ({EmpId}) => {
     const handleAddSalary = async () => {
         try {
             const response = await axios.post(
-                'https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php',
-                { EmpId,
-        basic: newSalary.basic,
-        hra: newSalary.hra,
-        specialAllowance: newSalary.specialAllowance,
-        pf: newSalary.pf,
-        insurance: newSalary.insurance, }
+                `${BASE_URL}/salary/add_salary.php`,
+                {
+                    EmpId,
+                    basic: newSalary.basic,
+                    hra: newSalary.hra,
+                    specialAllowance: newSalary.specialAllowance,
+                    pf: newSalary.pf,
+                    insurance: newSalary.insurance,
+                }
             );
             if (response.data.success) {
                 alert('Salary added successfully');
                 const updatedSalaryResponse = await axios.get(
-                    `https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php?EmpId=${EmpId}`
+                    `${BASE_URL}/salary/get_salary.php?EmpId=${EmpId}`
                 );
                 setSalaryDetails(updatedSalaryResponse.data.data);
                 setIsDialogOpen(false);
@@ -144,50 +147,50 @@ const DashboardData = ({EmpId}) => {
     return (
         <Box sx={{ padding: 1 }}>
             <Grid container spacing={3} alignItems="center">
-                <Grid item xs={12} sm={2} container justifyContent="center" alignItems="center">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                        style={{ display: 'flex', justifyContent: 'left', alignItems: 'center', width: '100%' }}
-                    >
-                        <Avatar
-                            sx={{ width: 100, height: 100 }}
-                            src={employeeData?.Pic || employeeData?.Name}
-                            alt={employeeData?.Name || 'Employee Profile Picture'}
-                            style={{ boxShadow: '0px 4px 20px rgba(0,0,0,0.1)' }}
-                        />
-                    </motion.div>
-                </Grid>
+                < Grid item xs = { 12} sm = { 2} container justifyContent = "center" alignItems = "center" >
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    style={{ display: 'flex', justifyContent: 'left', alignItems: 'center', width: '100%' }}
+                >
+                    <Avatar
+                        sx={{ width: 100, height: 100 }}
+                        src={employeeData?.Pic || employeeData?.Name}
+                        alt={employeeData?.Name || 'Employee Profile Picture'}
+                        style={{ boxShadow: '0px 4px 20px rgba(0,0,0,0.1)' }}
+                    />
+                </motion.div>
+                </Grid >
 
-                <Grid item xs={12} sm={9}>
-                    <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <Typography variant="h5" gutterBottom style={{ color: "#8d0638ff" }}>
-                            {employeeData?.Name || 'N/A'}'s Details
-                        </Typography>
-                        <Divider sx={{ marginY: 2 }} />
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <div>
-                                <Typography variant="body1">EmpId: {employeeData?.EmpId || 'N/A'}</Typography>
-                                <Typography variant="body1">Email: {employeeData?.EmailId || 'N/A'}</Typography>
-                                <Typography variant="body1">Phone: {employeeData?.Mobile || 'N/A'}</Typography>
-                            </div>
-                            <div>
-                                <Typography variant="body1">Name: {employeeData?.Name || 'N/A'}</Typography>
-                                <Typography variant="body1">Role: {employeeData?.Designation || 'N/A'}</Typography>
-                                <Typography variant="body1">Shift: {employeeData?.Shift || 'N/A'}</Typography>
-                            </div>
-                            <div>
-                                <Typography variant="body1">RM: {employeeData?.RM || 'N/A'}</Typography>
-                            </div>
-                        </div>
-                    </motion.div>
-                </Grid>
-            </Grid>
+    <Grid item xs={12} sm={9}>
+        <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+        >
+            <Typography variant="h5" gutterBottom style={{ color: "#8d0638ff" }}>
+                {employeeData?.Name || 'N/A'}'s Details
+            </Typography>
+            <Divider sx={{ marginY: 2 }} />
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div>
+                    <Typography variant="body1">EmpId: {employeeData?.EmpId || 'N/A'}</Typography>
+                    <Typography variant="body1">Email: {employeeData?.EmailId || 'N/A'}</Typography>
+                    <Typography variant="body1">Phone: {employeeData?.Mobile || 'N/A'}</Typography>
+                </div>
+                <div>
+                    <Typography variant="body1">Name: {employeeData?.Name || 'N/A'}</Typography>
+                    <Typography variant="body1">Role: {employeeData?.Designation || 'N/A'}</Typography>
+                    <Typography variant="body1">Shift: {employeeData?.Shift || 'N/A'}</Typography>
+                </div>
+                <div>
+                    <Typography variant="body1">RM: {employeeData?.RM || 'N/A'}</Typography>
+                </div>
+            </div>
+        </motion.div>
+    </Grid>
+            </Grid >
             <Divider sx={{ marginY: 2 }} />
             <Tabs
                 value={activeTab}
@@ -204,193 +207,203 @@ const DashboardData = ({EmpId}) => {
                 <Tab label="Assets" />
             </Tabs>
 
-           
-            {activeTab === 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                    <Typography variant="body1" gutterBottom>
-                        Total Working Hours in Last 7 days: {totalWorkingHours.toFixed(2)} hours
-                    </Typography>
 
-                    <Divider sx={{ marginY: 2 }} />
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Date</TableCell>
-                                <TableCell>In</TableCell>
-                                <TableCell>Out</TableCell>
-                                <TableCell>Working Hours</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {attendanceDetails
-                                ?.sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort in descending order if necessary
-                                .slice(0, 7) // Get the most recent 7 entries
-                                .map((day, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>{day.date}</TableCell>
-                                        <TableCell>{day.firstIn}</TableCell>
-                                        <TableCell>{day.lastOut}</TableCell>
-                                        <TableCell>{day.workingHours} hrs</TableCell>
-                                    </TableRow>
-                                ))}
-                        </TableBody>
-                    </Table>
-                </motion.div>
-            )}
-            {activeTab === 1 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
+{
+    activeTab === 0 && (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+        >
+            <Typography variant="body1" gutterBottom>
+                Total Working Hours in Last 7 days: {totalWorkingHours.toFixed(2)} hours
+            </Typography>
 
-                    style={{ display: "flex", justifyContent: "space-around" }}
-                >
-
-                   
-                    <Box sx={{ mt: 2 }}>
-                        <Typography variant="body1">SL: {leaveDetails?.SL || 0}</Typography>
-                        <LinearProgress variant="determinate" value={(leaveDetails?.SL / 12) * 100} sx={{ backgroundColor: "#8d0638ff" }} />
-                    </Box>
-                    
-                </motion.div>
-            )}
-            {activeTab === 2 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                    <div style={{ display: "flex", justifyContent: "space-around" }}>
-
-                        <Typography variant="body1">Total Approved: ₹{totalApproved.toFixed(2)}</Typography>
-                        <Typography variant="body1">Total Rejected: ₹{totalRejected.toFixed(2)}</Typography>
-                        <Typography variant="body1">Total Pending: ₹{totalPending.toFixed(2)}</Typography>
-
-                    </div>
-
-                    <Divider sx={{ marginY: 2 }} />
-
-                    <List>
-                        {expenseDetails && expenseDetails.map((expense) => (
-                            <ListItem key={expense.detailId} sx={{ marginY: 1 }}>
-                                <ListItemAvatar>
-                                    <Avatar alt="Expense Image" src={expense.image} />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={`${expense.expenseType} - ₹${expense.expenseAmount}`}
-                                    secondary={`Date: ${expense.expenseDate} | Status: ${expense.Status}`}
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
-                </motion.div>
-            )}
-
-            {activeTab === 3 && (
-                <>
-                    <Button onClick={handleDialogOpen} variant="contained" color="#8d0638ff">
-                        Add Salary
-                    </Button>
-        <Table>
-            <TableHead>
-                <TableRow>
-                    <TableCell>Component</TableCell>
-                    <TableCell>Value</TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
-                {filteredSalary && filteredSalary.EmpId === EmpId ? (
-                    <>
-                        <TableRow>
-                            <TableCell>Basic Salary</TableCell>
-                            <TableCell>{filteredSalary.Basic_Salary}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>HRA</TableCell>
-                            <TableCell>{filteredSalary.HRA}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Special Allowance</TableCell>
-                            <TableCell>{filteredSalary.Special_Allowance}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>PF</TableCell>
-                            <TableCell>{filteredSalary.PF}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Insurance</TableCell>
-                            <TableCell>{filteredSalary.Insurance}</TableCell>
-                        </TableRow>
-                    </>
-                ) : (
+            <Divider sx={{ marginY: 2 }} />
+            <Table>
+                <TableHead>
                     <TableRow>
-                        <TableCell colSpan={2}>No salary data available for this employee.</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>In</TableCell>
+                        <TableCell>Out</TableCell>
+                        <TableCell>Working Hours</TableCell>
                     </TableRow>
-                )}
-            </TableBody>
-        </Table>
-        
-        <Dialog open={isDialogOpen} onClose={handleDialogClose}>
-            <DialogTitle>Add Salary</DialogTitle>
-            <DialogContent>
-                {Object.keys(newSalary).map((field) => (
-                    <TextField
-                        key={field}
-                        name={field}
-                        label={field}
-                        value={newSalary[field]}
-                        onChange={handleSalaryChange}
-                        fullWidth
-                        margin="dense"
-                    />
-                ))}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={handleDialogClose}>Cancel</Button>
-                <Button onClick={handleAddSalary} color="#8d0638ff">
-                    Add
-                </Button>
-            </DialogActions>
-        </Dialog>
-    </>
-)}
-
-
-            {activeTab === 4 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                    <Table>
-                        <TableHead style={{ backgroundColor: "#8d0638ff" }}>
-                            <TableRow>
-                                <TableCell style={{ color: "white" }}>Asset</TableCell>
-                                <TableCell style={{ color: "white" }}> Make</TableCell>
-                                <TableCell style={{ color: "white" }}> Model</TableCell>
-                                <TableCell style={{ color: "white" }}>Serial Number</TableCell>
+                </TableHead>
+                <TableBody>
+                    {attendanceDetails
+                        ?.sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort in descending order if necessary
+                        .slice(0, 7) // Get the most recent 7 entries
+                        .map((day, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{day.date}</TableCell>
+                                <TableCell>{day.firstIn}</TableCell>
+                                <TableCell>{day.lastOut}</TableCell>
+                                <TableCell>{day.workingHours} hrs</TableCell>
                             </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {assetDetails.map((asset, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{asset.asset_name}</TableCell>
-                                    <TableCell>{asset.make_name}</TableCell>
-                                    <TableCell>{asset.model_name}</TableCell>
-                                    <TableCell>{asset.serial_number}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                        ))}
+                </TableBody>
+            </Table>
+        </motion.div>
+    )
+}
+{
+    activeTab === 1 && (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
 
-                </motion.div>
-            )}
+            style={{ display: "flex", justifyContent: "space-around" }}
+        >
 
-        </Box>
+
+            <Box sx={{ mt: 2 }}>
+                <Typography variant="body1">SL: {leaveDetails?.SL || 0}</Typography>
+                <LinearProgress variant="determinate" value={(leaveDetails?.SL / 12) * 100} sx={{ backgroundColor: "#8d0638ff" }} />
+            </Box>
+
+        </motion.div>
+    )
+}
+{
+    activeTab === 2 && (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+        >
+            <div style={{ display: "flex", justifyContent: "space-around" }}>
+
+                <Typography variant="body1">Total Approved: ₹{totalApproved.toFixed(2)}</Typography>
+                <Typography variant="body1">Total Rejected: ₹{totalRejected.toFixed(2)}</Typography>
+                <Typography variant="body1">Total Pending: ₹{totalPending.toFixed(2)}</Typography>
+
+            </div>
+
+            <Divider sx={{ marginY: 2 }} />
+
+            <List>
+                {expenseDetails && expenseDetails.map((expense) => (
+                    <ListItem key={expense.detailId} sx={{ marginY: 1 }}>
+                        <ListItemAvatar>
+                            <Avatar alt="Expense Image" src={expense.image} />
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary={`${expense.expenseType} - ₹${expense.expenseAmount}`}
+                            secondary={`Date: ${expense.expenseDate} | Status: ${expense.Status}`}
+                        />
+                    </ListItem>
+                ))}
+            </List>
+        </motion.div>
+    )
+}
+
+{
+    activeTab === 3 && (
+        <>
+            <Button onClick={handleDialogOpen} variant="contained" color="#8d0638ff">
+                Add Salary
+            </Button>
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Component</TableCell>
+                        <TableCell>Value</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {filteredSalary && filteredSalary.EmpId === EmpId ? (
+                        <>
+                            <TableRow>
+                                <TableCell>Basic Salary</TableCell>
+                                <TableCell>{filteredSalary.Basic_Salary}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>HRA</TableCell>
+                                <TableCell>{filteredSalary.HRA}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Special Allowance</TableCell>
+                                <TableCell>{filteredSalary.Special_Allowance}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>PF</TableCell>
+                                <TableCell>{filteredSalary.PF}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Insurance</TableCell>
+                                <TableCell>{filteredSalary.Insurance}</TableCell>
+                            </TableRow>
+                        </>
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={2}>No salary data available for this employee.</TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+
+            <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+                <DialogTitle>Add Salary</DialogTitle>
+                <DialogContent>
+                    {Object.keys(newSalary).map((field) => (
+                        <TextField
+                            key={field}
+                            name={field}
+                            label={field}
+                            value={newSalary[field]}
+                            onChange={handleSalaryChange}
+                            fullWidth
+                            margin="dense"
+                        />
+                    ))}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose}>Cancel</Button>
+                    <Button onClick={handleAddSalary} color="#8d0638ff">
+                        Add
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
+    )
+}
+
+
+{
+    activeTab === 4 && (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+        >
+            <Table>
+                <TableHead style={{ backgroundColor: "#8d0638ff" }}>
+                    <TableRow>
+                        <TableCell style={{ color: "white" }}>Asset</TableCell>
+                        <TableCell style={{ color: "white" }}> Make</TableCell>
+                        <TableCell style={{ color: "white" }}> Model</TableCell>
+                        <TableCell style={{ color: "white" }}>Serial Number</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {assetDetails.map((asset, index) => (
+                        <TableRow key={index}>
+                            <TableCell>{asset.asset_name}</TableCell>
+                            <TableCell>{asset.make_name}</TableCell>
+                            <TableCell>{asset.model_name}</TableCell>
+                            <TableCell>{asset.serial_number}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+
+        </motion.div>
+    )
+}
+
+        </Box >
     );
 };
 

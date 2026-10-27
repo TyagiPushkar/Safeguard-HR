@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState, useEffect } from "react"
 import {
@@ -136,7 +137,7 @@ const UserProfile = () => {
     setSuccess("")
 
     try {
-      const response = await axios.post("https://namami-infotech.com/SAFEGUARD/src/auth/change_password.php", {
+      const response = await axios.post(`${BASE_URL}/auth/change_password.php`, {
         EmpId: user?.emp_id,
         currentPassword,
         newPassword,

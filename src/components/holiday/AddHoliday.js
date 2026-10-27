@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState } from "react"
 import {
@@ -112,7 +113,7 @@ const AddHoliday = ({ open, onClose, onHolidayAdded }) => {
       }
 
       const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/holiday/add_holiday.php",
+        `${BASE_URL}/holiday/add_holiday.php`,
         payload,
       )
 

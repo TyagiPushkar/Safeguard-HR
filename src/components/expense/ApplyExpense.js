@@ -1,4 +1,5 @@
-'use client'
+'use client';
+import { BASE_URL } from "../../api/endpoints";
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -171,7 +172,7 @@ function ApplyExpense({ open, onClose, onExpenseApplied }) {
     try {
       const payload = { expenses: expenseEntries };
       const response = await axios.post(
-        'https://namami-infotech.com/SAFEGUARD/src/expense/apply_expense.php', 
+        `${BASE_URL}/expense/apply_expense.php`, 
         payload
       );
       

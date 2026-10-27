@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL } from "../../api/endpoints";
 import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
 import axios from 'axios';
 
@@ -15,7 +16,7 @@ function EditHoliday({ open, onClose, holiday, onHolidayUpdated }) {
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/holiday/edit_holiday.php', {
+            const response = await axios.post(`${BASE_URL}/holiday/edit_holiday.php`, {
                 id: holiday.id,
                 title,
                 date

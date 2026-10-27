@@ -1,4 +1,5 @@
 "use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import React from "react";
 import { useState, useEffect } from "react";
@@ -397,11 +398,10 @@ const TodayAttendanceCard = ({ attendance, isMobile, employees }) => {
     <Card
       sx={{
         mb: 2,
-        borderLeft: `4px solid ${
-          status === "present"
+        borderLeft: `4px solid ${status === "present"
             ? theme.palette.success.main
             : theme.palette.error.main
-        }`,
+          }`,
         "&:hover": {
           boxShadow: theme.shadows[4],
           transform: "translateY(-2px)",
@@ -515,8 +515,9 @@ const AttendanceList = () => {
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const isHrOrAdmin = ["HR", "Admin", "admin", "SuperAdmin"].includes(user?.role);
   const [selectedEmpId, setSelectedEmpId] = useState(
-    user.role === "HR" ? "" : user.emp_id,
+    isHrOrAdmin ? "" : user.emp_id,
   );
   const [allActivities, setAllActivities] = useState([]);
   const [filteredActivities, setFilteredActivities] = useState([]);
@@ -660,8 +661,8 @@ const AttendanceList = () => {
     // Add leave events
     const leaveEvents = selectedEmpId
       ? generateLeaveEvents(selectedEmpId).filter((leave) =>
-          isWithinInterval(leave.start, { start: startDate, end: endDate }),
-        )
+        isWithinInterval(leave.start, { start: startDate, end: endDate }),
+      )
       : [];
 
     // Combine all events
@@ -705,7 +706,7 @@ const AttendanceList = () => {
       console.log("Fetching attendance for date:", format(date, "yyyy-MM-dd"));
 
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/attendance/get_today_attendance.php`,
+        `${BASE_URL}/attendance/get_today_attendance.php`,
         {
           params: {
             date: format(date, "yyyy-MM-dd"),
@@ -737,22 +738,33 @@ const AttendanceList = () => {
     const activeEmployees = employees.filter((emp) => isEmployeeActive(emp));
 
     // Create a set of employee IDs that have attendance records
-    const presentEmpIds = new Set(todayAttendance.map((att) => att.EmpId));
+    const presentEmpIds = new Set(
+      todayAttendance.map((att) =>
+        String(att.EmpId || "").trim().toLowerCase(),
+      ),
+    );
 
     // Create combined data with all active employees
     const combinedData = [];
 
     // Add present employees with their attendance data
     todayAttendance.forEach((att) => {
+      const emp = employees.find(
+        (e) =>
+          String(e.EmpId || "").trim().toLowerCase() ===
+          String(att.EmpId || "").trim().toLowerCase(),
+      );
       combinedData.push({
         ...att,
+        _employee: emp,
         _status: "present",
       });
     });
 
     // Add absent employees (active employees not in todayAttendance)
     activeEmployees.forEach((emp) => {
-      if (!presentEmpIds.has(emp.EmpId)) {
+      const cleanEmpId = String(emp.EmpId || "").trim().toLowerCase();
+      if (!presentEmpIds.has(cleanEmpId)) {
         combinedData.push({
           EmpId: emp.EmpId,
           Date: format(selectedTodayDate, "dd/MM/yyyy"),
@@ -791,7 +803,7 @@ const AttendanceList = () => {
       console.log("Fetching attendance for EmpId:", selectedEmpId);
 
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php`,
+        `${BASE_URL}/attendance/view_attendance.php`,
         {
           params: { EmpId: selectedEmpId },
           timeout: 10000,
@@ -823,8 +835,18 @@ const AttendanceList = () => {
               return null;
             }
 
+            const currentEmployee =
+              employees.find(
+                (emp) =>
+                  String(emp.EmpId || "").trim().toLowerCase() ===
+                  String(selectedEmpId || "").trim().toLowerCase(),
+              ) || selectedEmployee;
+
             const employeeShift =
-              selectedEmployee?.Shift || user.shift || "9:00 AM - 6:00 PM";
+              currentEmployee?.Shift ||
+              selectedEmployee?.Shift ||
+              user.shift ||
+              "9:00 AM - 6:00 PM";
 
             return {
               title: `In: ${activity.firstIn || "N/A"}\nOut: ${activity.lastOut || "N/A"}`,
@@ -855,7 +877,7 @@ const AttendanceList = () => {
         if (!response.data.success) {
           setError(
             response.data.message ||
-              "No attendance data found for the selected employee",
+            "No attendance data found for the selected employee",
           );
         }
       }
@@ -863,7 +885,7 @@ const AttendanceList = () => {
       console.error("Error fetching attendance:", error);
       setError(
         "Error fetching attendance: " +
-          (error.response?.data?.message || error.message),
+        (error.response?.data?.message || error.message),
       );
       setAllActivities([]);
     } finally {
@@ -876,7 +898,7 @@ const AttendanceList = () => {
       console.log("Fetching holidays for Tenent_Id:", user.tenent_id);
 
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
+        `${BASE_URL}/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
         { timeout: 10000 },
       );
 
@@ -900,7 +922,7 @@ const AttendanceList = () => {
       console.log("Fetching leaves for empId:", empId);
 
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php?empId=${empId}`,
+        `${BASE_URL}/leave/get_leave.php?empId=${empId}`,
         { timeout: 10000 },
       );
 
@@ -949,7 +971,7 @@ const AttendanceList = () => {
         console.log("Fetching employees for Tenent_Id:", user.tenent_id);
 
         const response = await axios.get(
-          `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+          `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
           { timeout: 10000 },
         );
 
@@ -993,8 +1015,8 @@ const AttendanceList = () => {
           console.log("Active employees count:", activeEmployees.length);
           setFilteredEmployees(activeEmployees);
 
-          // If user is not HR, set current user as selected
-          if (user.role !== "HR") {
+          // If user is not HR/Admin, set current user as selected
+          if (!isHrOrAdmin) {
             const currentUserEmployee = fetchedEmployees.find(
               (emp) => emp.EmpId === user.emp_id,
             ) || {
@@ -1006,6 +1028,13 @@ const AttendanceList = () => {
             };
             setSelectedEmployee(currentUserEmployee);
             setSelectedEmpId(user.emp_id);
+          } else if (fetchedEmployees.length > 0) {
+            // For HR/Admin, auto-select first employee so history loads immediately
+            const firstActive = activeEmployees[0] || fetchedEmployees[0];
+            if (firstActive && !selectedEmpId) {
+              setSelectedEmployee(firstActive);
+              setSelectedEmpId(firstActive.EmpId);
+            }
           }
         } else {
           console.log("No employee data or API error:", response.data.message);
@@ -1013,7 +1042,7 @@ const AttendanceList = () => {
           setFilteredEmployees([]);
           setError(
             "Error fetching employee list: " +
-              (response.data.message || "Unknown error"),
+            (response.data.message || "Unknown error"),
           );
         }
       } catch (error) {
@@ -1048,36 +1077,45 @@ const AttendanceList = () => {
   const parseTime = (timeString) => {
     if (!timeString || timeString === "N/A") return null;
 
-    const [time, modifier] = timeString.split(" ");
-    if (!time || !modifier) return null;
+    // Matches e.g. "9:00 AM", "09:00 AM", "09:00:00", "9:00", "09:00" even with surrounding text
+    const match = timeString.match(/(\d{1,2}:\d{2}(?::\d{2})?)\s*(AM|PM|am|pm)?/i);
+    if (!match) return null;
 
-    let [hours, minutes] = time.split(":");
-    if (!hours || !minutes) return null;
+    const timePart = match[1];
+    const modifier = match[2] ? match[2].toUpperCase() : null;
 
-    hours = String(hours);
+    let [hours, minutes] = timePart.split(":");
+    let h = Number.parseInt(hours, 10);
+    const m = String(minutes).padStart(2, "0");
 
-    if (hours === "12") {
-      hours = "00";
+    if (modifier) {
+      if (modifier === "PM" && h < 12) {
+        h += 12;
+      } else if (modifier === "AM" && h === 12) {
+        h = 0;
+      }
     }
-    if (modifier === "PM" && hours !== "12") {
-      hours = String(Number.parseInt(hours, 10) + 12);
-    } else if (modifier === "AM" && hours === "12") {
-      hours = "00";
-    }
 
-    return `${hours.padStart(2, "0")}:${minutes}`;
+    return `${String(h).padStart(2, "0")}:${m}`;
   };
 
   const compareTimes = (attendanceTime, shiftTime) => {
-    if (!attendanceTime || attendanceTime === "N/A" || !shiftTime) {
+    if (!attendanceTime || attendanceTime === "N/A") {
       return "red";
     }
 
     try {
-      const shiftStartTime = parseTime(shiftTime.split(" - ")[0]);
+      let rawShiftStart = (shiftTime || "").split(" - ")[0];
+      let shiftStartTime = parseTime(rawShiftStart);
+
+      // If shift has no explicit time (e.g. "General"), default to 09:00 AM
+      if (!shiftStartTime) {
+        shiftStartTime = "09:00";
+      }
+
       const attendanceTime24 = parseTime(attendanceTime);
 
-      if (!shiftStartTime || !attendanceTime24) {
+      if (!attendanceTime24) {
         return "red";
       }
 
@@ -1233,11 +1271,11 @@ const AttendanceList = () => {
   const avgHours =
     attendanceRecords.length > 0
       ? attendanceRecords.reduce((acc, activity) => {
-          const hours =
-            Number.parseFloat(activity.workingHours.replace(/[^\d.]/g, "")) ||
-            0;
-          return acc + hours;
-        }, 0) / attendanceRecords.length
+        const hours =
+          Number.parseFloat(activity.workingHours.replace(/[^\d.]/g, "")) ||
+          0;
+        return acc + hours;
+      }, 0) / attendanceRecords.length
       : 0;
 
   // Count other types
@@ -1373,7 +1411,8 @@ const AttendanceList = () => {
                   gap={1.5}
                   sx={{ width: { xs: "100%", md: "auto" } }}
                 >
-                  {user.role === "HR" && (
+                  {/* Select Employee field: Only shown in Attendance History tab (activeTab === 0), hidden in Today's Attendance tab so all employees are shown */}
+                  {isHrOrAdmin && activeTab === 0 && (
                     <>
                       <Box flex={{ xs: 1, sm: 1 }}>
                         <Autocomplete
@@ -1522,7 +1561,7 @@ const AttendanceList = () => {
 
                   {/* Action Buttons */}
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    {user.role === "HR" && (
+                    {isHrOrAdmin && (
                       <Tooltip title="Regularise">
                         <IconButton
                           onClick={regularise}
@@ -1981,8 +2020,7 @@ const AttendanceList = () => {
                                       backgroundColor:
                                         theme.palette.action.hover,
                                     },
-                                    borderLeft: `4px solid ${
-                                      activity.type === "attendance"
+                                    borderLeft: `4px solid ${activity.type === "attendance"
                                         ? activity.color === "green"
                                           ? theme.palette.success.main
                                           : theme.palette.error.main
@@ -1991,7 +2029,7 @@ const AttendanceList = () => {
                                           : activity.type === "weekoff"
                                             ? theme.palette.secondary.main
                                             : theme.palette.info.main
-                                    }`,
+                                      }`,
                                     transition: "background 0.3s",
                                   }}
                                 >
@@ -2407,7 +2445,7 @@ const AttendanceList = () => {
                               const status =
                                 attendance._status ||
                                 (attendance.FirstIn === "N/A" ||
-                                !attendance.FirstIn
+                                  !attendance.FirstIn
                                   ? "absent"
                                   : "present");
 
@@ -2419,11 +2457,10 @@ const AttendanceList = () => {
                                       backgroundColor:
                                         theme.palette.action.hover,
                                     },
-                                    borderLeft: `4px solid ${
-                                      status === "present"
+                                    borderLeft: `4px solid ${status === "present"
                                         ? theme.palette.success.main
                                         : theme.palette.error.main
-                                    }`,
+                                      }`,
                                     transition: "background 0.3s",
                                   }}
                                 >
@@ -2442,8 +2479,8 @@ const AttendanceList = () => {
                                       >
                                         {employee.Name
                                           ? employee.Name.charAt(
-                                              0,
-                                            ).toUpperCase()
+                                            0,
+                                          ).toUpperCase()
                                           : attendance.EmpId.charAt(0)}
                                       </Avatar>
                                       <Box>
@@ -2518,7 +2555,7 @@ const AttendanceList = () => {
 
                                   <TableCell sx={{ py: 1 }}>
                                     {status === "present" &&
-                                    attendance.LastOutLocation !== "N/A" ? (
+                                      attendance.LastOutLocation !== "N/A" ? (
                                       <Tooltip
                                         title={`Location: ${attendance.LastOutLocation}`}
                                       >
@@ -2589,7 +2626,7 @@ const AttendanceList = () => {
                                       status={status}
                                       time={
                                         status === "present" &&
-                                        attendance.FirstIn !== "N/A"
+                                          attendance.FirstIn !== "N/A"
                                           ? attendance.FirstIn
                                           : ""
                                       }

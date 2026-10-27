@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
  
 import { useEffect, useState } from "react"
 import {
@@ -45,7 +46,7 @@ const VisitList = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          "https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=1",
+          `${BASE_URL}/employee/list_employee.php?Tenent_Id=1`,
         )
         if (response.data.success) {
           setEmployees(response.data.data)
@@ -65,7 +66,7 @@ const VisitList = () => {
       setError("")
       try {
         const response = await axios.get(
-          `https://namami-infotech.com/SAFEGUARD/src/visit/get_visits_entry.php?role=HR`,
+          `${BASE_URL}/visit/get_visits_entry.php?role=HR`,
         )
         if (response.data.success) {
           const filteredVisits = response.data.data.filter((visit) => {

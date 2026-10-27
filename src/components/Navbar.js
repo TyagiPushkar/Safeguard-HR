@@ -32,9 +32,9 @@ import {
   LightMode,
   ChevronRight,
   ReceiptLongSharp,
+  Receipt as ReceiptIcon,
 } from "@mui/icons-material"
 import { motion } from "framer-motion"
-import ReceiptIcon from '@mui/icons-material/Receipt';
 
 const HRSmileLogo = () => (
   <Box
@@ -220,7 +220,7 @@ function Navbar({ onMenuClick }) { // Add onMenuClick prop for mobile
         <MenuItem onClick={() => navigate("/profile")}>
           <Person fontSize="small" sx={{ mr: 1 }} /> Profile
         </MenuItem>
-        {user && user.role === "HR" && (
+        {user && (user.role === "HR" || user.role === "Admin" || user.role === "admin" || user.role === "SuperAdmin" || (Array.isArray(user.modules) && user.modules.includes(7))) && (
           <MenuItem onClick={() => navigate("/invoices")}>
             <ReceiptIcon fontSize="small" sx={{ mr: 1 }} /> Invoices
           </MenuItem>

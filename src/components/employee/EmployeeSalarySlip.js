@@ -1,3 +1,4 @@
+import { BASE_URL } from "../../api/endpoints";
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
@@ -35,7 +36,7 @@ function EmployeeSalarySlip() {
   //   const fetchEmployees = async () => {
   //     try {
   //       const response = await axios.get(
-  //         `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=1`,
+  //         `${BASE_URL}/employee/list_employee.php?Tenent_Id=1`,
   //       );
   //     } catch (error) {
   //       console.error("Error fetching employees:", error);
@@ -49,7 +50,7 @@ function EmployeeSalarySlip() {
     const fetchSalarySlip = async () => {
       try {
         const response = await axios.get(
-          `https://namami-infotech.com/SAFEGUARD/src/salary/salary_slip.php?month=${selectedMonth}&year=${selectedYear}&EmpId=${EmpId}`
+          `${BASE_URL}/salary/salary_slip.php?month=${selectedMonth}&year=${selectedYear}&EmpId=${EmpId}`
         );
         setSalarySlip(response.data.data);
       } catch (error) {

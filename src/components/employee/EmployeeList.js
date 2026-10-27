@@ -1,4 +1,5 @@
 "use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState, useEffect } from "react";
 import {
@@ -59,6 +60,13 @@ import {
   PersonAdd,
   Download,
   Block,
+  AccountBalance,
+  Payments,
+  HomeWork,
+  DirectionsCar,
+  Star,
+  TrendingUp,
+  AccountBalanceWallet,
 } from "@mui/icons-material";
 import { CheckBox } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -264,146 +272,118 @@ const StatsCard = ({ icon, title, value, color, subtitle }) => {
   );
 };
 
-// Employee Details Component
+// Colorful Salary Card Component
+const SalaryCard = ({ title, amount, annualAmount, color, icon, isHighlighted = false }) => {
+  return (
+    <Card
+      sx={{
+        height: "100%",
+        borderLeft: `5px solid ${color}`,
+        background: isHighlighted
+          ? `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`
+          : `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+        borderRadius: 2,
+        transition: "all 0.25s ease-in-out",
+        "&:hover": {
+          transform: "translateY(-3px)",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+        },
+      }}
+    >
+      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                color: isHighlighted ? "rgba(255,255,255,0.9)" : "text.secondary",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                display: "block",
+                fontSize: "0.7rem",
+              }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                my: 0.5,
+                color: isHighlighted ? "#ffffff" : color,
+                wordBreak: "break-word",
+                fontSize: { xs: "1.1rem", md: "1.25rem" },
+              }}
+            >
+              ₹{Number(amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Typography>
+            {annualAmount !== undefined && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: isHighlighted ? "rgba(255,255,255,0.8)" : "text.secondary",
+                  display: "block",
+                  fontSize: "0.75rem",
+                }}
+              >
+                ₹{Number(annualAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / annum
+              </Typography>
+            )}
+          </Box>
+          <Avatar
+            sx={{
+              bgcolor: isHighlighted ? "rgba(255,255,255,0.25)" : `${color}25`,
+              color: isHighlighted ? "#ffffff" : color,
+              width: 44,
+              height: 44,
+              ml: 1,
+            }}
+          >
+            {icon}
+          </Avatar>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Employee Details Component (View Only, Non-Editable)
 const EmployeeDetails = ({ employee, open, onClose, salary }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [salaryData, setSalaryData] = useState({
-    basic_salary: "",
-    hra: "",
-    conveyance: "",
-    special_allowance: "",
-    epf: "",
-    esi: "",
-  });
-  const [calculatedData, setCalculatedData] = useState({});
-  const [addingSalary, setAddingSalary] = useState(false);
+  const [employeeSalary, setEmployeeSalary] = useState(null);
+  const [loadingSalary, setLoadingSalary] = useState(false);
 
   useEffect(() => {
     if (employee && open) {
-      // Pre-fill with existing salary data if available
-      const employeeSalary = salary?.find((s) => s.empId === employee.EmpId);
-      if (employeeSalary) {
-        setSalaryData({
-          basic_salary: employeeSalary.basic_salary || "",
-          hra: employeeSalary.hra || "",
-          conveyance: employeeSalary.conveyance || "",
-          special_allowance: employeeSalary.special_allowance || "",
-          epf: employeeSalary.epf || "",
-          esi: employeeSalary.esi || "",
-        });
-      } else {
-        // Reset salary data when dialog opens
-        setSalaryData({
-          basic_salary: "",
-          hra: "",
-          conveyance: "",
-          special_allowance: "",
-          epf: "",
-          esi: "",
-        });
+      const empId = (employee.EmpId || employee.empId || "").toString().trim();
+      const existing = salary?.find(
+        (s) => (s.empId || s.EmpId || "").toString().trim().toLowerCase() === empId.toLowerCase()
+      );
+      if (existing) {
+        setEmployeeSalary(existing);
+      } else if (empId) {
+        setLoadingSalary(true);
+        axios
+          .get(`${BASE_URL}/salary/get_salary.php?empId=${empId}`)
+          .then((res) => {
+            if (res.data.success && res.data.data && res.data.data.length > 0) {
+              setEmployeeSalary(res.data.data[0]);
+            } else {
+              setEmployeeSalary(null);
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching employee salary:", err);
+            setEmployeeSalary(null);
+          })
+          .finally(() => setLoadingSalary(false));
       }
-      setCalculatedData({});
+    } else {
+      setEmployeeSalary(null);
     }
   }, [employee, open, salary]);
-
-  // Calculate derived values when salary inputs change
-  useEffect(() => {
-    const basic = parseFloat(salaryData.basic_salary) || 0;
-    const hra = parseFloat(salaryData.hra) || 0;
-    const conveyance = parseFloat(salaryData.conveyance) || 0;
-    const specialAllowance = parseFloat(salaryData.special_allowance) || 0;
-    const epf = parseFloat(salaryData.epf) || 0;
-    const esi = parseFloat(salaryData.esi) || 0;
-
-    const grossSalary = basic + hra + conveyance + specialAllowance;
-    const totalBenefits = epf + esi;
-    const netTakeHome = grossSalary - totalBenefits;
-    const totalCostOfCompany = grossSalary + totalBenefits;
-
-    setCalculatedData({
-      gross_salary: grossSalary,
-      gross_salary_per_annum: grossSalary * 12,
-      total_benefits: totalBenefits,
-      total_benefits_per_annum: totalBenefits * 12,
-      net_take_home: netTakeHome,
-      total_cost_of_company: totalCostOfCompany,
-      basic_salary_per_annum: basic * 12,
-      hra_per_annum: hra * 12,
-      conveyance_per_annum: conveyance * 12,
-      special_allowance_per_annum: specialAllowance * 12,
-      epf_per_annum: epf * 12,
-      esi_per_annum: esi * 12,
-    });
-  }, [salaryData]);
-
-  const handleSalaryInputChange = (field, value) => {
-    setSalaryData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleAddSalary = async () => {
-    if (!employee) return;
-
-    setAddingSalary(true);
-    try {
-      const payload = {
-        empId: employee.EmpId,
-        emp_name: employee.Name,
-        designation: employee.Designation,
-        department: employee.Role,
-        grade: employee.Grade,
-        date_of_joining: employee.JoinDate,
-        basic_salary: parseFloat(salaryData.basic_salary) || 0,
-        basic_salary_per_annum: calculatedData.basic_salary_per_annum || 0,
-        hra: parseFloat(salaryData.hra) || 0,
-        hra_per_annum: calculatedData.hra_per_annum || 0,
-        conveyance: parseFloat(salaryData.conveyance) || 0,
-        conveyance_per_annum: calculatedData.conveyance_per_annum || 0,
-        special_allowance: parseFloat(salaryData.special_allowance) || 0,
-        special_allowance_per_annum:
-          calculatedData.special_allowance_per_annum || 0,
-        gross_salary: calculatedData.gross_salary || 0,
-        gross_salary_per_annum: calculatedData.gross_salary_per_annum || 0,
-        epf: parseFloat(salaryData.epf) || 0,
-        epf_per_annum: calculatedData.epf_per_annum || 0,
-        esi: parseFloat(salaryData.esi) || 0,
-        esi_per_annum: calculatedData.esi_per_annum || 0,
-        total_benefits: calculatedData.total_benefits || 0,
-        total_benefits_per_annum: calculatedData.total_benefits_per_annum || 0,
-        total_cost_of_company: calculatedData.total_cost_of_company || 0,
-        net_take_home: calculatedData.net_take_home || 0,
-      };
-
-      const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php",
-        payload
-      );
-
-      if (response.data.success) {
-        alert("Salary information added successfully!");
-        // Reset form
-        setSalaryData({
-          basic_salary: "",
-          hra: "",
-          conveyance: "",
-          special_allowance: "",
-          epf: "",
-          esi: "",
-        });
-        onClose(); // Close the dialog after successful addition
-      } else {
-        alert("Failed to add salary information: " + response.data.message);
-      }
-    } catch (error) {
-      console.error("Error adding salary:", error);
-      alert("Error adding salary information: " + error.message);
-    } finally {
-      setAddingSalary(false);
-    }
-  };
 
   const DetailRow = ({ icon, label, value }) => (
     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -418,44 +398,6 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
       </Box>
     </Box>
   );
-
-  const SalaryInputField = ({ label, value, onChange, field, ...props }) => (
-    <Grid item xs={12} sm={6}>
-      <TextField
-        fullWidth
-        label={label}
-        type="number"
-        value={value}
-        onChange={(e) => onChange(field, e.target.value)}
-        variant="outlined"
-        size="small"
-        {...props}
-      />
-    </Grid>
-  );
-
-  const CalculatedField = ({ label, value }) => (
-    <Grid item xs={12} sm={6}>
-      <Box
-        sx={{
-          p: 1,
-          border: `1px solid ${theme.palette.divider}`,
-          borderRadius: 1,
-          bgcolor: theme.palette.background.default,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
-        <Typography variant="body1" fontWeight="bold">
-          ₹{value?.toLocaleString("en-IN") || 0}
-        </Typography>
-      </Box>
-    </Grid>
-  );
-
-  // Get employee salary data
-  const employeeSalary = salary?.find((s) => s.empId === employee?.EmpId);
 
   if (!employee) return null;
 
@@ -484,7 +426,7 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Person sx={{ mr: 1 }} />
-          Employee Details
+          Employee Details - {employee.Name} ({employee.EmpId})
         </Box>
         <IconButton onClick={onClose} sx={{ color: "white" }}>
           <Close />
@@ -493,69 +435,68 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
 
       <DialogContent sx={{ p: 3 }}>
         <Grid container spacing={3}>
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ display: "flex", alignItems: "center" }}
-          >
-            <Person sx={{ mr: 1, color: theme.palette.primary.main }} />
-            Personal Information
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          {/* Header Section */}
+          {/* Personal Information */}
           <Grid item xs={12}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center" }}
+            >
+              <Person sx={{ mr: 1, color: theme.palette.primary.main }} />
+              Personal Information
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                mb: 3,
+                flexWrap: "wrap",
+                gap: 2,
+                mb: 2,
               }}
             >
-              <Avatar
-                sx={{
-                  mr: 2,
-                  width: 52,
-                  height: 52,
-                  bgcolor: theme.palette.primary.main,
-                }}
-                src={employee.Pic ? employee.Pic : undefined} // show image if available
-                alt={employee.Name}
-              >
-                {!employee.Pic && employee.Name?.charAt(0).toUpperCase()}
-              </Avatar>
+              <Box sx={{ display: "flex", alignItems: "center", minWidth: 200 }}>
+                <Avatar
+                  sx={{
+                    mr: 2,
+                    width: 56,
+                    height: 56,
+                    bgcolor: theme.palette.primary.main,
+                    fontSize: "1.4rem",
+                  }}
+                  src={employee.Pic ? employee.Pic : undefined}
+                  alt={employee.Name}
+                >
+                  {!employee.Pic && employee.Name?.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight="bold">
+                    {employee.Name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    ID: {employee.EmpId}
+                  </Typography>
+                </Box>
+              </Box>
 
-              <Box>
-                <Typography variant="h5" fontWeight="bold">
-                  {employee.Name}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {employee.EmpId}
-                </Typography>
-              </Box>
-              <Box>
-                <DetailRow
-                  icon={<Phone sx={{ color: theme.palette.primary.main }} />}
-                  label="Mobile"
-                  value={employee.Mobile}
-                />
-              </Box>
-              <Box>
-                <DetailRow
-                  icon={<Email sx={{ color: theme.palette.info.main }} />}
-                  label="Email"
-                  value={employee.EmailId}
-                />
-              </Box>
-              <Box>
-                <DetailRow
-                  icon={
-                    <CalendarToday sx={{ color: theme.palette.warning.main }} />
-                  }
-                  label="Date of Birth"
-                  value={employee.DOB}
-                />
-              </Box>
+              <DetailRow
+                icon={<Phone sx={{ color: theme.palette.primary.main }} />}
+                label="Mobile"
+                value={employee.Mobile}
+              />
+              <DetailRow
+                icon={<Email sx={{ color: theme.palette.info.main }} />}
+                label="Email"
+                value={employee.EmailId}
+              />
+              <DetailRow
+                icon={<CalendarToday sx={{ color: theme.palette.warning.main }} />}
+                size="small"
+                    label="Date of Birth"
+                value={employee.DOB}
+              />
             </Box>
           </Grid>
 
@@ -576,11 +517,12 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
               label="Role"
               value={employee.Role}
             />
-            {/* <DetailRow
-              icon={<Work sx={{ color: theme.palette.secondary.main }} />}
-              label="Designation"
+            <DetailRow
+              icon={<Work sx={{ color: theme.palette.info.main }} />}
+              size="small"
+                    label="Designation"
               value={employee.Designation}
-            /> */}
+            />
             <DetailRow
               icon={<Schedule sx={{ color: theme.palette.warning.main }} />}
               label="Shift"
@@ -600,7 +542,7 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
               gutterBottom
               sx={{ display: "flex", alignItems: "center" }}
             >
-              <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Badge sx={{ mr: 1, color: theme.palette.primary.main }} />
               Additional Information
             </Typography>
             <Divider sx={{ mb: 2 }} />
@@ -611,25 +553,26 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
               value={employee.Grade}
             />
             <DetailRow
-              icon={<Money sx={{ color: theme.palette.success.main }} />}
-              label="UAN"
+              icon={<AccountBalance sx={{ color: theme.palette.success.main }} />}
+              size="small"
+                    label="UAN"
               value={employee.UAN}
             />
             <DetailRow
-              icon={<Money sx={{ color: theme.palette.info.main }} />}
-              label="ESI"
+              icon={<AccountBalance sx={{ color: theme.palette.info.main }} />}
+              size="small"
+                    label="ESI"
               value={employee.ESI}
             />
             <DetailRow
-              icon={
-                <CalendarToday sx={{ color: theme.palette.success.main }} />
-              }
-              label="Date of Joining"
+              icon={<CalendarToday sx={{ color: theme.palette.success.main }} />}
+              size="small"
+                    label="Date of Joining"
               value={employee.JoinDate}
             />
           </Grid>
 
-          {/* Existing Salary Information Section */}
+          {/* Current Salary Structure Section (Colorful Cards, Read-Only) */}
           <Grid item xs={12}>
             <Typography
               variant="h6"
@@ -639,261 +582,110 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
               <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
               Current Salary Structure
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2.5 }} />
 
-            {employeeSalary ? (
+            {loadingSalary ? (
+              <Box sx={{ display: "flex", alignItems: "center", py: 3, justifyContent: "center" }}>
+                <CircularProgress size={28} sx={{ mr: 1.5, color: "#8d0638ff" }} />
+                <Typography variant="body1" color="text.secondary">Loading salary structure...</Typography>
+              </Box>
+            ) : employeeSalary ? (
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    sx={{
-                      bgcolor: theme.palette.success.light,
-                      color: "white",
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="body2">Basic Salary</Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        ₹{employeeSalary.basic_salary}
-                      </Typography>
-                      <Typography variant="caption">
-                        ₹{employeeSalary.basic_salary_per_annum}/annum
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                  <SalaryCard
+                    title="Basic Salary"
+                    amount={employeeSalary.basic_salary}
+                    annualAmount={employeeSalary.basic_salary_per_annum || parseFloat(employeeSalary.basic_salary || 0) * 12}
+                    color="#10b981"
+                    icon={<Payments />}
+                  />
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    sx={{ bgcolor: theme.palette.info.light, color: "white" }}
-                  >
-                    <CardContent>
-                      <Typography variant="body2">HRA</Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        ₹{employeeSalary.hra}
-                      </Typography>
-                      <Typography variant="caption">
-                        ₹{employeeSalary.hra_per_annum}/annum
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                  <SalaryCard
+                    title="HRA"
+                    amount={employeeSalary.hra}
+                    annualAmount={employeeSalary.hra_per_annum || parseFloat(employeeSalary.hra || 0) * 12}
+                    color="#3b82f6"
+                    icon={<HomeWork />}
+                  />
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    sx={{
-                      bgcolor: theme.palette.warning.light,
-                      color: "white",
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="body2">Conveyance</Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        ₹{employeeSalary.conveyance}
-                      </Typography>
-                      <Typography variant="caption">
-                        ₹{employeeSalary.conveyance_per_annum}/annum
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                  <SalaryCard
+                    title="Conveyance"
+                    amount={employeeSalary.conveyance}
+                    annualAmount={employeeSalary.conveyance_per_annum || parseFloat(employeeSalary.conveyance || 0) * 12}
+                    color="#f59e0b"
+                    icon={<DirectionsCar />}
+                  />
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card
-                    sx={{
-                      bgcolor: theme.palette.secondary.light,
-                      color: "white",
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="body2">Special Allowance</Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        ₹{employeeSalary.special_allowance}
-                      </Typography>
-                      <Typography variant="caption">
-                        ₹{employeeSalary.special_allowance_per_annum}/annum
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                  <SalaryCard
+                    title="Special Allowance"
+                    amount={employeeSalary.special_allowance}
+                    annualAmount={employeeSalary.special_allowance_per_annum || parseFloat(employeeSalary.special_allowance || 0) * 12}
+                    color="#8b5cf6"
+                    icon={<Star />}
+                  />
                 </Grid>
 
-                {/* Gross Salary Summary */}
-                <Grid item xs={12}>
-                  <Card
-                    sx={{
-                      mt: 2,
-                      bgcolor: theme.palette.primary.main,
-                      color: "white",
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        Gross Salary Summary
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="body1">
-                            Monthly Gross: ₹{employeeSalary.gross_salary}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="body1">
-                            Annual Gross: ₹
-                            {employeeSalary.gross_salary_per_annum}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-                  </Card>
+                <Grid item xs={12} sm={6} md={3}>
+                  <SalaryCard
+                    title="EPF (Deduction)"
+                    amount={employeeSalary.epf}
+                    annualAmount={employeeSalary.epf_per_annum || parseFloat(employeeSalary.epf || 0) * 12}
+                    color="#ec4899"
+                    icon={<AccountBalance />}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                  <SalaryCard
+                    title="ESI (Deduction)"
+                    amount={employeeSalary.esi}
+                    annualAmount={employeeSalary.esi_per_annum || parseFloat(employeeSalary.esi || 0) * 12}
+                    color="#06b6d4"
+                    icon={<AccountBalance />}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                  <SalaryCard
+                    title="Monthly Gross Salary"
+                    amount={employeeSalary.gross_salary}
+                    annualAmount={employeeSalary.gross_salary_per_annum || parseFloat(employeeSalary.gross_salary || 0) * 12}
+                    color="#0284c7"
+                    icon={<TrendingUp />}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                  <SalaryCard
+                    title="Net Take Home"
+                    amount={employeeSalary.net_take_home || employeeSalary.gross_salary}
+                    annualAmount={(parseFloat(employeeSalary.net_take_home || employeeSalary.gross_salary || 0)) * 12}
+                    color="#8d0638"
+                    icon={<AccountBalanceWallet />}
+                    isHighlighted={true}
+                  />
                 </Grid>
               </Grid>
             ) : (
-              <Alert severity="info">
-                No salary information available for this employee.
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                No salary information available for this employee. You can configure salary in the <strong>Edit Employee</strong> modal.
               </Alert>
             )}
-          </Grid>
-
-          {/* Add/Update Salary Information Section */}
-          <Grid item xs={12}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ display: "flex", alignItems: "center", mt: 4 }}
-            >
-              <Money sx={{ mr: 1, color: theme.palette.primary.main }} />
-              {employeeSalary
-                ? "Update Salary Information"
-                : "Add Salary Information"}
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              {/* Input Fields */}
-              <Grid item xs={12}>
-                <Typography
-                  variant="subtitle1"
-                  gutterBottom
-                  sx={{ fontWeight: "bold" }}
-                >
-                  Salary Components (Monthly)
-                </Typography>
-              </Grid>
-
-              <SalaryInputField
-                label="Basic Salary"
-                value={salaryData.basic_salary}
-                onChange={handleSalaryInputChange}
-                field="basic_salary"
-                required
-              />
-              <SalaryInputField
-                label="HRA"
-                value={salaryData.hra}
-                onChange={handleSalaryInputChange}
-                field="hra"
-              />
-              <SalaryInputField
-                label="Conveyance"
-                value={salaryData.conveyance}
-                onChange={handleSalaryInputChange}
-                field="conveyance"
-              />
-              <SalaryInputField
-                label="Special Allowance"
-                value={salaryData.special_allowance}
-                onChange={handleSalaryInputChange}
-                field="special_allowance"
-              />
-              <SalaryInputField
-                label="EPF"
-                value={salaryData.epf}
-                onChange={handleSalaryInputChange}
-                field="epf"
-              />
-              <SalaryInputField
-                label="ESI"
-                value={salaryData.esi}
-                onChange={handleSalaryInputChange}
-                field="esi"
-              />
-
-              {/* Calculated Fields - Monthly */}
-              <Grid item xs={12}>
-                <Typography
-                  variant="subtitle1"
-                  gutterBottom
-                  sx={{ fontWeight: "bold", mt: 2 }}
-                >
-                  Calculated Values (Monthly)
-                </Typography>
-              </Grid>
-
-              <CalculatedField
-                label="Gross Salary"
-                value={calculatedData.gross_salary}
-              />
-              <CalculatedField
-                label="Total Benefits"
-                value={calculatedData.total_benefits}
-              />
-              <CalculatedField
-                label="Net Take Home"
-                value={calculatedData.net_take_home}
-              />
-              <CalculatedField
-                label="Total Cost to Company"
-                value={calculatedData.total_cost_of_company}
-              />
-
-              {/* Calculated Fields - Annual */}
-              <Grid item xs={12}>
-                <Typography
-                  variant="subtitle1"
-                  gutterBottom
-                  sx={{ fontWeight: "bold", mt: 2 }}
-                >
-                  Annual Values
-                </Typography>
-              </Grid>
-
-              <CalculatedField
-                label="Basic Salary (Annual)"
-                value={calculatedData.basic_salary_per_annum}
-              />
-              <CalculatedField
-                label="Gross Salary (Annual)"
-                value={calculatedData.gross_salary_per_annum}
-              />
-              <CalculatedField
-                label="Total Benefits (Annual)"
-                value={calculatedData.total_benefits_per_annum}
-              />
-            </Grid>
-
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-              <Button
-                variant="contained"
-                sx={{ bgcolor: "#8d0638ff", color: "white" }}
-                onClick={handleAddSalary}
-                disabled={addingSalary || !salaryData.basic_salary}
-                startIcon={addingSalary ? <CircularProgress size={20} /> : null}
-              >
-                {addingSalary
-                  ? "Saving..."
-                  : employeeSalary
-                  ? "Update Salary"
-                  : "Add Salary Information"}
-              </Button>
-            </Box>
           </Grid>
         </Grid>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, bgcolor: "#f5f5f5" }}>
+      <DialogActions sx={{ p: 2.5, bgcolor: "#f9f9f9" }}>
         <Button
           onClick={onClose}
           variant="contained"
-          sx={{ bgcolor: "#8d0638ff", color: "white" }}
+          sx={{ bgcolor: "#8d0638ff", color: "white", "&:hover": { bgcolor: "#6b042d" } }}
         >
           Close
         </Button>
@@ -1008,40 +800,64 @@ function EmployeeList() {
     fetchOffices();
   }, []);
 
-  const generateNextEmployeeId = (lastEmpId) => {
-    if (!lastEmpId) return "SGM0001";
+  const [lastEmpIdFromBackend, setLastEmpIdFromBackend] = useState("");
 
-    // Extract the numeric part and increment
-    const prefix = lastEmpId.substring(0, 3); // "SGM"
-    const numberPart = lastEmpId.substring(3); // "0001"
+  const generateNextEmployeeId = (allEmployees, lastEmpIdHint = null) => {
+    if (!allEmployees || allEmployees.length === 0) return "EMP0001";
 
-    // Convert to number, increment, and pad with leading zeros
-    const nextNumber = parseInt(numberPart) + 1;
-    const paddedNumber = nextNumber.toString().padStart(4, "0");
+    const existingIds = new Set(
+      allEmployees.map((e) => (e.EmpId || "").toString().trim().toUpperCase())
+    );
 
-    return `${prefix}${paddedNumber}`;
+    // Determine the prefix and number padding
+    let prefix = "EMP";
+    let padLength = 4;
+
+    const testId = lastEmpIdHint || (allEmployees[allEmployees.length - 1]?.EmpId || "");
+    const match = testId.match(/^([A-Za-z_]+)([0-9]+)$/);
+    if (match) {
+      prefix = match[1];
+      padLength = Math.max(match[2].length, 3);
+    }
+
+    // Find the highest number already used for this prefix
+    let maxNum = 0;
+    const regex = new RegExp(`^${prefix}([0-9]+)$`, "i");
+    for (const emp of allEmployees) {
+      const id = (emp.EmpId || "").toString().trim();
+      const m = id.match(regex);
+      if (m) {
+        const val = parseInt(m[1], 10);
+        if (!isNaN(val) && val > maxNum) {
+          maxNum = val;
+          if (m[1].length > padLength) padLength = m[1].length;
+        }
+      }
+    }
+
+    // Generate candidate and loop until guaranteed completely unique
+    let nextNum = maxNum + 1;
+    let candidate = `${prefix}${String(nextNum).padStart(padLength, "0")}`;
+
+    while (existingIds.has(candidate.toUpperCase())) {
+      nextNum++;
+      candidate = `${prefix}${String(nextNum).padStart(padLength, "0")}`;
+    }
+
+    return candidate;
   };
   
   const fetchEmployees = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
+        `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
       );
       if (response.data.success) {
         setEmployees(response.data.data);
 
-        // Store the last employee ID for auto-generation
         if (response.data.message) {
-          // If you need to use the last ID elsewhere, you can store it in state
-          const lastEmpId = response.data.message;
-          console.log("Last Employee ID:", lastEmpId);
-
-          // Auto-generate next ID when opening add form
-          const nextEmpId = generateNextEmployeeId(lastEmpId);
-          console.log("Next Employee ID:", nextEmpId);
-
-          // You can set this in state or use it directly when needed
+          setLastEmpIdFromBackend(response.data.message);
         }
       } else {
         setError("Failed to fetch employees");
@@ -1056,7 +872,7 @@ function EmployeeList() {
   const fetchSalaryStructure = async () => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php`
+        `${BASE_URL}/salary/get_salary.php`
       );
       if (response.data.success) {
         setSalary(response.data.data);
@@ -1071,7 +887,7 @@ function EmployeeList() {
   const fetchOffices = async () => {
     try {
       const response = await axios.get(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/get_office.php"
+        `${BASE_URL}/employee/get_office.php`
       );
       if (response.data.success) {
         setOffices(response.data.data);
@@ -1100,22 +916,18 @@ function EmployeeList() {
     setPage(0);
   };
 
-  const handleOpenForm = (mode, employee = null) => {
-    // Check if offices are loaded before opening form
+  const handleOpenForm = async (mode, employee = null) => {
     if (offices.length === 0) {
-      alert("Please wait, offices are loading...");
-      fetchOffices().then(() => {
-        // Once offices are loaded, proceed with opening form
-        openFormAfterOfficeLoad(mode, employee);
-      });
-      return;
+      try {
+        await fetchOffices();
+      } catch (e) {
+        console.error("Error loading offices:", e);
+      }
     }
-    
-    openFormAfterOfficeLoad(mode, employee);
+    await openFormAfterOfficeLoad(mode, employee);
   };
   
-  // Helper function to open form after offices are loaded
-  const openFormAfterOfficeLoad = (mode, employee = null) => {
+  const openFormAfterOfficeLoad = async (mode, employee = null) => {
     setFormMode(mode);
     if (mode === "edit" && employee) {
       // Find the RM name if RM exists
@@ -1124,8 +936,27 @@ function EmployeeList() {
       
       // IMPORTANT: Find the matching office object from offices array
       let officeObj = null;
-      if (employee.OfficeId  && offices.length > 0) {
+      if (employee.OfficeId && offices.length > 0) {
         officeObj = offices.find(o => o.Id == employee.OfficeId);
+      }
+
+      // Prefill salary information for this employee
+      const empId = (employee.EmpId || employee.empId || "").toString().trim();
+      let empSalary = salary?.find(
+        (s) => (s.empId || s.EmpId || "").toString().trim().toLowerCase() === empId.toLowerCase()
+      );
+
+      if (!empSalary && empId) {
+        try {
+          const res = await axios.get(
+            `${BASE_URL}/salary/get_salary.php?empId=${empId}`
+          );
+          if (res.data.success && res.data.data && res.data.data.length > 0) {
+            empSalary = res.data.data[0];
+          }
+        } catch (salErr) {
+          console.error("Error prefetching salary:", salErr);
+        }
       }
   
       setFormData({
@@ -1134,7 +965,7 @@ function EmployeeList() {
         Password: "",
         Mobile: employee.Mobile,
         EmailId: employee.EmailId,
-        Role:employee.new_role|| employee.Role,
+        Role: employee.new_role || employee.Role,
         OTP: "123456",
         IsOTPExpired: 1,
         IsGeofence: employee.IsGeofence || 0,
@@ -1159,19 +990,33 @@ function EmployeeList() {
         UAN: employee.UAN || "",
         ESI: employee.ESI || "",
         ProbationPeriod: employee.ProbationPeriod || "",
-        basic_salary: "",
-        hra: "",
-        conveyance: "",
-        special_allowance: "",
+        FatherName: employee.FatherName || "",
+        PanNumber: employee.PanNumber || "",
+        AadharNumber: employee.AadharNumber || "",
+        basic_salary: employee.basic_salary ? String(parseFloat(employee.basic_salary)) : (empSalary?.basic_salary ? String(parseFloat(empSalary.basic_salary)) : ""),
+        da: employee.da ? String(parseFloat(employee.da)) : "",
+        hra: employee.hra ? String(parseFloat(employee.hra)) : (empSalary?.hra ? String(parseFloat(empSalary.hra)) : ""),
+        conveyance: employee.conveyance ? String(parseFloat(employee.conveyance)) : (empSalary?.conveyance ? String(parseFloat(empSalary.conveyance)) : ""),
+        special_allowance: employee.special_allowance ? String(parseFloat(employee.special_allowance)) : (empSalary?.special_allowance ? String(parseFloat(empSalary.special_allowance)) : ""),
+        pf_deduction: employee.pf_deduction ? String(parseFloat(employee.pf_deduction)) : (empSalary?.epf ? String(parseFloat(empSalary.epf)) : ""),
+        esi_deduction: employee.esi_deduction ? String(parseFloat(employee.esi_deduction)) : (empSalary?.esi ? String(parseFloat(empSalary.esi)) : ""),
+        tds: employee.tds ? String(parseFloat(employee.tds)) : "",
+        advance: employee.advance ? String(parseFloat(employee.advance)) : "",
+        lwf: employee.lwf ? String(parseFloat(employee.lwf)) : "",
       });
       
     } else {
-      // Auto-generate new employee ID for add mode
-      const lastEmpId =
-        employees.length > 0
-          ? employees[employees.length - 1].EmpId
-          : "SGM0000";
-      const nextEmpId = generateNextEmployeeId(lastEmpId);
+      // Auto-generate new employee ID for add mode (guaranteed unique)
+      const nextEmpId = generateNextEmployeeId(employees, lastEmpIdFromBackend);
+
+      // Verify and sync in real-time directly with backend database
+      axios.get(`${BASE_URL}/employee/get_next_emp_id.php`)
+        .then((res) => {
+          if (res.data && res.data.success && res.data.nextEmpId) {
+            setFormData((prev) => ({ ...prev, EmpId: res.data.nextEmpId }));
+          }
+        })
+        .catch(() => {});
   
       setFormData({
         EmpId: nextEmpId,
@@ -1201,10 +1046,19 @@ function EmployeeList() {
         UAN: "",
         ESI: "",
         ProbationPeriod: "",
+        FatherName: "",
+        PanNumber: "",
+        AadharNumber: "",
         basic_salary: "",
+        da: "",
         hra: "",
         conveyance: "",
         special_allowance: "",
+        pf_deduction: "",
+        esi_deduction: "",
+        tds: "",
+        advance: "",
+        lwf: "",
       });
     }
     setOpenForm(true);
@@ -1289,6 +1143,19 @@ function EmployeeList() {
       UAN: formData.UAN,
       ESI: formData.ESI,
       ProbationPeriod: formData.ProbationPeriod || "", // Added Probation Period
+      FatherName: formData.FatherName || "",
+      PanNumber: formData.PanNumber || "",
+      AadharNumber: formData.AadharNumber || "",
+      basic_salary: parseFloat(formData.basic_salary) || 0,
+      da: parseFloat(formData.da) || 0,
+      hra: parseFloat(formData.hra) || 0,
+      conveyance: parseFloat(formData.conveyance) || 0,
+      special_allowance: parseFloat(formData.special_allowance) || 0,
+      pf_deduction: parseFloat(formData.pf_deduction) || 0,
+      esi_deduction: parseFloat(formData.esi_deduction) || 0,
+      tds: parseFloat(formData.tds) || 0,
+      advance: parseFloat(formData.advance) || 0,
+      lwf: parseFloat(formData.lwf) || 0,
       Distance: distance,
       Offices: formData.OfficeId ? [
         {
@@ -1301,8 +1168,8 @@ function EmployeeList() {
 
     const url =
       formMode === "add"
-        ? "https://namami-infotech.com/SAFEGUARD/src/employee/add_employee.php"
-        : "https://namami-infotech.com/SAFEGUARD/src/employee/edit_employee.php";
+        ? `${BASE_URL}/employee/add_employee.php`
+        : `${BASE_URL}/employee/edit_employee.php`;
 
     try {
       // Step 1: Add/Update Employee
@@ -1314,9 +1181,12 @@ function EmployeeList() {
         // Step 2: If salary fields are filled, add salary data separately
         if (
           formData.basic_salary ||
+          formData.da ||
           formData.hra ||
           formData.conveyance ||
-          formData.special_allowance
+          formData.special_allowance ||
+          formData.pf_deduction ||
+          formData.esi_deduction
         ) {
           try {
             await addSalaryData(formData);
@@ -1356,11 +1226,19 @@ function EmployeeList() {
   // Updated addSalaryData function
   const addSalaryData = async (employeeData) => {
     const basic = parseFloat(employeeData.basic_salary) || 0;
+    const da = parseFloat(employeeData.da) || 0;
     const hra = parseFloat(employeeData.hra) || 0;
     const conveyance = parseFloat(employeeData.conveyance) || 0;
     const specialAllowance = parseFloat(employeeData.special_allowance) || 0;
+    const pf = parseFloat(employeeData.pf_deduction) || 0;
+    const esi = parseFloat(employeeData.esi_deduction) || 0;
+    const tds = parseFloat(employeeData.tds) || 0;
+    const advance = parseFloat(employeeData.advance) || 0;
+    const lwf = parseFloat(employeeData.lwf) || 0;
 
-    const grossSalary = basic + hra + conveyance + specialAllowance;
+    const grossSalary = basic + da + hra + conveyance + specialAllowance;
+    const totalDeductions = pf + esi + tds + advance + lwf;
+    const netTakeHome = grossSalary - totalDeductions;
 
     const salaryPayload = {
       empId: employeeData.EmpId,
@@ -1369,8 +1247,8 @@ function EmployeeList() {
       department: employeeData.Role,
       grade: employeeData.Grade,
       date_of_joining: employeeData.JoinDate,
-      basic_salary: basic,
-      basic_salary_per_annum: basic * 12,
+      basic_salary: basic + da,
+      basic_salary_per_annum: (basic + da) * 12,
       hra: hra,
       hra_per_annum: hra * 12,
       conveyance: conveyance,
@@ -1379,18 +1257,18 @@ function EmployeeList() {
       special_allowance_per_annum: specialAllowance * 12,
       gross_salary: grossSalary,
       gross_salary_per_annum: grossSalary * 12,
-      epf: 0,
-      epf_per_annum: 0,
-      esi: 0,
-      esi_per_annum: 0,
+      epf: pf,
+      epf_per_annum: pf * 12,
+      esi: esi,
+      esi_per_annum: esi * 12,
       total_benefits: 0,
       total_benefits_per_annum: 0,
       total_cost_of_company: grossSalary,
-      net_take_home: grossSalary,
+      net_take_home: netTakeHome,
     };
 
     const response = await axios.post(
-      "https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php",
+      `${BASE_URL}/salary/add_salary.php`,
       salaryPayload
     );
 
@@ -1494,7 +1372,7 @@ function EmployeeList() {
 
     try {
       const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/disable_employee.php",
+        `${BASE_URL}/employee/disable_employee.php`,
         {
           EmpId: employeeToDisable.EmpId,
           action: "disable",
@@ -1583,7 +1461,7 @@ const exportToExcel = () => {
 
     const matchesRole = filterRole === "" || employee.Role === filterRole;
     const matchesStatus =
-      filterStatus === "" || employee.IsActive.toString() === filterStatus;
+      filterStatus === "" || (employee.IsActive ?? '').toString() === filterStatus;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -2036,6 +1914,7 @@ const exportToExcel = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  size="small"
                   label="Disable Date"
                   type="date"
                   value={disableDate}
@@ -2132,13 +2011,15 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Employee ID"
                     value={formData.EmpId}
                     onChange={(e) =>
                       setFormData({ ...formData, EmpId: e.target.value })
                     }
                     required
-                    disabled
+                    disabled={formMode === "edit"}
+                    helperText={formMode === "add" ? "Auto-generated unique ID (you can also edit this)" : ""}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -2152,6 +2033,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Full Name"
                     value={formData.Name}
                     onChange={(e) =>
@@ -2171,6 +2053,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Password"
                     type="password"
                     value={formData.Password}
@@ -2185,6 +2068,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Mobile Number"
                     value={formData.Mobile}
                     onChange={(e) => {
@@ -2209,6 +2093,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Email Address"
                     type="email"
                     value={formData.EmailId}
@@ -2285,6 +2170,44 @@ const exportToExcel = () => {
                   />
                 </Grid>
 
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Father's Name"
+                    value={formData.FatherName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, FatherName: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="PAN / ID Number"
+                    value={formData.PanNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, PanNumber: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Badge color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
                 {/* Work Information Section */}
                 <Grid item xs={12}>
                   <Typography
@@ -2301,6 +2224,7 @@ const exportToExcel = () => {
                 {/* Grade */}
                 <Grid item xs={12} md={6}>
                   <Autocomplete
+                    size="small"
                     options={gradeOptions}
                     value={
                       gradeOptions.find((g) => g.value === formData.Grade) ||
@@ -2311,7 +2235,7 @@ const exportToExcel = () => {
                     }
                     getOptionLabel={(option) => option.label}
                     renderInput={(params) => (
-                      <TextField {...params} label="Grade" required fullWidth />
+                      <TextField {...params} size="small" label="Grade" required fullWidth />
                     )}
                   />
                 </Grid>
@@ -2319,47 +2243,24 @@ const exportToExcel = () => {
                 {/* Role */}
                 <Grid item xs={12} md={6}>
                 <Autocomplete
+  size="small"
   options={roleOptions1}
   value={selectedRole}
   onChange={(_, newValue) =>
     setFormData({ ...formData, Role: newValue || "" })
   }
   renderInput={(params) => (
-    <TextField {...params} label="Role" required fullWidth />
+    <TextField {...params} size="small" label="Role" required fullWidth />
   )}
 />
 
                 </Grid>
 
-                {/* NEW: Probation Period Field */}
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Probation Period (Months)"
-                    type="number"
-                    value={formData.ProbationPeriod}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ProbationPeriod: e.target.value,
-                      })
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Schedule color="action" />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">months</InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
 
                 {/* NEW: Reporting Manager Field */}
                 <Grid item xs={12} md={6}>
                   <Autocomplete
+                    size="small"
                     options={activeEmployees}
                     value={
                       activeEmployees.find(
@@ -2373,6 +2274,7 @@ const exportToExcel = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
+                        size="small"
                         label="Reporting Manager"
                         fullWidth
                         helperText="Select from active employees"
@@ -2411,6 +2313,7 @@ const exportToExcel = () => {
                 {/* Week Off (Multi Select) */}
                 <Grid item xs={12} md={6}>
                   <Autocomplete
+                    size="small"
                     multiple
                     options={weekDays}
                     disableCloseOnSelect
@@ -2427,6 +2330,7 @@ const exportToExcel = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
+                        size="small"
                         label="Week Off"
                         required
                         fullWidth
@@ -2437,9 +2341,10 @@ const exportToExcel = () => {
 
                {/* Office Selection - Single Select */}
 <Grid item xs={12} md={6}>
-  <FormControl fullWidth required>
+  <FormControl fullWidth size="small" required>
     <InputLabel>Office</InputLabel>
     <Select
+      size="small"
       value={formData.OfficeId?.toString() || ""}
       onChange={(e) => {
         const selectedOfficeId = e.target.value;
@@ -2455,7 +2360,7 @@ const exportToExcel = () => {
           return;
         }
         
-        const selectedOffice = offices.find(o => o.Id.toString() === selectedOfficeId);
+        const selectedOffice = offices.find(o => ((o.Id || o.id) ?? '').toString() === selectedOfficeId);
         
         if (selectedOffice) {
           const latLongParts = selectedOffice.LatLong?.split(",") || [];
@@ -2463,7 +2368,7 @@ const exportToExcel = () => {
           
           setFormData({
             ...formData,
-            OfficeId: selectedOffice.Id,
+            OfficeId: selectedOffice.Id || selectedOffice.id,
             OfficeName: selectedOffice.OfficeName,
             LatLong: selectedOffice.LatLong,
             Distance: distance,
@@ -2476,7 +2381,7 @@ const exportToExcel = () => {
         <em>Select an office</em>
       </MenuItem>
       {offices.map((office) => (
-        <MenuItem key={office.Id} value={office.Id.toString()}>
+        <MenuItem key={office.Id || office.id} value={((office.Id || office.id) ?? '').toString()}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <LocationOn sx={{ mr: 1, color: "text.secondary" }} />
             {office.OfficeName}
@@ -2503,6 +2408,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Basic Salary"
                     type="number"
                     value={formData.basic_salary}
@@ -2522,6 +2428,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="HRA"
                     type="number"
                     value={formData.hra}
@@ -2541,6 +2448,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Conveyance"
                     type="number"
                     value={formData.conveyance}
@@ -2560,6 +2468,7 @@ const exportToExcel = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
+                    size="small"
                     label="Special Allowance"
                     type="number"
                     value={formData.special_allowance}
@@ -2573,6 +2482,66 @@ const exportToExcel = () => {
                       startAdornment: (
                         <InputAdornment position="start">
                           <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Day Allowance"
+                    type="number"
+                    value={formData.da}
+                    onChange={(e) =>
+                      setFormData({ ...formData, da: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Money color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="PF / EPF Deduction"
+                    type="number"
+                    value={formData.pf_deduction}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pf_deduction: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AccountBalanceWallet color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="ESI Deduction"
+                    type="number"
+                    value={formData.esi_deduction}
+                    onChange={(e) =>
+                      setFormData({ ...formData, esi_deduction: e.target.value })
+                    }
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AccountBalanceWallet color="action" />
                         </InputAdornment>
                       ),
                     }}

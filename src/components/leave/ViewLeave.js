@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
+import { BASE_URL } from "../../api/endpoints";
 import {
   Box,
   Typography,
@@ -339,6 +340,7 @@ const formatDateTime = (dateString) => {
 };
 function ViewLeave() {
   const { user } = useAuth()
+  const isHR = ["HR", "Admin", "admin", "SuperAdmin"].includes(user?.role)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 const [expanded, setExpanded] = useState(false);
@@ -368,7 +370,7 @@ const [expanded, setExpanded] = useState(false);
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          "https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php",
+          `${BASE_URL}/employee/list_employee.php`,
           {
             params: { Tenent_Id: user.tenent_id },
           },
@@ -403,16 +405,19 @@ const [expanded, setExpanded] = useState(false);
 
     try {
       setLoading(true)
-      const params = user.role === "HR" ? { role: user.role } : { empId: user.emp_id }
-      const response = await axios.get("https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php", {
+      const params = isHR ? { role: user.role } : { empId: user.emp_id }
+      const response = await axios.get(`${BASE_URL}/leave/get_leave.php`, {
         params,
       })
 
       if (response.data.success) {
-        const filteredLeaves = response.data.data.filter((leave) =>
-          employees.some((emp) => emp.EmpId === leave.EmpId),
-        )
-        setLeaves(filteredLeaves)
+        const rawLeaves = response.data.data || []
+        const filteredLeaves = employees.length > 0
+          ? rawLeaves.filter((leave) =>
+              employees.some((emp) => emp.EmpId === leave.EmpId),
+            )
+          : rawLeaves
+        setLeaves(filteredLeaves.length > 0 ? filteredLeaves : rawLeaves)
       } else {
         setError(response.data.message)
       }
@@ -441,7 +446,7 @@ const [expanded, setExpanded] = useState(false);
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const response = await axios.post("https://namami-infotech.com/SAFEGUARD/src/leave/approve_leave.php", {
+      const response = await axios.post(`${BASE_URL}/leave/approve_leave.php`, {
         id,
         status: newStatus,
       })
@@ -661,7 +666,7 @@ const [expanded, setExpanded] = useState(false);
                     leave={leave}
                     employee={employee}
                     onStatusChange={handleStatusChange}
-                    isHR={user.role === "HR"}
+                    isHR={isHR}
                     index={index}
                   />
                 )
@@ -718,7 +723,7 @@ const [expanded, setExpanded] = useState(false);
             Applied
           </Box>
         </TableCell> 
-        {user.role === "HR" && <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>}
+        {isHR && <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.8rem', py: 1 }}>Actions</TableCell>}
       </TableRow>
     </TableHead>
     <TableBody>
@@ -845,7 +850,7 @@ const [expanded, setExpanded] = useState(false);
                     {formatDateTime(leave.CreatedAt)}
                   </Typography>
                 </TableCell>
-                {user.role === "HR" && (
+                {isHR && (
                   <TableCell sx={{ py: 1 }}>
                     <Box sx={{ display: "flex", gap: 0.5 }}>
                       <Tooltip title="Approve">

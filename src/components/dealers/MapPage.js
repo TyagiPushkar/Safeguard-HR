@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import React, { useEffect, useState } from "react"
 import {
@@ -213,7 +214,7 @@ function MapPage() {
       const fetchEmployees = async () => {
         try {
           const response = await axios.get(
-            `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+            `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
           )
           if (response.data.success) {
             setEmployees(response.data.data)
@@ -247,7 +248,7 @@ function MapPage() {
   const fetchAttendanceData = async (empId, date) => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${empId}`,
+        `${BASE_URL}/attendance/view_attendance.php?EmpId=${empId}`,
       )
       if (response.data.success && response.data.data.length > 0) {
         const formattedDate = date.toLocaleDateString("en-GB")
@@ -276,7 +277,7 @@ function MapPage() {
 
       // Fetch visits
       const visitsResponse = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`,
+        `${BASE_URL}/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`,
       )
 
       // Fetch attendance data

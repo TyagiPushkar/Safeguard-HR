@@ -1,3 +1,4 @@
+import { BASE_URL } from "../../api/endpoints";
 // DashboardData.jsx
 import React, { useEffect, useState } from 'react';
 import {
@@ -252,11 +253,11 @@ const DashboardData = () => {
     setLoading(true);
     try {
       const responses = await Promise.all([
-        axios.get(`https://namami-infotech.com/SAFEGUARD/src/employee/view_employee.php?EmpId=${EmpId}`),
-        axios.get(`https://namami-infotech.com/SAFEGUARD/src/leave/balance_leave.php?empid=${EmpId}`),
-        axios.get(`https://namami-infotech.com/SAFEGUARD/src/expense/get_expense.php?EmpId=${EmpId}`),
-        axios.get(`https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${EmpId}`),
-        axios.get(`https://namami-infotech.com/SAFEGUARD/src/assets/get_issue_asset.php?EmpId=${EmpId}`),
+        axios.get(`${BASE_URL}/employee/view_employee.php?EmpId=${EmpId}`),
+        axios.get(`${BASE_URL}/leave/balance_leave.php?empid=${EmpId}`),
+        axios.get(`${BASE_URL}/expense/get_expense.php?EmpId=${EmpId}`),
+        axios.get(`${BASE_URL}/attendance/view_attendance.php?EmpId=${EmpId}`),
+        axios.get(`${BASE_URL}/assets/get_issue_asset.php?EmpId=${EmpId}`),
       ]);
 
       setEmployeeData(responses[0].data.data);

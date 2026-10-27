@@ -1,4 +1,5 @@
 "use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState, useEffect } from "react";
 import {
@@ -370,7 +371,7 @@ const EmployeeDetails = ({ employee, open, onClose, salary }) => {
       };
 
       const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php",
+        `${BASE_URL}/salary/add_salary.php`,
         payload,
       );
 
@@ -804,7 +805,7 @@ function EmployeeList() {
     try {
       setLoading(true);
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+        `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
       );
       if (response.data.success) {
         setEmployees(response.data.data);
@@ -834,7 +835,7 @@ function EmployeeList() {
   const fetchSalaryStructure = async () => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php`,
+        `${BASE_URL}/salary/get_salary.php`,
       );
       if (response.data.success) {
         setSalary(response.data.data);
@@ -849,7 +850,7 @@ function EmployeeList() {
   const fetchOffices = async () => {
     try {
       const response = await axios.get(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/get_office.php",
+        `${BASE_URL}/employee/get_office.php`,
       );
       if (response.data.success) {
         setOffices(response.data.data);
@@ -996,8 +997,8 @@ function EmployeeList() {
 
     const url =
       formMode === "add"
-        ? "https://namami-infotech.com/SAFEGUARD/src/employee/add_employee.php"
-        : "https://namami-infotech.com/SAFEGUARD/src/employee/edit_employee.php";
+        ? `${BASE_URL}/employee/add_employee.php`
+        : `${BASE_URL}/employee/edit_employee.php`;
 
     try {
       // Step 1: Add/Update Employee
@@ -1085,7 +1086,7 @@ function EmployeeList() {
     };
 
     const response = await axios.post(
-      "https://namami-infotech.com/SAFEGUARD/src/salary/add_salary.php",
+      `${BASE_URL}/salary/add_salary.php`,
       salaryPayload,
     );
 
@@ -1133,7 +1134,7 @@ function EmployeeList() {
     try {
       const action = employee.IsActive ? "disable" : "enable";
       const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/employee/disable_employee.php",
+        `${BASE_URL}/employee/disable_employee.php`,
         {
           EmpId: employee.EmpId,
           action: action,

@@ -1,4 +1,5 @@
 "use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
@@ -73,7 +74,7 @@ const MonthlyInOutReport = () => {
       setError("");
       try {
         const empRes = await axios.get(
-          `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
+          `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
         );
 
         if (!empRes.data.success) {
@@ -93,7 +94,7 @@ const MonthlyInOutReport = () => {
           const results = await Promise.allSettled(
             batch.map((emp) =>
               axios.get(
-                `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${emp.EmpId}`
+                `${BASE_URL}/attendance/view_attendance.php?EmpId=${emp.EmpId}`
               )
             )
           );

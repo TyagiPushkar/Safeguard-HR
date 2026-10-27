@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState, useEffect } from "react"
 import {
@@ -74,7 +75,7 @@ function DealerList() {
         }
 
         const employeeResponse = await axios.get(
-          `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php`,
+          `${BASE_URL}/employee/list_employee.php`,
           { params: { Tenent_Id: user.tenent_id } },
         )
 
@@ -87,7 +88,7 @@ function DealerList() {
         const employeeEmpIds = new Set(employeeResponse.data.data.map((emp) => emp.EmpId))
 
         const dealerResponse = await axios.get(
-          "https://namami-infotech.com/SAFEGUARD/src/dealer/get_dealers.php",
+          `${BASE_URL}/dealer/get_dealers.php`,
           { params: { empId: user.emp_id, role: user.role } },
         )
 

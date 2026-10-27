@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL } from "../../api/endpoints";
 import {
     Box, Typography, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, CircularProgress, TableFooter,
@@ -27,52 +28,52 @@ function ViewTickets() {
     };
 
     useEffect(() => {
-    const fetchTickets = async () => {
-        try {
-            const [ticketsResponse, employeesResponse] = await Promise.all([
-                axios.get('https://namami-infotech.com/SAFEGUARD/src/support/get_ticket.php', {
-                    params: { EmpId: user.emp_id, role: user.role },
-                }),
-                axios.get(`https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`),
-            ]);
+        const fetchTickets = async () => {
+            try {
+                const [ticketsResponse, employeesResponse] = await Promise.all([
+                    axios.get(`${BASE_URL}/support/get_ticket.php`, {
+                        params: { EmpId: user.emp_id, role: user.role },
+                    }),
+                    axios.get(`${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`),
+                ]);
 
-            if (employeesResponse.data.success) {
-                // Filter employees by matching Tenent_Id
-                const filteredEmployees = employeesResponse.data.data.filter(emp => emp.Tenent_Id === user.tenent_id);
+                if (employeesResponse.data.success) {
+                    // Filter employees by matching Tenent_Id
+                    const filteredEmployees = employeesResponse.data.data.filter(emp => emp.Tenent_Id === user.tenent_id);
 
-                // Create a map of employee IDs that belong to the user's tenant
-                const employeeMap = {};
-                const validEmpIds = new Set();
+                    // Create a map of employee IDs that belong to the user's tenant
+                    const employeeMap = {};
+                    const validEmpIds = new Set();
 
-                filteredEmployees.forEach(emp => {
-                    employeeMap[emp.EmpId] = emp.Name;
-                    validEmpIds.add(emp.EmpId);
-                });
+                    filteredEmployees.forEach(emp => {
+                        employeeMap[emp.EmpId] = emp.Name;
+                        validEmpIds.add(emp.EmpId);
+                    });
 
-                setEmployeeMap(employeeMap);
+                    setEmployeeMap(employeeMap);
 
-                if (ticketsResponse.data.success) {
-                    // Filter tickets by checking if the EmpId exists in the validEmpIds set
-                    const filteredTickets = ticketsResponse.data.data.filter(ticket => validEmpIds.has(ticket.EmpId));
-                    setTickets(filteredTickets);
+                    if (ticketsResponse.data.success) {
+                        // Filter tickets by checking if the EmpId exists in the validEmpIds set
+                        const filteredTickets = ticketsResponse.data.data.filter(ticket => validEmpIds.has(ticket.EmpId));
+                        setTickets(filteredTickets);
+                    } else {
+                        setError(ticketsResponse.data.message);
+                    }
                 } else {
-                    setError(ticketsResponse.data.message);
+                    setError(employeesResponse.data.message);
                 }
-            } else {
-                setError(employeesResponse.data.message);
+            } catch (error) {
+                setError('Error fetching tickets or employee data');
+                console.error('Error:', error);
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            setError('Error fetching tickets or employee data');
-            console.error('Error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
-    fetchTickets();
-}, [user.emp_id, user.role, user.tenent_id]);
+        fetchTickets();
+    }, [user.emp_id, user.role, user.tenent_id]);
 
-   
+
 
 
     const handleChangePage = (event, newPage) => {
@@ -86,7 +87,7 @@ function ViewTickets() {
 
     const handleStatusChange = async (id, status) => {
         try {
-            const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/support/update_status.php', {
+            const response = await axios.post(`${BASE_URL}/support/update_status.php`, {
                 id,
                 status,
             });

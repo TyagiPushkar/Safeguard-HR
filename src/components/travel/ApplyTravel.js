@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState } from "react"
 import {
@@ -91,7 +92,7 @@ function ApplyTravel({ open, onClose, onTravelApplied }) {
         application: travelEntry,
       }
       const response = await axios.post(
-        "https://namami-infotech.com/SAFEGUARD/src/travel/apply_travel.php",
+        `${BASE_URL}/travel/apply_travel.php`,
         payload,
       )
 

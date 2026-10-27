@@ -1,7 +1,8 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
-import { useState, useEffect, useRef } from "react"
-import axios from "axios"
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import {
   Box,
   Typography,
@@ -10,385 +11,756 @@ import {
   Select,
   MenuItem,
   Button,
-  TableCell,
-  TableRow,
-  Table,
-  TableHead,
-  TableContainer,
   Paper,
-  Container,
-  TableBody,
-  Divider,
+  CircularProgress,
+  Alert,
+  Grid,
   Card,
   CardContent,
-  Grid,
-  Stack,
-  Alert,
-  CircularProgress,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material"
+  Autocomplete,
+  TextField,
+  Divider,
+} from "@mui/material";
 import {
-  GetApp,
+  Download,
+  Print,
+  Refresh,
   Person,
   CalendarMonth,
-  Receipt,
-  Download,
-} from "@mui/icons-material"
-import { useAuth } from "../auth/AuthContext"
-import jsPDF from "jspdf"
-import html2canvas from "html2canvas"
+  Payments,
+} from "@mui/icons-material";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { useAuth } from "../auth/AuthContext";
+
+const MONTHS = [
+  { value: 1, label: "January" },
+  { value: 2, label: "February" },
+  { value: 3, label: "March" },
+  { value: 4, label: "April" },
+  { value: 5, label: "May" },
+  { value: 6, label: "June" },
+  { value: 7, label: "July" },
+  { value: 8, label: "August" },
+  { value: 9, label: "September" },
+  { value: 10, label: "October" },
+  { value: 11, label: "November" },
+  { value: 12, label: "December" },
+];
+
+const YEARS = [2024, 2025, 2026, 2027];
 
 function SalarySlip() {
-  const { user } = useAuth()
-  const [employees, setEmployees] = useState([])
-  const [selectedEmployee, setSelectedEmployee] = useState("")
-  const [salarySlip, setSalarySlip] = useState(null)
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const salarySlipRef = useRef(null)
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+  const { user } = useAuth();
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmpId, setSelectedEmpId] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [payableDaysInput, setPayableDaysInput] = useState("");
+  const [isCustomDays, setIsCustomDays] = useState(false);
+  const [salarySlip, setSalarySlip] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState("");
 
+  const slipRef = useRef(null);
+
+  // 1. Fetch active employees list
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(
-          `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
-        )
-        if (response.data.success) setEmployees(response.data.data)
-      } catch (error) {
-        console.error("Error fetching employees:", error)
-        setError("Failed to fetch employees")
-      }
-    }
-    fetchEmployees()
-  }, [user.tenent_id])
-
-  useEffect(() => {
-    if (selectedEmployee) {
-      const fetchSalarySlip = async () => {
-        setLoading(true)
-        setError("")
-        try {
-          const response = await axios.get(
-            `https://namami-infotech.com/SAFEGUARD/src/salary/salary_slip.php?month=${selectedMonth}&year=${selectedYear}&EmpId=${selectedEmployee}`,
-          )
-          setSalarySlip(response.data.data)
-        } catch (error) {
-          console.error("Error fetching salary slip:", error)
-          setError("Failed to fetch salary slip")
-          setSalarySlip(null)
-        } finally {
-          setLoading(false)
+        const tenantId = user?.tenent_id || 1;
+        const res = await axios.get(
+          `${BASE_URL}/employee/list_employee.php?Tenent_Id=${tenantId}`
+        );
+        if (res.data.success && res.data.data) {
+          setEmployees(res.data.data);
+          // Auto select current logged-in employee or first employee
+          if (user?.role === "Employee" && user?.empId) {
+            setSelectedEmpId(user.empId);
+          } else if (res.data.data.length > 0 && !selectedEmpId) {
+            setSelectedEmpId(res.data.data[0].EmpId);
+          }
         }
+      } catch (err) {
+        console.error("Error fetching employees:", err);
       }
-      fetchSalarySlip()
-    } else {
-      setSalarySlip(null)
+    };
+    fetchEmployees();
+  }, [user]);
+
+  // Reset custom days when changing employee, month, or year
+  const handleEmpChange = (newEmpId) => {
+    setSelectedEmpId(newEmpId);
+    setIsCustomDays(false);
+    setPayableDaysInput("");
+  };
+
+  const handleMonthChange = (newMonth) => {
+    setSelectedMonth(newMonth);
+    setIsCustomDays(false);
+    setPayableDaysInput("");
+  };
+
+  const handleYearChange = (newYear) => {
+    setSelectedYear(newYear);
+    setIsCustomDays(false);
+    setPayableDaysInput("");
+  };
+
+  // 2. Fetch salary slip data whenever selectedEmpId, month, year, or customDays changes
+  useEffect(() => {
+    if (!selectedEmpId) return;
+
+    const fetchSlip = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        let url = `${BASE_URL}/salary/salary_slip.php?empId=${selectedEmpId}&month=${selectedMonth}&year=${selectedYear}`;
+        if (isCustomDays && payableDaysInput !== "") {
+          url += `&payableDays=${payableDaysInput}`;
+        }
+        const res = await axios.get(url);
+        if (res.data.success) {
+          setSalarySlip(res.data.data);
+          if (!isCustomDays) {
+            setPayableDaysInput(String(res.data.data.employee.payableDays ?? 0));
+          }
+        } else {
+          setError(res.data.message || "Failed to load salary slip.");
+          setSalarySlip(null);
+        }
+      } catch (err) {
+        console.error("Error fetching salary slip:", err);
+        setError("Error loading salary slip. Please check server connection.");
+        setSalarySlip(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSlip();
+  }, [selectedEmpId, selectedMonth, selectedYear, isCustomDays, payableDaysInput]);
+
+  // Download PDF
+  const handleDownloadPDF = async () => {
+    if (!slipRef.current) return;
+    setDownloading(true);
+
+    try {
+      const element = slipRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 190;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+      const empCode = salarySlip?.employee?.empCode || selectedEmpId;
+      pdf.save(`Salary_Slip_${empCode}_${selectedMonth}_${selectedYear}.pdf`);
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setDownloading(false);
     }
-  }, [selectedEmployee, selectedMonth, selectedYear])
+  };
 
-  const downloadPDF = () => {
-    const input = salarySlipRef.current
-    if (!input) return
-    html2canvas(input).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png")
-      const pdf = new jsPDF()
-      const imgWidth = 190
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight)
-      pdf.save(`salary_slip_${selectedEmployee}_${selectedMonth}_${selectedYear}.pdf`)
-    })
-  }
+  const handlePrint = () => {
+    window.print();
+  };
 
-  const handleEmployeeChange = (e) => {
-    setSelectedEmployee(e.target.value)
-    setSalarySlip(null)
-  }
+  // Safe data extraction
+  const comp = salarySlip?.company || {
+    name: "M/S ABERDURE PHARMA",
+    address:
+      "1ST FLOOR, SHOP 28 PROP.NO 920-21 WARD NO 07 KH NO 1151/3, BISHAN SWAROOP COMPLEX, MEHRAULI MAIN MARKET, MEHRAULI, NEW DELHI, SOUTH DELHI, DELHI, 110030",
+    title: `PAY SLIP FOR THE MONTH OF: ${MONTHS.find((m) => m.value === selectedMonth)?.label?.toUpperCase()} ${selectedYear}`,
+  };
 
-  const employeeDetails = salarySlip
-    ? [
-        ["Employee ID", salarySlip.EmpId, "PF No.", "-"],
-        ["Employee Name", salarySlip.Name, "Bank", "Bank Name"],
-        ["Designation", salarySlip.Designation, "Account No.", "xxxxxxxxxxxxx"],
-        ["Location", "Delhi", "Date of Joining", "23-07-2024"],
-      ]
-    : []
+  const emp = salarySlip?.employee || {
+    empCode: selectedEmpId || "AP0005",
+    name: "EMPLOYEE NAME",
+    fatherName: "FATHER'S NAME",
+    designation: "DESIGNATION",
+    department: "NA",
+    location: "DELHI",
+    esiNo: "NA",
+    uanNo: "-",
+    dob: "NA",
+    doj: "NA",
+    idNo: "-",
+    payableDays: 31,
+  };
 
-  const salaryDetails = salarySlip
-    ? [
-        ["Gross Wages", `₹${salarySlip.BasicSalary}`, "Total Deductions", "₹0"],
-        ["Total Working Days", salarySlip.TotalDaysInMonth, "Net Salary", `₹${salarySlip.Salary}`],
-        ["Leaves", salarySlip.LeaveDays, "Paid Days", salarySlip.PresentDays],
-        ["Week Offs", salarySlip.WeekOffs, "Present Days", salarySlip.PresentDays],
-      ]
-    : []
+  const rate = salarySlip?.rate || {
+    basicDa: 0,
+    hra: 0,
+    conv: 0,
+    specialAllow: 0,
+    total: 0,
+  };
 
-  const earnings = salarySlip
-    ? [
-        ["Basic", salarySlip.BasicSalary],
-        ["HRA", "0"],
-        ["Conveyance Allowance", "0"],
-        ["Medical Allowance", "0"],
-        ["Other Allowances", "0"],
-      ]
-    : []
+  const earn = salarySlip?.earnings || {
+    basic: 0,
+    hra: 0,
+    conv: 0,
+    specialAllow: 0,
+    gwrInc: 0,
+    performanceBonus: 0,
+    total: 0,
+  };
 
-  const deductions = [
-    ["EPF", "0"],
-    ["ESI", "0"],
-    ["Professional Tax", "0"],
-  ]
+  const ded = salarySlip?.deductions || {
+    esi: 0,
+    pf: 0,
+    lwf: 0,
+    tds: 0,
+    advance: 0,
+    total: 0,
+  };
 
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ]
+  const summary = salarySlip?.summary || {
+    grossPay: 0,
+    grossDed: 0,
+    reimbursement: 0,
+    netPay: 0,
+    netPayWords: "Zero Rupees Only",
+  };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      {/* Header Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          gutterBottom
-          sx={{
-            fontWeight: 600,
-            color: "primary.main",
-            mb: 1,
-          }}
-        >
-          <Receipt sx={{ mr: 2, verticalAlign: "middle" }} />
-          Salary Slip Generator
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Generate and download employee salary slips
-        </Typography>
-      </Box>
+    <Box sx={{ p: { xs: 1, md: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+      {/* Top Controls Card */}
+      <Card
+        sx={{
+          mb: 3,
+          p: 2,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+          borderRadius: 2,
+        }}
+      >
+        <Grid container spacing={1.5} alignItems="center">
+          {/* Employee Selector */}
+          <Grid item xs={12} sm={3.5} md={3.2}>
+            <Autocomplete
+              size="small"
+              options={employees}
+              getOptionLabel={(option) =>
+                `${option.Name || ""} (${option.EmpId || ""})`
+              }
+              value={
+                employees.find((e) => e.EmpId === selectedEmpId) || null
+              }
+              onChange={(_, newValue) => {
+                if (newValue) handleEmpChange(newValue.EmpId);
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Employee"
+                  placeholder="Search by name or ID"
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <Person sx={{ color: "action.active", mr: 1 }} />
+                        {params.InputProps.startAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
+          </Grid>
 
-      {/* Controls Section */}
-      <Card sx={{ mb: 4, boxShadow: 2 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Employee</InputLabel>
-                <Select
-                  value={selectedEmployee}
-                  onChange={handleEmployeeChange}
-                  label="Employee"
-                  startAdornment={<Person sx={{ mr: 1, color: "action.active" }} />}
-                >
-                  {employees.map((emp) => (
-                    <MenuItem key={emp.EmpId} value={emp.EmpId}>
-                      {emp.Name} ({emp.EmpId})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          {/* Month Selector */}
+          <Grid item xs={6} sm={2} md={1.6}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Month</InputLabel>
+              <Select
+                value={selectedMonth}
+                label="Month"
+                onChange={(e) => handleMonthChange(Number(e.target.value))}
+              >
+                {MONTHS.map((m) => (
+                  <MenuItem key={m.value} value={m.value}>
+                    {m.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Month</InputLabel>
-                <Select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  label="Month"
-                  startAdornment={<CalendarMonth sx={{ mr: 1, color: "action.active" }} />}
-                >
-                  {months.map((month, index) => (
-                    <MenuItem key={index + 1} value={index + 1}>
-                      {month}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          {/* Year Selector */}
+          <Grid item xs={6} sm={1.5} md={1.4}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Year</InputLabel>
+              <Select
+                value={selectedYear}
+                label="Year"
+                onChange={(e) => handleYearChange(Number(e.target.value))}
+              >
+                {YEARS.map((y) => (
+                  <MenuItem key={y} value={y}>
+                    {y}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Year</InputLabel>
-                <Select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} label="Year">
-                  {[2024, 2025, 2026].map((year) => (
-                    <MenuItem key={year} value={year}>
-                      {year}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          {/* Payable Days (From Attendance with Custom Override) */}
+          <Grid item xs={6} sm={2} md={1.8}>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              label="Payable Days"
+              value={payableDaysInput}
+              onChange={(e) => {
+                setIsCustomDays(true);
+                setPayableDaysInput(e.target.value);
+              }}
+              helperText={
+                isCustomDays
+                  ? `Custom (Att: ${salarySlip?.employee?.attendanceDays ?? 0})`
+                  : `Att. Marked: ${salarySlip?.employee?.attendanceDays ?? 0}d`
+              }
+              inputProps={{ min: 0, max: 31 }}
+            />
+          </Grid>
 
-            <Grid item xs={12} md={4}>
+          {/* Actions */}
+          <Grid
+            item
+            xs={12}
+            sm={3}
+            md={4}
+            sx={{ display: "flex", gap: 1, justifyContent: "flex-end", alignItems: "center" }}
+          >
+            {isCustomDays && (
               <Button
-                variant="contained"
-                fullWidth
-                onClick={downloadPDF}
-                startIcon={<Download />}
-                disabled={!salarySlip || loading}
+                size="small"
+                variant="text"
+                onClick={() => {
+                  setIsCustomDays(false);
+                  setPayableDaysInput("");
+                }}
                 sx={{
-                  height: 40,
-                  bgcolor: "primary.main",
-                  "&:hover": { bgcolor: "primary.dark" },
+                  color: "#6b7280",
+                  textTransform: "none",
+                  fontSize: "12px",
+                  p: 0.5,
                 }}
               >
-                Download PDF
+                ↺ Use Attendance
               </Button>
-            </Grid>
+            )}
+
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={
+                downloading ? <CircularProgress size={16} color="inherit" /> : <Download fontSize="small" />
+              }
+              onClick={handleDownloadPDF}
+              disabled={downloading || !salarySlip}
+              sx={{
+                bgcolor: "#8d0638",
+                "&:hover": { bgcolor: "#6b042d" },
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "13px",
+                py: 0.8,
+              }}
+            >
+              {downloading ? "PDF..." : "Download PDF"}
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Print fontSize="small" />}
+              onClick={handlePrint}
+              disabled={!salarySlip}
+              sx={{
+                borderColor: "#8d0638",
+                color: "#8d0638",
+                "&:hover": { borderColor: "#6b042d", bgcolor: "rgba(141,6,56,0.04)" },
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "13px",
+                py: 0.8,
+              }}
+            >
+              Print
+            </Button>
           </Grid>
-        </CardContent>
+        </Grid>
       </Card>
 
-      {/* Loading State */}
-      {loading && (
-        <Card sx={{ p: 4, textAlign: "center" }}>
-          <CircularProgress size={60} sx={{ mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            Generating salary slip...
-          </Typography>
-        </Card>
-      )}
-
-      {/* Error State */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      {/* No Selection State */}
-      {!selectedEmployee && !loading && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Please select an employee to generate salary slip
-        </Alert>
-      )}
-
-      {/* Salary Slip */}
-      {salarySlip && !loading && (
-        <Card elevation={4} sx={{ maxWidth: 800, mx: "auto" }}>
-          <Box ref={salarySlipRef} sx={{ p: 4, bgcolor: "white" }}>
-            {/* Company Header */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
-              <Box sx={{ width: 80, height: 80, bgcolor: "grey.200", borderRadius: 1 }}>
-                {/* Logo placeholder */}
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+          <CircularProgress sx={{ color: "#8d0638" }} />
+        </Box>
+      ) : (
+        /* Aberdure Pharma Salary Slip Container */
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            width: "100%",
+            overflowX: "auto",
+            pb: 4,
+          }}
+        >
+          <Paper
+            ref={slipRef}
+            elevation={3}
+            sx={{
+              width: "820px",
+              minWidth: "820px",
+              bgcolor: "#ffffff",
+              p: 3,
+              fontFamily: '"Arial", "Helvetica", sans-serif',
+              color: "#000000",
+              boxSizing: "border-box",
+            }}
+          >
+            {/* Main Outer Border Box */}
+            <Box sx={{ border: "2px solid #000000" }}>
+              {/* 1. Header Section */}
+              <Box sx={{ textAlign: "center", p: 1.5, borderBottom: "2px solid #000000" }}>
+                <Typography
+                  sx={{
+                    fontSize: "20px",
+                    fontWeight: "bold",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {comp.name}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "9.5px",
+                    fontWeight: "bold",
+                    mt: 0.5,
+                    px: 2,
+                    lineHeight: 1.3,
+                    color: "#111827",
+                  }}
+                >
+                  {comp.address}
+                </Typography>
               </Box>
-              <Box sx={{ textAlign: "right", flex: 1, ml: 2 }}>
-                <Typography variant="h5" fontWeight="bold" color="primary.main">
-                  Namami Infotech India Pvt. Ltd.
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  DPT-303, DLF Prime Towers, Okhla Phase 1, New Delhi - 110020
-                </Typography>
-                <Typography variant="h6" sx={{ mt: 2, color: "primary.main" }}>
-                  Pay Slip for {months[selectedMonth - 1]} {selectedYear}
+
+              {/* 2. Month Title Bar */}
+              <Box
+                sx={{
+                  bgcolor: "#d1d5db",
+                  textAlign: "center",
+                  py: 0.5,
+                  borderBottom: "2px solid #000000",
+                }}
+              >
+                <Typography sx={{ fontSize: "12px", fontWeight: "bold" }}>
+                  {comp.title}
                 </Typography>
               </Box>
-            </Box>
 
-            <Divider sx={{ mb: 3 }} />
-
-            {/* Employee Details */}
-            <TableContainer component={Paper} elevation={0} sx={{ mb: 3, border: "1px solid", borderColor: "grey.300" }}>
-              <Table size="small">
-                <TableBody>
-                  {employeeDetails.map((row, index) => (
-                    <TableRow key={index} sx={{ "&:nth-of-type(odd)": { bgcolor: "grey.50" } }}>
-                      {row.map((cell, idx) => (
-                        <TableCell key={idx} sx={{ fontWeight: idx % 2 === 0 ? 600 : 400, py: 1 }}>
-                          {cell}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            {/* Salary Summary */}
-            <TableContainer component={Paper} elevation={0} sx={{ mb: 3, border: "1px solid", borderColor: "grey.300" }}>
-              <Table size="small">
-                <TableBody>
-                  {salaryDetails.map((row, index) => (
-                    <TableRow
-                      key={index}
+              {/* 3. Employee Info 2-Column Grid */}
+              <Box sx={{ display: "flex", borderBottom: "2px solid #000000" }}>
+                {/* Left Column */}
+                <Box sx={{ width: "50%", borderRight: "2px solid #000000" }}>
+                  {[
+                    ["EMPLOYEE CODE", emp.empCode],
+                    ["NAME", emp.name],
+                    ["FATHER'S NAME", emp.fatherName],
+                    ["DESIGNATION", emp.designation],
+                    ["DEPARTMENT", emp.department],
+                    ["LOCATION", emp.location],
+                  ].map(([label, val], idx, arr) => (
+                    <Box
+                      key={label}
                       sx={{
-                        bgcolor: index === 0 ? "primary.50" : index % 2 === 0 ? "grey.50" : "white",
+                        display: "flex",
+                        fontSize: "11px",
+                        px: 1,
+                        py: 0.35,
+                        borderBottom: idx !== arr.length - 1 ? "1px solid #d1d5db" : "none",
                       }}
                     >
-                      {row.map((cell, idx) => (
-                        <TableCell
-                          key={idx}
-                          sx={{
-                            fontWeight: idx % 2 !== 0 ? 600 : 400,
-                            py: 1,
-                            color: idx % 2 !== 0 && typeof cell === "string" && cell.includes("₹") ? "success.main" : "inherit",
-                          }}
-                        >
-                          {cell}
-                        </TableCell>
-                      ))}
-                    </TableRow>
+                      <Box sx={{ width: "42%", fontWeight: 600 }}>{label}</Box>
+                      <Box sx={{ width: "58%", fontWeight: 500 }}>{val || "NA"}</Box>
+                    </Box>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                </Box>
 
-            {/* Earnings and Deductions */}
-            <TableContainer component={Paper} elevation={0} sx={{ mb: 3, border: "1px solid", borderColor: "grey.300" }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ bgcolor: "primary.main" }}>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Earnings</TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Amount (₹)</TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Deductions</TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>Amount (₹)</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {earnings.map((earn, index) => (
-                    <TableRow key={index} sx={{ "&:nth-of-type(odd)": { bgcolor: "grey.50" } }}>
-                      <TableCell sx={{ py: 1 }}>{earn[0]}</TableCell>
-                      <TableCell sx={{ py: 1, fontWeight: 500 }}>{earn[1]}</TableCell>
-                      <TableCell sx={{ py: 1 }}>{deductions[index]?.[0] || ""}</TableCell>
-                      <TableCell sx={{ py: 1, fontWeight: 500 }}>{deductions[index]?.[1] || ""}</TableCell>
-                    </TableRow>
+                {/* Right Column */}
+                <Box sx={{ width: "50%" }}>
+                  {[
+                    ["ESI No.", emp.esiNo],
+                    ["PF/UAN Number", emp.uanNo],
+                    ["D.O.B", emp.dob],
+                    ["D.O.J", emp.doj],
+                    ["ID NO.", emp.idNo],
+                    ["Payable Days", emp.payableDays],
+                  ].map(([label, val], idx, arr) => (
+                    <Box
+                      key={label}
+                      sx={{
+                        display: "flex",
+                        fontSize: "11px",
+                        px: 1,
+                        py: 0.35,
+                        borderBottom: idx !== arr.length - 1 ? "1px solid #d1d5db" : "none",
+                      }}
+                    >
+                      <Box sx={{ width: "42%", fontWeight: 600 }}>{label}</Box>
+                      <Box sx={{ width: "58%", fontWeight: 500 }}>{val || "NA"}</Box>
+                    </Box>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                </Box>
+              </Box>
 
-            {/* Net Salary */}
-            <Box sx={{ textAlign: "right", p: 2, bgcolor: "success.50", borderRadius: 1 }}>
-              <Typography variant="h5" fontWeight="bold" color="success.main">
-                Net Salary: ₹{salarySlip.Salary}
-              </Typography>
-            </Box>
+              {/* 4. Salary Table Breakdown (4 Columns) */}
+              {/* Header Row */}
+              <Box
+                sx={{
+                  display: "flex",
+                  bgcolor: "#e5e7eb",
+                  fontWeight: "bold",
+                  fontSize: "11px",
+                  borderBottom: "2px solid #000000",
+                  textAlign: "center",
+                }}
+              >
+                <Box sx={{ width: "24%", py: 0.6, borderRight: "1px solid #000000" }}>
+                  RATE
+                </Box>
+                <Box sx={{ width: "32%", py: 0.6, borderRight: "1px solid #000000" }}>
+                  ACTUAL EARNING
+                </Box>
+                <Box sx={{ width: "24%", py: 0.6, borderRight: "1px solid #000000" }}>
+                  DEDUCTIONS
+                </Box>
+                <Box sx={{ width: "20%", py: 0.6 }}>TOTAL</Box>
+              </Box>
 
-            {/* Footer */}
-            <Box sx={{ mt: 4, pt: 2, borderTop: "1px solid", borderColor: "grey.300" }}>
-              <Typography variant="caption" color="text.secondary">
-                This is a computer-generated salary slip and does not require a signature.
-              </Typography>
+              {/* Table Body (6 Rows matching PDF) */}
+              <Box sx={{ display: "flex", fontSize: "11px" }}>
+                {/* 1. RATE Column */}
+                <Box
+                  sx={{
+                    width: "24%",
+                    borderRight: "1px solid #000000",
+                    p: 0.5,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.4,
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>BASIC & DA</span>
+                    <span style={{ fontWeight: 600 }}>{rate.basicDa}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>HRA</span>
+                    <span style={{ fontWeight: 600 }}>{rate.hra}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>CONV.</span>
+                    <span style={{ fontWeight: 600 }}>{rate.conv}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>SPECIAL ALLOW.</span>
+                    <span style={{ fontWeight: 600 }}>{rate.specialAllow}</span>
+                  </Box>
+                </Box>
+
+                {/* 2. ACTUAL EARNING Column */}
+                <Box
+                  sx={{
+                    width: "32%",
+                    borderRight: "1px solid #000000",
+                    p: 0.5,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.4,
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>BASIC</span>
+                    <span style={{ fontWeight: 600 }}>{earn.basic}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>HRA</span>
+                    <span style={{ fontWeight: 600 }}>{earn.hra}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>CONV.</span>
+                    <span style={{ fontWeight: 600 }}>{earn.conv}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>SPECIAL ALLOW.</span>
+                    <span style={{ fontWeight: 600 }}>{earn.specialAllow}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>GWR/INC.</span>
+                    <span style={{ fontWeight: 600 }}>{earn.gwrInc}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>PERFORMANCE BONUS</span>
+                    <span style={{ fontWeight: 600 }}>{earn.performanceBonus}</span>
+                  </Box>
+                </Box>
+
+                {/* 3. DEDUCTIONS Column */}
+                <Box
+                  sx={{
+                    width: "24%",
+                    borderRight: "1px solid #000000",
+                    p: 0.5,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.4,
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>ESI</span>
+                    <span style={{ fontWeight: 600 }}>{ded.esi}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>PF</span>
+                    <span style={{ fontWeight: 600 }}>{ded.pf}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>LWF</span>
+                    <span style={{ fontWeight: 600 }}>{ded.lwf}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>TDS</span>
+                    <span style={{ fontWeight: 600 }}>{ded.tds}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>ADVANCE</span>
+                    <span style={{ fontWeight: 600 }}>{ded.advance}</span>
+                  </Box>
+                </Box>
+
+                {/* 4. TOTAL Column */}
+                <Box
+                  sx={{
+                    width: "20%",
+                    p: 0.5,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.4,
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>GROSS PAY</span>
+                    <span style={{ fontWeight: 600 }}>{summary.grossPay}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>GROSS DED.</span>
+                    <span style={{ fontWeight: 600 }}>{summary.grossDed}</span>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>REIMBURSEMENT</span>
+                    <span style={{ fontWeight: 600 }}>{summary.reimbursement}</span>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* 5. Total & Net Pay Row */}
+              <Box
+                sx={{
+                  display: "flex",
+                  borderTop: "2px solid #000000",
+                  borderBottom: "2px solid #000000",
+                  fontWeight: "bold",
+                  fontSize: "11px",
+                  bgcolor: "#f9fafb",
+                  py: 0.6,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: "24%",
+                    px: 1,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    borderRight: "1px solid #000000",
+                  }}
+                >
+                  <span>Total</span>
+                  <span>{rate.total}</span>
+                </Box>
+
+                <Box
+                  sx={{
+                    width: "32%",
+                    px: 1,
+                    textAlign: "right",
+                    borderRight: "1px solid #000000",
+                  }}
+                >
+                  {earn.total}
+                </Box>
+
+                <Box
+                  sx={{
+                    width: "24%",
+                    px: 1,
+                    textAlign: "right",
+                    borderRight: "1px solid #000000",
+                  }}
+                >
+                  {ded.total}
+                </Box>
+
+                <Box
+                  sx={{
+                    width: "20%",
+                    px: 1,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "#1e3a8a",
+                  }}
+                >
+                  <span>Net Pay</span>
+                  <span style={{ fontWeight: "bold" }}>{summary.netPay}</span>
+                </Box>
+              </Box>
+
+              {/* 6. Footer Note */}
+              <Box sx={{ textAlign: "center", py: 0.7, bgcolor: "#ffffff" }}>
+                <Typography sx={{ fontSize: "10px", fontStyle: "italic" }}>
+                  This is a computer-generated slip and does not require a signature.
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        </Card>
+          </Paper>
+        </Box>
       )}
-    </Container>
-  )
+    </Box>
+  );
 }
 
-export default SalarySlip
+export default SalarySlip;

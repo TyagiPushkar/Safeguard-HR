@@ -17,26 +17,12 @@ import {
 } from "@mui/material"
 import {
   Dashboard,
-  HolidayVillage,
-  Policy,
   Notifications,
-  Person,
-  Business,
-  BarChart,
-  AccountBalanceWallet,
-  AddLocationAlt,
-  LocalAirport,
-  HowToReg,
-  Map,
-  SupportAgent,
-  Laptop,
-  Summarize,
+  Map as MapIcon,
 } from "@mui/icons-material"
 import { useAuth } from "./auth/AuthContext"
+import { MODULES_BY_ID, ROLE_PERMISSIONS } from "../config/rolePermissions"
 import logo from "../assets/HRSmileLogo.jpeg"
-import ReceiptIcon from '@mui/icons-material/Receipt';
-// Add this import for Manual Attendance icon
-import EditCalendarIcon from '@mui/icons-material/EditCalendar';
 
 // Simple logo
 const HRSmileLogo = () => (
@@ -142,6 +128,20 @@ const NavItem = ({ route, isActive, isExpanded, hasNotification = false }) => {
   )
 }
 
+const CATEGORY_ORDER = [
+  "Main",
+  "Analytics",
+  "HR",
+  "Finance",
+  "Sales",
+  "Field",
+  "Travel",
+  "Compliance",
+  "Support",
+  "IT",
+  "Operations",
+]
+
 // --- Sidebar ---
 function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mobile
   const location = useLocation()
@@ -150,54 +150,47 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
   const [isExpanded, setIsExpanded] = useState(true)
 
-  const moduleMapping = {
-    1: { path: "/attendance", name: "Attendance", icon: <BarChart />, category: "Analytics" },
-    // Add Manual Attendance to module mapping
-    16: { path: "/manual-attendance", name: "Manual Attendance", icon: <EditCalendarIcon />, category: "Analytics" },
-    2: { path: "/leave", name: "Leave", icon: <Person />, category: "HR" },
-    3: { path: "/expense", name: "Expense", icon: <AccountBalanceWallet />, category: "Finance" },
-    4: { path: "/registration", name: "Leads", icon: <HowToReg />, category: "Sales" },
-    5: { path: "/visit", name: "Visit", icon: <AddLocationAlt />, category: "Field" },
-    6: { path: "/travel", name: "Travel", icon: <LocalAirport />, category: "Travel" },
-    8: { path: "/policy", name: "Policy", icon: <Policy />, category: "Compliance" },
-    9: { path: "/holiday", name: "Holiday", icon: <HolidayVillage />, category: "HR" },
-    10: { path: "/tickets", name: "Tickets", icon: <SupportAgent />, category: "Support" },
-    11: { path: "/assets", name: "Assets", icon: <Laptop />, category: "IT" },
-    15: { path: "/docket", name: "Docket", icon: <HowToReg />, category: "Operations" },
+  // 1. Get modules array sent directly by Backend Login API (from tenent.Menu & role)
+  const rawModules = user?.modules
+  let userModules = []
+
+  if (Array.isArray(rawModules)) {
+    userModules = rawModules.map((id) => Number(id)).filter((n) => !isNaN(n))
+  } else if (typeof rawModules === "string" && rawModules.trim()) {
+    userModules = rawModules
+      .split(",")
+      .map((s) => Number(s.trim()))
+      .filter((n) => !isNaN(n))
   }
 
-  const defaultRoutes = [
-    { path: "/dashboard", name: "Dashboard", icon: <Dashboard />, category: "Main" },
-    { path: "/notification", name: "Notifications", icon: <Notifications />, category: "Main", hasNotification: true },
-  ]
+  // 2. Map directly from MODULES_BY_ID and deduplicate by path
+  const seenPaths = {}
+  const routes = []
+  userModules.forEach((id) => {
+    const route = MODULES_BY_ID[id]
+    if (route && route.path && !seenPaths[route.path]) {
+      seenPaths[route.path] = true
+      routes.push(route)
+    }
+  })
 
-  const userModules = user?.modules || []
-  const allowedRoutes = userModules.map((id) => moduleMapping[id]).filter(Boolean)
-
-  if (user?.role === "HR") {
-    allowedRoutes.push(
-      { path: "/employees", name: "Employees", icon: <Person />, category: "HR" },
-      { path: "/offices", name: "Offices", icon: <Business />, category: "HR" },
-      { path: "/report", name: "Reports", icon: <Summarize />, category: "Analytics" },
-      // { path: "/invoices", name: "Invoices", icon: <ReceiptIcon />, category: "Finance" },
-    )
-    // Add Manual Attendance for HR users by default
-    allowedRoutes.push(
-      { path: "/manual-attendance", name: "Manual Attendance", icon: <EditCalendarIcon />, category: "Analytics" }
-    )
-  }
-
-  if (userModules.includes(5)) {
-    allowedRoutes.push({ path: "/maps", name: "Maps", icon: <Map />, category: "Field" })
-  }
-
-  const routes = [...defaultRoutes, ...allowedRoutes]
+  // 3. Group routes by category
   const groupedRoutes = routes.reduce((acc, r) => {
     const cat = r.category || "Other"
     if (!acc[cat]) acc[cat] = []
     acc[cat].push(r)
     return acc
   }, {})
+
+  // Sort categories according to CATEGORY_ORDER so Main is at the top
+  const sortedCategories = Object.keys(groupedRoutes).sort((a, b) => {
+    const indexA = CATEGORY_ORDER.indexOf(a)
+    const indexB = CATEGORY_ORDER.indexOf(b)
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB
+    if (indexA !== -1) return -1
+    if (indexB !== -1) return 1
+    return a.localeCompare(b)
+  })
 
   const sidebarContent = (
   <>
@@ -265,39 +258,43 @@ function Sidebar({ open, onClose, variant = "permanent" }) { // Add props for mo
         borderRadius: "3px",
       },
     }}>
-      {Object.entries(groupedRoutes).map(([category, categoryRoutes]) => (
-        <Box key={category} sx={{ mb: 1, width: "100%" }}>
-          {isExpanded && (
-            <Typography
-              variant="overline"
-              sx={{
-                px: 2,
-                color: "#8d0638ff",
-                fontWeight: 800,
-                letterSpacing: 0.8,
-                fontSize: "1rem",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {category}
-            </Typography>
-          )}
-          <List sx={{ py: 0, width: "100%" }}>
-            {categoryRoutes.map((route) => (
-              <NavItem
-                key={route.path}
-                route={route}
-                isActive={location.pathname === route.path}
-                isExpanded={isExpanded}
-                hasNotification={route.hasNotification}
-              />
-            ))}
-          </List>
-          <Divider sx={{ mx: 2, opacity: 0.3 }} />
-        </Box>
-      ))}
+      {sortedCategories.map((category) => {
+        const categoryRoutes = groupedRoutes[category]
+        if (!categoryRoutes || categoryRoutes.length === 0) return null
+        return (
+          <Box key={category} sx={{ mb: 1, width: "100%" }}>
+            {isExpanded && (
+              <Typography
+                variant="overline"
+                sx={{
+                  px: 2,
+                  color: "#8d0638ff",
+                  fontWeight: 800,
+                  letterSpacing: 0.8,
+                  fontSize: "1rem",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {category}
+              </Typography>
+            )}
+            <List sx={{ py: 0, width: "100%" }}>
+              {categoryRoutes.map((route) => (
+                <NavItem
+                  key={route.path}
+                  route={route}
+                  isActive={location.pathname === route.path}
+                  isExpanded={isExpanded}
+                  hasNotification={route.hasNotification}
+                />
+              ))}
+            </List>
+            <Divider sx={{ mx: 2, opacity: 0.3 }} />
+          </Box>
+        )
+      })}
     </Box>
   </>
 );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL } from "../../api/endpoints";
 import {
     Button,
     Table,
@@ -36,7 +37,7 @@ const AssetList = () => {
     const [selectedAsset, setSelectedAsset] = useState('');
     const [issueDialogOpen, setIssueDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-const [employeeMap, setEmployeeMap] = useState({});
+    const [employeeMap, setEmployeeMap] = useState({});
 
     // New state for manual EmpId entry
     const [manualEmpId, setManualEmpId] = useState('');
@@ -69,7 +70,7 @@ const [employeeMap, setEmployeeMap] = useState({});
         setAnchorEl(null);
     };
 
-    
+
 
     useEffect(() => {
         fetchAssets();
@@ -77,56 +78,56 @@ const [employeeMap, setEmployeeMap] = useState({});
     }, [page, rowsPerPage]);
 
     const fetchAssets = async () => {
-    try {
-        const params = {
-            role: user.role === 'HR' ? 'HR' : undefined,
-            EmpId: user.role === 'HR' ? undefined : user.emp_id,
-            page,
-            limit: rowsPerPage
-        };
+        try {
+            const params = {
+                role: user.role === 'HR' ? 'HR' : undefined,
+                EmpId: user.role === 'HR' ? undefined : user.emp_id,
+                page,
+                limit: rowsPerPage
+            };
 
-        const [assetsResponse, employeesResponse] = await Promise.all([
-            axios.get('https://namami-infotech.com/SAFEGUARD/src/assets/get_issue_asset.php', { params }),
-            axios.get(`https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`)
-        ]);
+            const [assetsResponse, employeesResponse] = await Promise.all([
+                axios.get(`${BASE_URL}/assets/get_issue_asset.php`, { params }),
+                axios.get(`${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`)
+            ]);
 
-        if (employeesResponse.data.success) {
-            const employees = employeesResponse.data.data.filter(emp => emp.Tenent_Id === user.tenent_id); // Filter employees by Tenent_Id
-            
-            const employeeMap = employees.reduce((map, emp) => {
-                map[emp.EmpId] = emp.Name; // Map EmpId to Name
-                return map;
-            }, {});
+            if (employeesResponse.data.success) {
+                const employees = employeesResponse.data.data.filter(emp => emp.Tenent_Id === user.tenent_id); // Filter employees by Tenent_Id
 
-            setEmployeeMap(employeeMap);
+                const employeeMap = employees.reduce((map, emp) => {
+                    map[emp.EmpId] = emp.Name; // Map EmpId to Name
+                    return map;
+                }, {});
 
-            if (assetsResponse.data.success) {
-                const filteredAssets = assetsResponse.data.data
-                    .filter(asset => employeeMap[asset.emp_id]) // Show only assets for employees in the same Tenent_Id
-                    .map(asset => ({
-                        ...asset,
-                        emp_name: employeeMap[asset.emp_id] || 'Unknown' // Replace EmpId with Name
-                    }));
+                setEmployeeMap(employeeMap);
 
-                setAssets(filteredAssets);
+                if (assetsResponse.data.success) {
+                    const filteredAssets = assetsResponse.data.data
+                        .filter(asset => employeeMap[asset.emp_id]) // Show only assets for employees in the same Tenent_Id
+                        .map(asset => ({
+                            ...asset,
+                            emp_name: employeeMap[asset.emp_id] || 'Unknown' // Replace EmpId with Name
+                        }));
+
+                    setAssets(filteredAssets);
+                } else {
+                    setSnackbarMessage(assetsResponse.data.message);
+                    setOpenSnackbar(true);
+                }
             } else {
-                setSnackbarMessage(assetsResponse.data.message);
+                setSnackbarMessage(employeesResponse.data.message);
                 setOpenSnackbar(true);
             }
-        } else {
-            setSnackbarMessage(employeesResponse.data.message);
+        } catch (error) {
+            setSnackbarMessage('Error fetching assets.');
             setOpenSnackbar(true);
         }
-    } catch (error) {
-        setSnackbarMessage('Error fetching assets.');
-        setOpenSnackbar(true);
-    }
-};
+    };
 
 
     const fetchAvailableAssets = async () => {
         try {
-            const response = await axios.get('https://namami-infotech.com/SAFEGUARD/src/assets/get_asset.php');
+            const response = await axios.get(`${BASE_URL}/assets/get_asset.php`);
             if (response.data.success) {
                 setAvailableAssets(response.data.data);
             } else {
@@ -146,7 +147,7 @@ const [employeeMap, setEmployeeMap] = useState({});
     const handleIssueAssetSubmit = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/assets/issue_asset.php', {
+            const response = await axios.post(`${BASE_URL}/assets/issue_asset.php`, {
                 EmpId: manualEmpId, // Use the manually entered EmpId
                 assets: [
                     {
@@ -184,7 +185,7 @@ const [employeeMap, setEmployeeMap] = useState({});
 
     const handleAddNewAsset = async () => {
         try {
-            const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/assets/add_asset.php', {
+            const response = await axios.post(`${BASE_URL}/assets/add_asset.php`, {
                 product_name: newAssetData.productName,
                 added_date: newAssetData.addedDate
             });
@@ -224,7 +225,7 @@ const [employeeMap, setEmployeeMap] = useState({});
     const handleStatusChangeSubmit = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/assets/update_asset_status.php', {
+            const response = await axios.post(`${BASE_URL}/assets/update_asset_status.php`, {
                 issue_id: menuIssueId,
                 status: statusData.status
             });

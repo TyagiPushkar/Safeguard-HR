@@ -1,3 +1,4 @@
+import { BASE_URL } from "../../api/endpoints";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
@@ -55,7 +56,7 @@ function LiveTrack() {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+        `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
       );
       if (response.data.success) {
         setEmployees(response.data.data);
@@ -86,7 +87,7 @@ function LiveTrack() {
   }
 
   try {
-    const url = `https://namami-infotech.com/SAFEGUARD/src/track/get_location.php?emp_id=${selectedEmpId}`;
+    const url = `${BASE_URL}/track/get_location.php?emp_id=${selectedEmpId}`;
     const response = await axios.get(url);
 
     if (response.data.success && response.data.data.length > 0) {
@@ -175,7 +176,7 @@ function LiveTrack() {
 
   const fetchAttendanceData = async () => {
   try {
-    const url = `https://namami-infotech.com/SAFEGUARD/src/attendance/view_attendance.php?EmpId=${selectedEmpId}`;
+    const url = `${BASE_URL}/attendance/view_attendance.php?EmpId=${selectedEmpId}`;
     const response = await axios.get(url);
 
     if (response.data.success && response.data.data.length > 0) {

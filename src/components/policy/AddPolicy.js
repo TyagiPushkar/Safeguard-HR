@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useState } from "react"
 import {
@@ -89,7 +90,7 @@ function AddPolicyDialog({ open, onClose, onPolicyAdded }) {
     setSuccess("")
 
     try {
-      const response = await axios.post("https://namami-infotech.com/SAFEGUARD/src/policy/add_policy.php", {
+      const response = await axios.post(`${BASE_URL}/policy/add_policy.php`, {
         subject: policyName,
         body: policyDescription,
         pdf: pdfBase64,

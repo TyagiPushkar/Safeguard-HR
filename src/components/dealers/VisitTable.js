@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { BASE_URL } from "../../api/endpoints";
 
 import { useEffect, useState } from "react"
 import {
@@ -73,7 +74,7 @@ function VisitTable() {
       const fetchEmployees = async () => {
         try {
           const response = await axios.get(
-            `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+            `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
           )
 
           if (response.data.success) {
@@ -94,7 +95,7 @@ function VisitTable() {
     setNoData(false)
     try {
       const formattedDate = selectedDate.toISOString().substr(0, 10)
-      const url = `https://namami-infotech.com/SAFEGUARD/src/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`
+      const url = `${BASE_URL}/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`
 
       const response = await axios.get(url)
       if (response.data.success && response.data.data.length > 0) {
@@ -121,7 +122,7 @@ function VisitTable() {
   const handleViewImage = async (visitId) => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/SAFEGUARD/src/visit/view_one_visit.php?visit_id=${visitId}`,
+        `${BASE_URL}/visit/view_one_visit.php?visit_id=${visitId}`,
       )
       const base64Data = response.data.data[0].Attachment
       setImageData(`data:image/jpeg;base64,${base64Data}`)

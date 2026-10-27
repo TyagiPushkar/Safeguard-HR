@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Checkbox, FormControlLabel, Typography, MenuItem, Select, InputLabel, FormControl, Box, RadioGroup, Radio,FormControlLabel as RadioFormControlLabel, ListItemText } from '@mui/material';
+import { BASE_URL } from "../../api/endpoints";
+import { TextField, Button, Checkbox, FormControlLabel, Typography, MenuItem, Select, InputLabel, FormControl, Box, RadioGroup, Radio, FormControlLabel as RadioFormControlLabel, ListItemText } from '@mui/material';
 import axios from 'axios';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -27,7 +28,7 @@ const AddCheckpointForm = () => {
     useEffect(() => {
         // Fetch type data on component load
         axios
-            .get('https://namami-infotech.com/SAFEGUARD/src/menu/get_types.php')
+            .get(`${BASE_URL}/menu/get_types.php`)
             .then((response) => {
                 if (response.data.success) {
                     setTypes(response.data.data);
@@ -49,7 +50,7 @@ const AddCheckpointForm = () => {
         const { name, checked } = e.target;
         setFormData({ ...formData, [name]: checked });
     };
-        const handleRadioChange = (e) => {
+    const handleRadioChange = (e) => {
         const { value } = e.target;
         setFormData({ ...formData, Size: value }); // Set the selected Size value
     };
@@ -73,7 +74,7 @@ const AddCheckpointForm = () => {
             const optionsString = formData.Options.join(', ');
 
             // Submit formData with the options as a string
-            const response = await axios.post('https://namami-infotech.com/SAFEGUARD/src/menu/add_checkpoints.php', {
+            const response = await axios.post(`${BASE_URL}/menu/add_checkpoints.php`, {
                 ...formData,
                 Options: optionsString, // Submit options as a comma-separated string
             });
@@ -922,7 +923,7 @@ const AddCheckpointForm = () => {
 </Box>
 
             </form>
-        </div>
+        </div >
     );
 };
 

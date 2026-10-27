@@ -1,4 +1,5 @@
-'use client'
+'use client';
+import { BASE_URL } from "../../api/endpoints";
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -101,7 +102,7 @@ function EnhancedViewExpense() {
     const fetchEmployeeData = async () => {
       try {
         const response = await axios.get(
-          'https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php',
+          `${BASE_URL}/employee/list_employee.php`,
           { params: { Tenent_Id: user.tenent_id } }
         );
 
@@ -134,7 +135,7 @@ function EnhancedViewExpense() {
         }
 
         const response = await axios.get(
-          'https://namami-infotech.com/SAFEGUARD/src/expense/get_expense.php',
+          `${BASE_URL}/expense/get_expense.php`,
           { params: { EmpId: user.emp_id, role: user.role } }
         );
 
@@ -169,7 +170,7 @@ function EnhancedViewExpense() {
   const handleStatusChange = async (detailId, status) => {
     try {
       const response = await axios.post(
-        'https://namami-infotech.com/SAFEGUARD/src/expense/update_expense.php',
+        `${BASE_URL}/expense/update_expense.php`,
         { detailId, status, role: user.role }
       );
 

@@ -27,6 +27,7 @@ import {
   Medication,
   LocalPharmacy,
   Inventory2,
+  Science,
 } from "@mui/icons-material";
 import axios from "axios";
 
@@ -306,7 +307,7 @@ function ProductModal({ open, onClose, product, onSuccess }) {
               />
             </Grid>
 
-            {/* Category */}
+            {/* Therapeutic Category */}
             <Grid item xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Therapeutic Category</InputLabel>
@@ -322,6 +323,38 @@ function ProductModal({ open, onClose, product, onSuccess }) {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* Composition (Salt / Active Ingredients) */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Composition (Salt / Formulation) *"
+                placeholder="e.g. Paracetamol IP 650mg, Amoxicillin 500mg + Clavulanate 125mg"
+                value={formData.composition}
+                onChange={(e) => handleChange("composition", e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Science sx={{ color: "action.active", fontSize: 22 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                helperText="Active pharmaceutical ingredients / salt formulation"
+              />
+            </Grid>
+
+            {/* Description / Notes */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={2}
+                label="Description / Usage Notes"
+                placeholder="e.g. Effective relief for fever and mild to moderate pain"
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+              />
             </Grid>
           </Grid>
         </DialogContent>

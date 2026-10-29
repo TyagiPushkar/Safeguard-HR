@@ -38,10 +38,12 @@ import {
   Store,
   Download,
   Visibility,
+  Add,
 } from "@mui/icons-material"
 import { motion } from "framer-motion"
 import axios from "axios"
 import { useAuth } from "../auth/AuthContext"
+import AddDealers from "./AddDealers"
 
 // Color palette
 const COLORS = {
@@ -62,51 +64,50 @@ function DealerList() {
   const [error, setError] = useState("")
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [openAddModal, setOpenAddModal] = useState(false)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!user || !user.emp_id || !user.tenent_id) {
-          setError("User is not authenticated")
-          setLoading(false)
-          return
-        }
-
-        const employeeResponse = await axios.get(
-          `${BASE_URL}/employee/list_employee.php`,
-          { params: { Tenent_Id: user.tenent_id } },
-        )
-
-        if (!employeeResponse.data.success) {
-          setError("Error fetching employee data")
-          setLoading(false)
-          return
-        }
-
-        const employeeEmpIds = new Set(employeeResponse.data.data.map((emp) => emp.EmpId))
-
-        const dealerResponse = await axios.get(
-          `${BASE_URL}/dealer/get_dealers.php`,
-          { params: { empId: user.emp_id, role: user.role } },
-        )
-
-        if (!dealerResponse.data.success) {
-          setError(dealerResponse.data.message)
-          setLoading(false)
-          return
-        }
-
-        setDealers(dealerResponse.data.data.reverse())
-      } catch (error) {
-        setError("Error fetching data")
-        console.error("Error:", error)
-      } finally {
+  const fetchData = async () => {
+    try {
+      if (!user || !user.emp_id || !user.tenent_id) {
+        setError("User is not authenticated")
         setLoading(false)
+        return
       }
-    }
 
+      const employeeResponse = await axios.get(
+        `${BASE_URL}/employee/list_employee.php`,
+        { params: { Tenent_Id: user.tenent_id } },
+      )
+
+      if (!employeeResponse.data.success) {
+        setError("Error fetching employee data")
+        setLoading(false)
+        return
+      }
+
+      const dealerResponse = await axios.get(
+        `${BASE_URL}/dealer/get_dealers.php`,
+        { params: { empId: user.emp_id, role: user.role } },
+      )
+
+      if (!dealerResponse.data.success) {
+        setError(dealerResponse.data.message)
+        setLoading(false)
+        return
+      }
+
+      setDealers(dealerResponse.data.data.reverse())
+    } catch (error) {
+      setError("Error fetching data")
+      console.error("Error:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchData()
   }, [user])
 
@@ -187,8 +188,8 @@ function DealerList() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Avatar
               sx={{
                 bgcolor: `${COLORS.primary}15`,
@@ -211,13 +212,35 @@ function DealerList() {
                   mb: 0.5,
                 }}
               >
-                Dealer Management
+                Leads & Dealer Management
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Manage and track all dealer information in one place
+                Register, manage and track all leads and dealer records in one place
               </Typography>
             </Box>
           </Box>
+          <Button
+            variant="contained"
+            onClick={() => setOpenAddModal(true)}
+            startIcon={<Add />}
+            sx={{
+              bgcolor: COLORS.primary,
+              borderRadius: 2,
+              px: 3,
+              py: 1.5,
+              fontWeight: 600,
+              color: '#fff',
+              boxShadow: `0 4px 14px ${COLORS.primary}40`,
+              "&:hover": {
+                bgcolor: '#70042c',
+                transform: 'translateY(-1px)',
+                boxShadow: `0 6px 20px ${COLORS.primary}60`
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            + Add Lead
+          </Button>
         </Box>
       </motion.div>
 
@@ -246,33 +269,58 @@ function DealerList() {
                   {dealers.length}
                 </Typography>
                 <Typography variant="body1" color="text.secondary" fontWeight={500}>
-                  Total Dealers
+                  Total Leads / Dealers
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Active dealer records in the system
+                  Active records in the system
                 </Typography>
               </Box>
-              <Button
-                variant="contained"
-                onClick={exportToCsv}
-                startIcon={<Download />}
-                sx={{
-                  bgcolor: COLORS.secondary,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1.5,
-                  fontWeight: 600,
-                  "&:hover": { 
-                    bgcolor: '#5a6fd8',
-                    transform: 'translateY(-1px)',
-                    boxShadow: `0 6px 20px ${COLORS.secondary}40`
-                  },
-                  transition: 'all 0.2s ease',
-                  minWidth: 150,
-                }}
-              >
-                Export CSV
-              </Button>
+              <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1.5 }}>
+                <Button
+                  variant="contained"
+                  onClick={() => setOpenAddModal(true)}
+                  startIcon={<Add />}
+                  sx={{
+                    bgcolor: COLORS.primary,
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1.5,
+                    fontWeight: 600,
+                    color: '#fff',
+                    "&:hover": { 
+                      bgcolor: '#70042c',
+                      transform: 'translateY(-1px)',
+                      boxShadow: `0 6px 20px ${COLORS.primary}40`
+                    },
+                    transition: 'all 0.2s ease',
+                    minWidth: 140,
+                  }}
+                >
+                  + Add Lead
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={exportToCsv}
+                  startIcon={<Download />}
+                  sx={{
+                    borderColor: COLORS.secondary,
+                    color: COLORS.secondary,
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1.5,
+                    fontWeight: 600,
+                    "&:hover": { 
+                      borderColor: '#5a6fd8',
+                      bgcolor: `${COLORS.secondary}10`,
+                      transform: 'translateY(-1px)',
+                    },
+                    transition: 'all 0.2s ease',
+                    minWidth: 140,
+                  }}
+                >
+                  Export CSV
+                </Button>
+              </Stack>
             </Stack>
           </CardContent>
         </Card>
@@ -439,6 +487,13 @@ function DealerList() {
           </TableContainer>
         </Card>
       </motion.div>
+
+      {/* Dynamic Add Lead / Dealer Modal Form */}
+      <AddDealers
+        open={openAddModal}
+        onClose={() => setOpenAddModal(false)}
+        onDealerAdded={fetchData}
+      />
     </Container>
   )
 }

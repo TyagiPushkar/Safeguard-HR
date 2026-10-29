@@ -460,6 +460,7 @@ function ProductList() {
               <TableRow>
                 <TableCell sx={{ fontWeight: 800, color: "#1e293b", py: 1.5 }}>Code</TableCell>
                 <TableCell sx={{ fontWeight: 800, color: "#1e293b" }}>Product Name</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: "#1e293b" }}>Composition</TableCell>
                 <TableCell sx={{ fontWeight: 800, color: "#1e293b" }}>Unit</TableCell>
                 <TableCell sx={{ fontWeight: 800, color: "#1e293b" }}>Packaging</TableCell>
                 <TableCell sx={{ fontWeight: 800, color: "#1e293b", textAlign: "right" }}>Price (₹)</TableCell>
@@ -471,7 +472,7 @@ function ProductList() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} sx={{ textAlign: "center", py: 5 }}>
+                  <TableCell colSpan={9} sx={{ textAlign: "center", py: 5 }}>
                     <CircularProgress size={32} sx={{ color: "#8d0638", mb: 1 }} />
                     <Typography variant="body2" color="text.secondary">
                       Loading products catalog...
@@ -480,7 +481,7 @@ function ProductList() {
                 </TableRow>
               ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} sx={{ textAlign: "center", py: 5 }}>
+                  <TableCell colSpan={9} sx={{ textAlign: "center", py: 5 }}>
                     <LocalPharmacy sx={{ fontSize: 44, color: "#cbd5e1", mb: 1 }} />
                     <Typography variant="subtitle1" fontWeight="bold" color="text.secondary">
                       No products found
@@ -523,9 +524,35 @@ function ProductList() {
                       </TableCell>
 
                       {/* Name */}
-                      <TableCell>
+                      <TableCell sx={{ maxWidth: 220 }}>
                         <Typography variant="subtitle2" fontWeight="700" color="#1e293b">
                           {prd.name}
+                        </Typography>
+                        {prd.hsn && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                            HSN: {prd.hsn}
+                          </Typography>
+                        )}
+                      </TableCell>
+
+                      {/* Composition */}
+                      <TableCell sx={{ maxWidth: 240 }}>
+                        <Typography
+                          variant="body2"
+                          color="#334155"
+                          sx={{
+                            fontWeight: 500,
+                            fontSize: "0.85rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "normal",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          }}
+                          title={prd.composition || ""}
+                        >
+                          {prd.composition || <Typography component="span" variant="caption" color="text.secondary" fontStyle="italic">Not specified</Typography>}
                         </Typography>
                       </TableCell>
 

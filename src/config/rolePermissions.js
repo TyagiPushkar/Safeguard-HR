@@ -129,6 +129,7 @@ export const ROLE_PERMISSIONS = {
     "/expense",
     "/assets",
     "/tickets",
+    "/registration",
     "/policy",
     "/report",
     "/invoices",

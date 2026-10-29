@@ -428,6 +428,9 @@ function QuotationModal({ open, onClose, quotation, onSuccess, approvalThreshold
           payload
         );
       } else {
+        if (!payload.quotation_no || payload.quotation_no.includes("PREVIEW")) {
+          delete payload.quotation_no;
+        }
         res = await axios.post(
           `${BASE_URL}/quotation/create_quotation.php`,
           payload
@@ -770,7 +773,7 @@ function QuotationModal({ open, onClose, quotation, onSuccess, approvalThreshold
                             <Box sx={{ width: "100%" }}>
                               <Typography variant="body2" fontWeight="600">{option.name}</Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {option.packaging} • {option.unit} • ₹{parseFloat(option.price || 0).toFixed(2)}
+                                {option.composition ? `${option.composition} • ` : ""}{option.packaging} • {option.unit} • ₹{parseFloat(option.price || 0).toFixed(2)}
                               </Typography>
                             </Box>
                           </li>

@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -107,7 +106,7 @@ function ViewTravel({ EmpId }) {
     const fetchEmployeeData = async () => {
       try {
         const response = await axios.get(
-          `${BASE_URL}/employee/list_employee.php`,
+          "https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php",
           {
             params: { Tenent_Id: user.tenent_id },
           },
@@ -137,7 +136,7 @@ function ViewTravel({ EmpId }) {
           return
         }
 
-        const response = await axios.get(`${BASE_URL}/travel/get_travel.php`, {
+        const response = await axios.get("https://namami-infotech.com/SAFEGUARD/src/travel/get_travel.php", {
           params: { empId: user.emp_id, role: user.role },
         })
 
@@ -181,7 +180,7 @@ function ViewTravel({ EmpId }) {
 
   const handleStatusChange = async (id, status) => {
     try {
-      const response = await axios.post(`${BASE_URL}/travel/update_status.php`, {
+      const response = await axios.post("https://namami-infotech.com/SAFEGUARD/src/travel/update_status.php", {
         id,
         status,
       })

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { BASE_URL } from "../../api/endpoints";
 import axios from 'axios';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +11,7 @@ function CheckpointList() {
     // Fetch checkpoint data from API
     const fetchCheckpoints = async () => {
         try {
-            const response = await axios.get(`${BASE_URL}/menu/get_checkpoints.php`);
+            const response = await axios.get('https://namami-infotech.com/SAFEGUARD/src/menu/get_checkpoints.php');
             if (response.data.success) {
                 setCheckpoints(response.data.data);
             } else {
@@ -35,8 +34,8 @@ function CheckpointList() {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
-    const addCheckpoint = () => {
-        navigate('/add-checkpoint');
+  const addCheckpoint = () => {
+        navigate("/add-checkpoint");
     };
 
     return (

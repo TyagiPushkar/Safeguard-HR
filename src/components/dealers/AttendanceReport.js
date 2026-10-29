@@ -1,5 +1,4 @@
 "use client";
-import { BASE_URL } from "../../api/endpoints";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
@@ -88,19 +87,19 @@ const AttendanceReport = () => {
         const [employeesRes, attendanceRes, leaveRes, salaryRes, holidayRes] =
           await Promise.allSettled([
             axios.get(
-              `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+              `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
             ),
             axios.get(
-              `${BASE_URL}/attendance/get_attendance.php`,
+              "https://namami-infotech.com/SAFEGUARD/src/attendance/get_attendance.php",
             ),
             axios.get(
-              `${BASE_URL}/leave/get_leave.php?role=HR`,
+              "https://namami-infotech.com/SAFEGUARD/src/leave/get_leave.php?role=HR",
             ),
             axios.get(
-              `${BASE_URL}/salary/get_salary.php`,
+              "https://namami-infotech.com/SAFEGUARD/src/salary/get_salary.php",
             ),
             axios.get(
-              `${BASE_URL}/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
+              `https://namami-infotech.com/SAFEGUARD/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
             ),
           ]);
 

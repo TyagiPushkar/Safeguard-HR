@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -239,7 +238,7 @@ function ApplyLeave({ open, onClose, onLeaveApplied }) {
       try {
         setLoadingCategories(true)
         const response = await axios.get(
-          `${BASE_URL}/leave/balance_leave.php?empid=${user.emp_id}`,
+          `https://namami-infotech.com/SAFEGUARD/src/leave/balance_leave.php?empid=${user.emp_id}`,
         )
         if (response.data.success) {
           const data = response.data.data
@@ -340,7 +339,7 @@ function ApplyLeave({ open, onClose, onLeaveApplied }) {
       }
 
       const response = await axios.post(
-        `${BASE_URL}/leave/apply_leave.php`,
+        "https://namami-infotech.com/SAFEGUARD/src/leave/apply_leave.php",
         formattedLeaveDetails,
       )
 

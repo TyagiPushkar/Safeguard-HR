@@ -42,15 +42,13 @@ import axios from "axios"
 import { useAuth } from "../components/auth/AuthContext"
 import { motion, AnimatePresence } from "framer-motion"
 
-import { BASE_URL } from "../api/endpoints"
-
 // Import images - update paths as needed
 import logo from "../assets/HRSmileLogo.jpeg"
 import banner from "../assets/Login.png"
 import playstore from "../assets/playstore.png"
 import appstore from "../assets/appstore.png"
 
-const API_URL = `${BASE_URL}/auth`
+const API_URL = "https://namami-infotech.com/SAFEGUARD/src/auth"
 
 // Custom styled components matching dashboard aesthetics
 const GlassCard = ({ children, sx = {}, ...props }) => (

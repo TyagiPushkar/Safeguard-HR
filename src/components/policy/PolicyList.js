@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -186,7 +185,7 @@ function PolicyList() {
     setLoading(true)
     try {
       const response = await axios.get(
-        `${BASE_URL}/policy/view_policy.php?Tenent_Id=${user.tenent_id}`,
+        `https://namami-infotech.com/SAFEGUARD/src/policy/view_policy.php?Tenent_Id=${user.tenent_id}`,
       )
       if (response.data.success) {
         setPolicies(response.data.data)
@@ -203,7 +202,7 @@ function PolicyList() {
 
   const handleTogglePolicyStatus = async (policyId, action) => {
     try {
-      const response = await axios.post(`${BASE_URL}/policy/disable_policy.php`, {
+      const response = await axios.post("https://namami-infotech.com/SAFEGUARD/src/policy/disable_policy.php", {
         PolicyId: policyId,
         action,
       })

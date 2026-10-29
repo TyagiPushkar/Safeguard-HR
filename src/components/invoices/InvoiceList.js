@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -593,7 +592,7 @@ function InvoiceList() {
     setLoading(true)
     try {
       const response = await axios.get(
-        `${BASE_URL}/invoices/get_invoices.php`
+        `https://namami-infotech.com/SAFEGUARD/src/invoices/get_invoices.php`
       )
       if (response.data.success) {
         setInvoices(response.data.data)
@@ -610,7 +609,7 @@ function InvoiceList() {
 
   const handleUpdateUTR = async (invoiceId, utrNumber) => {
     try {
-      const response = await axios.post(`${BASE_URL}/invoices/update_invoice.php`, {
+      const response = await axios.post("https://namami-infotech.com/SAFEGUARD/src/invoices/update_invoice.php", {
         id: invoiceId,
         utr_no: utrNumber,
       })

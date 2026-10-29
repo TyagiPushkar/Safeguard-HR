@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import React, { useState, useEffect } from "react"
 import axios from "axios"
@@ -196,7 +195,7 @@ function ViewHoliday() {
     try {
       setLoading(true)
       const response = await axios.get(
-        `${BASE_URL}/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
+        `https://namami-infotech.com/SAFEGUARD/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
       )
       if (response.data.success) {
         const holidayEvents = response.data.data.map((holiday) => ({

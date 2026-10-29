@@ -35,9 +35,6 @@ import Docket from './pages/Docket';
 import MainLayout from './components/layout/MainLayout';
 import Offices from './pages/Offices';
 import Invoices from './pages/Invoices';
-import Salary from './pages/Salary';
-import Quotation from './pages/Quotation';
-import Product from './pages/Product';
 
 // Wrapper component for routes that need layout
 const LayoutWrapper = ({ children }) => {
@@ -167,38 +164,6 @@ function App() {
               <PrivateRoute>
                 <LayoutWrapper>
                   <Invoices />
-                </LayoutWrapper>
-              </PrivateRoute>
-            } />
-
-            <Route path="/salary" element={
-              <PrivateRoute>
-                <LayoutWrapper>
-                  <Salary />
-                </LayoutWrapper>
-              </PrivateRoute>
-            } />
-
-            <Route path="/quotation" element={
-              <PrivateRoute>
-                <LayoutWrapper>
-                  <Quotation />
-                </LayoutWrapper>
-              </PrivateRoute>
-            } />
-
-            <Route path="/products" element={
-              <PrivateRoute>
-                <LayoutWrapper>
-                  <Product />
-                </LayoutWrapper>
-              </PrivateRoute>
-            } />
-
-            <Route path="/product" element={
-              <PrivateRoute>
-                <LayoutWrapper>
-                  <Product />
                 </LayoutWrapper>
               </PrivateRoute>
             } />

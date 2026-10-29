@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useState, useEffect } from "react"
 import axios from "axios"
@@ -37,7 +36,7 @@ function SalaryList() {
     setError("")
     try {
       const response = await axios.get(
-        `${BASE_URL}/salary/salary_records.php?month=${month}&year=${year}`,
+        `https://namami-infotech.com/SAFEGUARD/src/salary/salary_records.php?month=${month}&year=${year}`,
       )
       if (response.data.success) {
         setSalaries(response.data.data)

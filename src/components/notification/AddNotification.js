@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useState } from "react"
 import {
@@ -347,7 +346,7 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
       }
 
       const response = await axios.post(
-        `${BASE_URL}/notification/add_notification.php`,
+        "https://namami-infotech.com/SAFEGUARD/src/notification/add_notification.php",
         payload,
         {
           headers: {

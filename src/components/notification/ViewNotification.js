@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import { useEffect, useState } from "react"
 import {
@@ -431,7 +430,7 @@ function ViewNotifications() {
     try {
       setLoading(true)
       const response = await axios.get(
-        `${BASE_URL}/notification/get_notification.php?Tenent_Id=${user.tenent_id}`,
+        `https://namami-infotech.com/SAFEGUARD/src/notification/get_notification.php?Tenent_Id=${user.tenent_id}`,
       )
       setNotifications(response.data.notifications || [])
     } catch (err) {

@@ -1,5 +1,5 @@
-"use client";
 // components/layout/PageWrapper.jsx (Simplified)
+"use client"
 
 import React from "react"
 import { Box, Typography, Breadcrumbs } from "@mui/material"

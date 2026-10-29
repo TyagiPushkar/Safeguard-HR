@@ -1,5 +1,4 @@
-"use client";
-import { BASE_URL } from "../../api/endpoints";
+"use client"
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -77,7 +76,7 @@ function PlanVisit() {
       const fetchEmployees = async () => {
         try {
           const response = await axios.get(
-            `${BASE_URL}/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+            `https://namami-infotech.com/SAFEGUARD/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
           );
 
           if (response.data.success) {
@@ -98,7 +97,7 @@ function PlanVisit() {
     setNoData(false);
     try {
       const formattedDate = selectedDate.toISOString().substr(0, 10);
-      const url = `${BASE_URL}/visit/plan.php?role=HR&empId=&date=${formattedDate}`;
+      const url = `https://namami-infotech.com/SAFEGUARD/src/visit/plan.php?role=HR&empId=&date=${formattedDate}`;
 
       const response = await axios.get(url);
       if (response.data.success && response.data.data.length > 0) {
@@ -121,7 +120,7 @@ function PlanVisit() {
   const handleViewImage = async (visitId) => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/visit/view_one_visit.php?visit_id=${visitId}`,
+        `https://namami-infotech.com/SAFEGUARD/src/visit/view_one_visit.php?visit_id=${visitId}`,
       );
       const base64Data = response.data.data[0].Attachment;
       setImageData(`data:image/jpeg;base64,${base64Data}`);
